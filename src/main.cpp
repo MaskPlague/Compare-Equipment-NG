@@ -1,14 +1,168 @@
 namespace logger = SKSE::log;
+
+double X_ORIGIN = 500.0f;
+double Y_ORIGIN = 300.0f;
+int BACKGROUND_ALPHA = 75;
+bool DEFAULT_OPEN = false;
+uint32_t TOGGLE_KEY = 48;
+namespace CEMenu
+{
+    std::string basename = "CompareEquipmentMenu_";
+    auto temp = basename + std::to_string(BACKGROUND_ALPHA) + "_" + (DEFAULT_OPEN ? "1" : "0");
+    auto MENU_NAME = temp.c_str();
+    // constexpr auto MENU_NAME = "CompareEquipmentMenu";
+    static constexpr std::string_view SWF_PATH{"CompareEquipment.swf"};
+    bool displayed = true;
+    RE::GFxValue GetMenu_mc()
+    {
+        auto UISingleton = RE::UI::GetSingleton();
+        auto inventoryMenu = UISingleton ? UISingleton->GetMenu<RE::InventoryMenu>() : nullptr;
+        RE::GFxMovieView *view = inventoryMenu ? inventoryMenu->uiMovie.get() : nullptr;
+        RE::GFxValue Menu_mc;
+
+        if (!UISingleton || !inventoryMenu || !view || !view->GetVariable(&Menu_mc, "_root.Menu_mc"))
+        {
+            return nullptr;
+        }
+        return Menu_mc;
+    }
+    RE::GFxValue GetCEMenu(RE::GFxValue Menu_mc)
+    {
+        RE::GFxValue ceMenu;
+        if (Menu_mc.IsNull() || !Menu_mc.GetMember(MENU_NAME, &ceMenu))
+        {
+            return nullptr;
+        }
+        return ceMenu;
+    }
+
+    void ShowMenu()
+    {
+        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
+        if (ceMenu.IsNull())
+            return;
+        ceMenu.Invoke("showMenu");
+        displayed = true;
+        logger::debug("showMenu called");
+    }
+
+    void HideMenu()
+    {
+        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
+        if (ceMenu.IsNull())
+            return;
+        ceMenu.Invoke("hideMenu");
+        displayed = false;
+        logger::debug("hideMenu called");
+    }
+
+    void ToggleMenu()
+    {
+        if (!displayed)
+        {
+            ShowMenu();
+        }
+        else
+        {
+            HideMenu();
+        }
+    }
+
+    void ChangeText(std::string_view text)
+    {
+        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
+        if (ceMenu.IsNull())
+            return;
+        RE::GFxValue args[1];
+        args[0].SetString(text);
+        ceMenu.Invoke("set_text", nullptr, args, 1);
+    }
+
+    void DestroyMenu()
+    {
+        logger::debug("        Destroying Menu");
+        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
+        if (ceMenu.IsNull())
+        {
+            logger::debug("Failed to get {}", MENU_NAME);
+            return;
+        }
+
+        if (!ceMenu.Invoke("removeMovieClip"))
+        {
+            logger::debug("Failed to remove {}", MENU_NAME);
+            return;
+        }
+        logger::debug("Removed {}", MENU_NAME);
+    }
+    void CreateMenu()
+    {
+        logger::debug("          Creating Menu");
+        RE::GFxValue Menu_mc = GetMenu_mc();
+        if (Menu_mc.IsNull())
+        {
+            logger::debug("Failed to get Menu_mc");
+            return;
+        }
+        RE::GFxValue _ceMenu = GetCEMenu(Menu_mc);
+        if (!_ceMenu.IsNull())
+        {
+            logger::debug("{} already created", MENU_NAME);
+            return;
+        }
+        RE::GFxValue args[2];
+        RE::GFxValue ceMenuMovieClip;
+        args[0].SetString(MENU_NAME); // name
+        args[1] = 3999;               // depth
+        if (!Menu_mc.Invoke("createEmptyMovieClip", &ceMenuMovieClip, args, 2))
+        {
+            logger::debug("failed to create {} movie clip via invoke", MENU_NAME);
+            return;
+        }
+        logger::debug("Created {} movie clip via invoke", MENU_NAME);
+
+        RE::GFxValue ceMenu = GetCEMenu(Menu_mc);
+        if (ceMenu.IsNull())
+        {
+            logger::debug("Failed to get {}", MENU_NAME);
+            return;
+        }
+        logger::debug("Got {}", MENU_NAME);
+
+        RE::GFxValue result2;
+        RE::GFxValue args2[1];
+        args2[0].SetString(SWF_PATH); // name
+        if (!ceMenu.Invoke("loadMovie", &result2, args2, 1))
+        {
+            logger::debug("Failed to load {} via invoke", args2[0].GetString());
+            return;
+        }
+        logger::debug("Loaded {} via invoke", args2[0].GetString());
+
+        RE::GFxValue xNumber;
+        xNumber.SetNumber(X_ORIGIN);
+        if (!ceMenu.SetMember("_x", xNumber))
+        {
+            logger::debug("Failed to set _x");
+            return;
+        }
+        RE::GFxValue yNumber;
+        yNumber.SetNumber(Y_ORIGIN);
+        if (!ceMenu.SetMember("_y", yNumber))
+        {
+            logger::debug("Failed to set _y");
+            return;
+        }
+        if (!DEFAULT_OPEN)
+        {
+            displayed = false;
+        }
+    }
+}
+
 namespace InventoryMenu
 {
     static std::string s_text;
-    void ShowNotification()
-    {
-        logger::info("Showing Notification");
-        RE::DebugMessageBox(s_text.c_str());
-        logger::info("Message: {}", s_text.c_str());
-        logger::info("should have notified");
-    }
 
     void GetEquippedInSlots(RE::FormID formId)
     {
@@ -69,58 +223,38 @@ namespace InventoryMenu
                         auto equipped = player->GetWornArmor(slot);
                         if (equipped)
                         {
-                            logger::info("Hovered item would use {} slot, currently equipped: {}", name, equipped->GetName());
+                            logger::debug("Hovered item would use {} slot, currently equipped: {}", name, equipped->GetName());
                         }
                         else
                         {
-                            logger::info("Hovered item would use {} slot, nothing equipped", name);
+                            logger::debug("Hovered item would use {} slot, nothing equipped", name);
                         }
                         text += "\n   " + std::string(name) + " -> ";
                         text += equipped ? equipped->GetName() : "(empty)";
                     }
                 }
                 s_text = text;
-                InventoryMenu::ShowNotification();
+                CEMenu::ChangeText(text.c_str());
             }
         }
     }
 
     void GetItem()
     {
-        if (!RE::UI::GetSingleton())
-        {
+        RE::GFxValue Menu_mc = CEMenu::GetMenu_mc();
+        if (Menu_mc.IsNull())
             return;
-        }
 
-        auto inventoryMenu = RE::UI::GetSingleton()->GetMenu<RE::InventoryMenu>();
-        if (!inventoryMenu)
-        {
-            return;
-        }
-
-        RE::GFxMovieView *view = inventoryMenu->uiMovie.get();
-        if (!view)
-        {
-            return;
-        }
-
+        RE::GFxValue inventoryLists;
         RE::GFxValue itemList;
-        if (!view->GetVariable(&itemList, "_root.Menu_mc.inventoryLists.itemList"))
-        {
-            return;
-        }
-
         RE::GFxValue selectedEntry;
-        if (!itemList.GetMember("selectedEntry", &selectedEntry))
-        {
-            return;
-        }
-
         RE::GFxValue formId;
-        if (!selectedEntry.GetMember("formId", &formId))
-        {
+        if (!Menu_mc.GetMember("inventoryLists", &inventoryLists) ||
+            !inventoryLists.GetMember("itemList", &itemList) ||
+            !itemList.GetMember("selectedEntry", &selectedEntry) ||
+            !selectedEntry.IsObject() ||
+            !selectedEntry.GetMember("formId", &formId))
             return;
-        }
 
         InventoryMenu::GetEquippedInSlots(static_cast<RE::FormID>(formId.GetUInt()));
     }
@@ -150,18 +284,58 @@ namespace Events
                         {
                             return RE::BSEventNotifyControl::kContinue;
                         }
-                        if (btn->GetIDCode() == 47)
+                        if (btn->GetIDCode() == 47) // value for 'V' key
+                        {
                             InventoryMenu::GetItem();
-                        if (btn->GetIDCode() == 48)
-                            InventoryMenu::ShowNotification();
+                        }
+                        if (btn->GetIDCode() == TOGGLE_KEY) // value for 'B' key
+                        {
+                            SKSE::GetTaskInterface()->AddTask([]()
+                                                              { CEMenu::ToggleMenu(); });
+                        }
                     }
                 }
+                return RE::BSEventNotifyControl::kContinue;
             }
             return RE::BSEventNotifyControl::kContinue;
         }
         static InputEvent *GetSingleton()
         {
             static InputEvent singleton;
+            return &singleton;
+        }
+    };
+
+    class UIEvent : public RE::BSTEventSink<RE::MenuOpenCloseEvent>
+    {
+    public:
+        virtual RE::BSEventNotifyControl ProcessEvent(
+            const RE::MenuOpenCloseEvent *a_event,
+            RE::BSTEventSource<RE::MenuOpenCloseEvent> *) override
+        {
+            if (!a_event)
+            {
+                return RE::BSEventNotifyControl::kContinue;
+            }
+            auto menuName = a_event->menuName;
+            if (menuName == RE::InventoryMenu::MENU_NAME)
+            {
+                if (a_event->opening)
+                {
+                    logger::debug("Inventory Menu opened");
+                    CEMenu::CreateMenu();
+                }
+                else
+                {
+                    logger::debug("Inventory Menu closed");
+                    CEMenu::DestroyMenu();
+                }
+            }
+            return RE::BSEventNotifyControl::kContinue;
+        }
+        static UIEvent *GetSingleton()
+        {
+            static UIEvent singleton;
             return &singleton;
         }
     };
@@ -183,12 +357,12 @@ namespace
         spdlog::flush_on(spdlog::level::trace);
     }
 
-    void
-    OnPostLoadGame()
+    void OnPostLoadGame()
     {
-        logger::info("Creating Event Sink");
+        logger::info("Creating Event Sinks");
         RE::BSInputDeviceManager::GetSingleton()->AddEventSink(Events::InputEvent::GetSingleton());
-        logger::info("Created Event Sink");
+        RE::UI::GetSingleton()->AddEventSink(Events::UIEvent::GetSingleton());
+        logger::info("Created Event Sinks");
     }
 
     void MessageHandler(SKSE::MessagingInterface::Message *msg)
@@ -205,15 +379,13 @@ namespace
         SKSE::Init(skse);
 
         SetupLog();
-        spdlog::set_level(spdlog::level::info);
+        spdlog::set_level(spdlog::level::debug);
 
         logger::info("Compare Equipment NG Plugin Starting");
 
         auto *messaging = SKSE::GetMessagingInterface();
         messaging->RegisterListener("SKSE", MessageHandler);
-
         logger::info("Compare Equipment NG Plugin Loaded");
-
         return true;
     }
 }
