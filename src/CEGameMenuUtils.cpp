@@ -56,7 +56,27 @@ namespace CEGameMenuUtils
         std::string description = static_cast<std::string>(str) + "\n";
         if (description.size() > 3)
             text = cleanPercentage(description);
+        if (text == "")
+            text = "None";
         return text;
+    }
+
+    std::string GetArmorSlotsString(RE::TESObjectARMO *armor, std::string slotsString)
+    {
+        auto biped = armor->bipedModelData.bipedObjectSlots.get();
+        uint32_t bipedUint = static_cast<uint32_t>(biped);
+        for (uint32_t slot = 30; slot <= 61; ++slot)
+        {
+            uint32_t mask = 1u << (slot - 30);
+            if ((bipedUint & mask) != 0)
+            {
+                if (slotsString == "")
+                    slotsString += std::to_string(slot);
+                else
+                    slotsString += ", " + std::to_string(slot);
+            }
+        }
+        return slotsString;
     }
 
     void GetEquippedInSlots(RE::FormID selectedFormId)
@@ -79,50 +99,51 @@ namespace CEGameMenuUtils
 
                 using Slot = RE::BGSBipedObjectForm::BipedObjectSlot;
 
-                std::vector<std::pair<Slot, const char *>> slotList = {
-                    {Slot::kAmulet, "Amulet"},
-                    {Slot::kBody, "Body"},
-                    {Slot::kCalves, "Calves"},
-                    {Slot::kCirclet, "Circlet"},
-                    {Slot::kDecapitate, "Decapitate"},
-                    {Slot::kDecapitateHead, "DecapitateHead"},
-                    {Slot::kEars, "Ears"},
-                    {Slot::kFeet, "Feet"},
-                    {Slot::kForearms, "Forearms"},
-                    {Slot::kFX01, "FX01"},
-                    {Slot::kHair, "Hair"},
-                    {Slot::kHands, "Hands"},
-                    {Slot::kHead, "Head"},
-                    {Slot::kLongHair, "LongHair"},
-                    {Slot::kModArmLeft, "ModArmLeft"},
-                    {Slot::kModArmRight, "ModArmRight"},
-                    {Slot::kModBack, "ModBack"},
-                    {Slot::kModChestPrimary, "ModChestPrimary"},
-                    {Slot::kModChestSecondary, "ModChestSecondary"},
-                    {Slot::kModFaceJewelry, "FaceJewelry"},
-                    {Slot::kModLegLeft, "ModLegLeft"},
-                    {Slot::kModLegRight, "ModLefRight"},
-                    {Slot::kModMisc1, "ModMisc1"},
-                    {Slot::kModMisc2, "ModMisc2"},
-                    {Slot::kModMouth, "ModMouth"},
-                    {Slot::kModNeck, "ModNeck"},
-                    {Slot::kModPelvisPrimary, "ModPelvisPrimary"},
-                    {Slot::kModPelvisSecondary, "ModPelvisSecondary"},
-                    {Slot::kModShoulder, "ModShoulder"},
-                    {Slot::kNone, "None"},
-                    {Slot::kRing, "Ring"},
-                    {Slot::kShield, "Shield"},
-                    {Slot::kTail, "Tail"},
+                std::vector<Slot> slotList = {
+                    Slot::kAmulet,
+                    Slot::kBody,
+                    Slot::kCalves,
+                    Slot::kCirclet,
+                    Slot::kDecapitate,
+                    Slot::kDecapitateHead,
+                    Slot::kEars,
+                    Slot::kFeet,
+                    Slot::kForearms,
+                    Slot::kFX01,
+                    Slot::kHair,
+                    Slot::kHands,
+                    Slot::kHead,
+                    Slot::kLongHair,
+                    Slot::kModArmLeft,
+                    Slot::kModArmRight,
+                    Slot::kModBack,
+                    Slot::kModChestPrimary,
+                    Slot::kModChestSecondary,
+                    Slot::kModFaceJewelry,
+                    Slot::kModLegLeft,
+                    Slot::kModLegRight,
+                    Slot::kModMisc1,
+                    Slot::kModMisc2,
+                    Slot::kModMouth,
+                    Slot::kModNeck,
+                    Slot::kModPelvisPrimary,
+                    Slot::kModPelvisSecondary,
+                    Slot::kModShoulder,
+                    Slot::kNone,
+                    Slot::kRing,
+                    Slot::kShield,
+                    Slot::kTail,
                 };
                 const auto &inv = actor->GetInventory();
                 auto selectedName = armor->GetName();
+                std::string selectedSlots = "";
+                selectedSlots += GetArmorSlotsString(armor, selectedSlots);
                 const char *selectedType = GetArmorTypeString(armor->GetArmorType());
                 auto selectedValue = armor->GetGoldValue();
                 auto selectedEnchantment = armor->formEnchanting;
-                std::string selectedEnchantmentInfo = "None";
+                std::string selectedEnchantmentInfo = "";
                 if (selectedEnchantment)
                 {
-                    selectedEnchantmentInfo = "";
                     auto effects = selectedEnchantment->effects;
                     for (auto effect : effects)
                     {
@@ -150,8 +171,12 @@ namespace CEGameMenuUtils
 
                 std::vector<std::array<RE::GFxValue, CEGlobals::EQUIPPED_ITEM_ARRAY_SIZE>> item_arr;
                 std::vector<RE::FormID> pushedFormIds;
-
-                for (auto &[slot, name] : slotList)
+                const char *equippedName;
+                std::string equippedSlots;
+                std::string equippedEnchantmentInfo;
+                const char *equippedType;
+                int32_t equippedValue;
+                for (auto slot : slotList)
                 {
                     if ((slots & slot) != Slot::kNone)
                     {
@@ -163,24 +188,25 @@ namespace CEGameMenuUtils
                             if (selectedFormId != formId && !alreadyPushed)
                             {
                                 pushedFormIds.push_back(formId);
-                                auto equippedName = equipped->GetName();
-                                auto equippedType = GetArmorTypeString(equipped->GetArmorType());
-                                auto equippedValue = equipped->GetGoldValue();
+                                equippedName = equipped->GetName();
+                                equippedSlots = "";
+                                equippedSlots += GetArmorSlotsString(equipped, equippedSlots);
+                                equippedType = GetArmorTypeString(equipped->GetArmorType());
+                                equippedValue = equipped->GetGoldValue();
                                 auto equippedEnchantment = equipped->formEnchanting;
-                                std::string equippedEnchantmentInfo = "None";
+                                equippedEnchantmentInfo = "";
                                 if (equippedEnchantment)
                                 {
-                                    equippedEnchantmentInfo = "";
                                     auto effects = equippedEnchantment->effects;
                                     for (auto effect : effects)
                                     {
                                         auto magnitude = effect->GetMagnitude();
                                         std::string description = static_cast<std::string>(effect->baseEffect->magicItemDescription);
-                                        selectedEnchantmentInfo += GetEnchantmentString(equipped, description, magnitude);
+                                        equippedEnchantmentInfo += GetEnchantmentString(equipped, description, magnitude);
                                     }
                                 }
                                 else
-                                    selectedEnchantmentInfo = GetArmorDescription(armor, selectedEnchantmentInfo);
+                                    equippedEnchantmentInfo += GetArmorDescription(equipped, equippedEnchantmentInfo);
 
                                 equippedAccumulateValue += equippedValue;
                                 float equippedRating = 0.0f;
@@ -195,29 +221,29 @@ namespace CEGameMenuUtils
                                     }
                                 }
                                 equippedAccumulatedRating += equippedRating;
-
                                 std::array<RE::GFxValue, CEGlobals::EQUIPPED_ITEM_ARRAY_SIZE>
-                                    itemInfo = {equippedName, "SlotsTBD", equippedType,
-                                                equippedRating, equippedValue, equippedEnchantmentInfo.c_str()};
+                                    itemInfo = {RE::GFxValue(equippedName), RE::GFxValue(equippedSlots.c_str()), RE::GFxValue(equippedType),
+                                                RE::GFxValue(equippedRating), RE::GFxValue(equippedValue), RE::GFxValue(equippedEnchantmentInfo.c_str())};
                                 item_arr.push_back(itemInfo);
                             }
                         }
                     }
                 }
-                if (equippedAccumulatedRating > 0.0f)
+                if (item_arr.size() > 0)
+                {
                     equippedAccumulatedRating = selectedRating - equippedAccumulatedRating;
-                if (equippedAccumulateValue > 0)
                     equippedAccumulateValue = selectedValue - equippedAccumulateValue;
+                }
                 std::array<RE::GFxValue, CEGlobals::SELECTED_ITEM_ARRAY_SIZE>
-                    selectedItemInfo = {selectedName, "SlotsTBD", selectedType,
-                                        selectedRating, equippedAccumulatedRating,
-                                        selectedValue, equippedAccumulateValue,
-                                        selectedEnchantmentInfo.c_str()};
+                    selectedItemInfo = {RE::GFxValue(selectedName), RE::GFxValue(selectedSlots.c_str()), RE::GFxValue(selectedType),
+                                        RE::GFxValue(selectedRating), RE::GFxValue(equippedAccumulatedRating),
+                                        RE::GFxValue(selectedValue), RE::GFxValue(equippedAccumulateValue),
+                                        RE::GFxValue(selectedEnchantmentInfo.c_str())};
                 CEMenu::ResetMenu();
                 CEMenu::SetActor(actor->GetName());
                 CEMenu::CreateSelectedItemCard(selectedItemInfo);
                 CEMenu::CreateComparisonItemCards(item_arr);
-                CEMenu::ShowMenu();
+                CEMenu::ShowMenuInstant();
             }
         }
     }
