@@ -93,11 +93,12 @@ namespace CEMenu
     auto MENU_NAME = temp.c_str();
     // constexpr auto MENU_NAME = "CompareEquipmentMenu";
     static constexpr std::string_view SWF_PATH{"CompareEquipment.swf"};
+    auto openedMenuName = RE::InventoryMenu::MENU_NAME;
 
     RE::GFxValue GetMenu_mc()
     {
         auto UISingleton = RE::UI::GetSingleton();
-        auto inventoryMenu = UISingleton ? UISingleton->GetMenu<RE::InventoryMenu>() : nullptr;
+        auto inventoryMenu = UISingleton ? UISingleton->GetMenu(openedMenuName) : nullptr;
         RE::GFxMovieView *view = inventoryMenu ? inventoryMenu->uiMovie.get() : nullptr;
         RE::GFxValue Menu_mc;
 
@@ -136,7 +137,6 @@ namespace CEMenu
         if (ceMenu.IsNull())
             return;
         ceMenu.Invoke("showMenu");
-        logger::debug("showMenu called");
     }
 
     void HideMenu()
@@ -147,7 +147,6 @@ namespace CEMenu
         if (ceMenu.IsNull())
             return;
         ceMenu.Invoke("hideMenu");
-        logger::debug("hideMenu called");
     }
 
     void ToggleMenu()
@@ -213,8 +212,9 @@ namespace CEMenu
 
         logger::debug("Removed {}", MENU_NAME);
     }
-    void CreateMenu()
+    void CreateMenu(std::string_view menuName)
     {
+        openedMenuName = menuName;
         logger::debug("Creating Menu");
         RE::GFxValue Menu_mc = GetMenu_mc();
         if (Menu_mc.IsNull())
@@ -264,6 +264,7 @@ namespace CEMenu
 namespace InventoryMenu
 {
     RE::FormID currentFormID;
+
     const char *GetArmorTypeString(RE::BGSBipedObjectForm::ArmorType type)
     {
         switch (type)
@@ -279,6 +280,21 @@ namespace InventoryMenu
         }
     }
 
+    std::string cleanPercentage(std::string str)
+    {
+        auto pos1 = str.find('<');
+        if (pos1 != std::string::npos)
+        {
+            str.erase(pos1, 1);
+        }
+        auto pos2 = str.find('>');
+        if (pos2 != std::string::npos)
+        {
+            str.erase(pos2, 1);
+        }
+        return str;
+    }
+
     std::string GetEnchantmentString(RE::TESObjectARMO *armor, std::string description, float magnitude)
     {
         auto index = description.find("<mag>");
@@ -288,10 +304,10 @@ namespace InventoryMenu
         {
             RE::BSString str;
             armor->GetDescription(str, nullptr);
-            return static_cast<std::string>(str) + "\n";
+            return cleanPercentage(static_cast<std::string>(str)) + "\n";
         }
         else
-            return description + "\n";
+            return cleanPercentage(description) + "\n";
     }
 
     std::string GetArmorDescription(RE::TESObjectARMO *armor, std::string text)
@@ -300,7 +316,7 @@ namespace InventoryMenu
         armor->GetDescription(str, nullptr);
         std::string description = static_cast<std::string>(str) + "\n";
         if (description.size() > 3)
-            text = description;
+            text = cleanPercentage(description);
         return text;
     }
 
@@ -394,6 +410,7 @@ namespace InventoryMenu
                 float equippedAccumulatedRating = 0.0f;
 
                 std::vector<std::array<RE::GFxValue, EQUIPPED_ITEM_ARRAY_SIZE>> item_arr;
+                std::vector<RE::FormID> pushedFormIds;
 
                 for (auto &[slot, name] : slotList)
                 {
@@ -403,8 +420,10 @@ namespace InventoryMenu
                         if (equipped)
                         {
                             auto formId = equipped->GetFormID();
-                            if (selectedFormId != formId)
+                            bool alreadyPushed = std::find(pushedFormIds.begin(), pushedFormIds.end(), formId) != pushedFormIds.end();
+                            if (selectedFormId != formId && !alreadyPushed)
                             {
+                                pushedFormIds.push_back(formId);
                                 auto equippedName = equipped->GetName();
                                 auto equippedType = GetArmorTypeString(equipped->GetArmorType());
                                 auto equippedValue = equipped->GetGoldValue();
@@ -464,12 +483,11 @@ namespace InventoryMenu
         }
     }
 
-    void GetItem()
+    bool GetItem()
     {
         RE::GFxValue Menu_mc = CEMenu::GetMenu_mc();
         if (Menu_mc.IsNull())
-            return;
-
+            return false;
         RE::GFxValue inventoryLists;
         RE::GFxValue itemList;
         RE::GFxValue selectedEntry;
@@ -479,14 +497,27 @@ namespace InventoryMenu
             !itemList.GetMember("selectedEntry", &selectedEntry) ||
             !selectedEntry.IsObject() ||
             !selectedEntry.GetMember("formId", &formId))
+            return false;
+        RE::FormID fid = static_cast<RE::FormID>(formId.GetUInt());
+        currentFormID = fid;
+        InventoryMenu::GetEquippedInSlots(fid);
+        return true;
+    }
+
+    void ActorChangedUpdateMenu()
+    {
+        if (!currentFormID)
+        {
             return;
-        InventoryMenu::GetEquippedInSlots(static_cast<RE::FormID>(formId.GetUInt()));
+        }
+        InventoryMenu::GetEquippedInSlots(currentFormID);
     }
 }
 
 namespace Events
 {
     std::chrono::steady_clock::time_point cycleButtonDownStart;
+    bool cycleButtonHit = false;
     class InputEvent : public RE::BSTEventSink<RE::InputEvent *>
     {
     public:
@@ -512,23 +543,31 @@ namespace Events
                         }
                         if (btn->GetIDCode() == CYCLE_KEY) // value for 'B' key
                         {
-                            if (!btn->IsUp())
+                            if (!btn->IsUp() and !cycleButtonHit)
                             {
+                                cycleButtonHit = true;
                                 cycleButtonDownStart = std::chrono::steady_clock::now();
                                 return RE::BSEventNotifyControl::kContinue;
                             }
-                            auto heldDuration = std::chrono::steady_clock::now() - cycleButtonDownStart;
-                            if (heldDuration >= HOLD_THRESHOLD)
+                            auto cycleButtonReleased = std::chrono::steady_clock::now();
+                            auto heldDuration = std::chrono::duration_cast<std::chrono::milliseconds>(cycleButtonReleased - cycleButtonDownStart).count();
+                            if (!btn->IsUp() && heldDuration < HOLD_THRESHOLD.count())
+                                return RE::BSEventNotifyControl::kContinue;
+                            if (btn->IsUp())
+                                cycleButtonHit = false;
+                            if (heldDuration >= HOLD_THRESHOLD.count())
                             {
                                 SKSE::GetTaskInterface()->AddTask([]()
                                                                   { ActorUtils::SetActorToPlayer(); 
-                                                                    InventoryMenu::GetItem(); });
+                                                                    if (!InventoryMenu::GetItem())
+                                                                        InventoryMenu::ActorChangedUpdateMenu(); });
                             }
                             else
                             {
                                 SKSE::GetTaskInterface()->AddTask([]()
                                                                   { ActorUtils::SetActorToNextFollower(); 
-                                                                    InventoryMenu::GetItem(); });
+                                                                    if (!InventoryMenu::GetItem())
+                                                                        InventoryMenu::ActorChangedUpdateMenu(); });
                             }
                         }
                     }
@@ -556,17 +595,20 @@ namespace Events
                 return RE::BSEventNotifyControl::kContinue;
             }
             auto menuName = a_event->menuName;
-            if (menuName == RE::InventoryMenu::MENU_NAME)
+            if ((menuName == RE::InventoryMenu::MENU_NAME || menuName == RE::ContainerMenu::MENU_NAME ||
+                 menuName == RE::BarterMenu::MENU_NAME || menuName == RE::GiftMenu::MENU_NAME))
             {
                 if (a_event->opening)
                 {
-                    logger::debug("Inventory Menu opened");
-                    CEMenu::CreateMenu();
+                    logger::debug("{} opened", menuName);
+                    CEMenu::CreateMenu(menuName);
+                    RE::BSInputDeviceManager::GetSingleton()->AddEventSink(Events::InputEvent::GetSingleton());
                 }
                 else
                 {
-                    logger::debug("Inventory Menu closed");
+                    logger::debug("{} closed", menuName);
                     CEMenu::DestroyMenu();
+                    RE::BSInputDeviceManager::GetSingleton()->RemoveEventSink(Events::InputEvent::GetSingleton());
                 }
             }
             return RE::BSEventNotifyControl::kContinue;
@@ -580,7 +622,7 @@ namespace Events
 
 }
 
-namespace
+namespace CompareEquipmentNG
 {
     void SetupLog()
     {
@@ -596,12 +638,24 @@ namespace
         spdlog::flush_on(spdlog::level::trace);
     }
 
+    void GetSettings()
+    {
+        /*double X_ORIGIN = 500.0f;
+double Y_ORIGIN = 300.0f;
+int BACKGROUND_ALPHA = 95;
+bool PERMANENT_OPEN = false; // TODO: this first
+bool DEFAULT_OPEN = false;   // TODO: Remove
+uint32_t COMPARE_KEY = 47;
+uint32_t CYCLE_KEY = 48;
+std::chrono::milliseconds HOLD_THRESHOLD(500);*/
+    }
+
     void OnPostLoadGame()
     {
-        logger::info("Creating Event Sinks");
-        RE::BSInputDeviceManager::GetSingleton()->AddEventSink(Events::InputEvent::GetSingleton());
+        logger::info("Creating Event Sink");
         RE::UI::GetSingleton()->AddEventSink(Events::UIEvent::GetSingleton());
-        logger::info("Created Event Sinks");
+        logger::info("Created Event Sink");
+        ActorUtils::SetActorToPlayer();
     }
 
     void MessageHandler(SKSE::MessagingInterface::Message *msg)
