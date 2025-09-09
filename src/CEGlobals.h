@@ -9,7 +9,8 @@ namespace CEGlobals
     extern uint32_t COMPARE_KEY;
     extern uint32_t CYCLE_KEY;
     extern std::chrono::milliseconds HOLD_THRESHOLD;
-    extern std::chrono::milliseconds TRIPLE_HIT_TIME;
+    extern std::chrono::milliseconds TRIPLE_HIT_WINDOW;
+    extern std::chrono::milliseconds GET_SETTINGS_THRESHOLD;
     extern int LOG_LEVEL;
 
     const int EQUIPPED_ITEM_ARRAY_SIZE = 6;
