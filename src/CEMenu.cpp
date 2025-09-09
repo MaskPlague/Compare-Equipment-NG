@@ -2,9 +2,7 @@ namespace logger = SKSE::log;
 
 namespace CEMenu
 {
-    std::string basename = "CompareEquipmentMenu_";
-    std::string temp = basename + std::to_string(CEGlobals::PERMANENT_OPEN);
-    const char *MENU_NAME = temp.c_str();
+    const char *MENU_NAME = "CompareEquipmentMenu";
     std::string_view SWF_PATH{"CompareEquipment.swf"};
     std::string_view openedMenuName = RE::InventoryMenu::MENU_NAME;
 
@@ -44,17 +42,23 @@ namespace CEMenu
         return false;
     }
 
-    void ShowMenu()
+    void ShowMenuInstant()
     {
-        std::thread([]()
-                    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
         if (IsMenuVisible())
             return;
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
         if (ceMenu.IsNull())
             return;
-        ceMenu.Invoke("showMenu"); })
+        logger::trace("Showing menu.");
+        ceMenu.Invoke("showMenu");
+    }
+
+    void ShowMenuDelayed()
+    {
+        std::thread([]()
+                    {   
+            std::this_thread::sleep_for(std::chrono::milliseconds(50)); 
+            ShowMenuInstant(); })
             .detach();
     }
 
@@ -66,6 +70,7 @@ namespace CEMenu
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
         if (ceMenu.IsNull())
             return;
+        logger::trace("Setting Background Alpha");
         RE::GFxValue args[1];
         args[0].SetNumber(CEGlobals::BACKGROUND_ALPHA);
         ceMenu.Invoke("setBackgroundAlpha", nullptr, args, 1); })
@@ -161,7 +166,7 @@ namespace CEMenu
         RE::GFxValue args[2];
         RE::GFxValue ceMenuMovieClip;
         args[0].SetString(MENU_NAME); // name
-        args[1] = 9999;               // depth
+        args[1] = 3999;               // depth
         if (!Menu_mc.Invoke("createEmptyMovieClip", &ceMenuMovieClip, args, 2))
             return;
 
