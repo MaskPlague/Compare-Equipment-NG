@@ -2,8 +2,6 @@
 
 namespace CEMenu
 {
-    extern std::string basename;
-    extern std::string temp;
     extern const char *MENU_NAME;
     extern std::string_view SWF_PATH;
     extern std::string_view openedMenuName;
@@ -12,7 +10,9 @@ namespace CEMenu
 
     RE::GFxValue GetCEMenu(RE::GFxValue Menu_mc);
 
-    void ShowMenu();
+    void ShowMenuInstant();
+
+    void ShowMenuDelayed();
 
     void CreateComparisonItemCards(std::vector<std::array<RE::GFxValue, CEGlobals::EQUIPPED_ITEM_ARRAY_SIZE>> item_arr);
 
