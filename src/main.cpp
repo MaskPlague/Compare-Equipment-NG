@@ -1,18 +1,99 @@
 namespace logger = SKSE::log;
 
+// TODO: Create INI
 double X_ORIGIN = 500.0f;
 double Y_ORIGIN = 300.0f;
-int BACKGROUND_ALPHA = 75;
-bool DEFAULT_OPEN = false;
-uint32_t TOGGLE_KEY = 48;
+int BACKGROUND_ALPHA = 95;
+bool PERMANENT_OPEN = false; // TODO: this first
+bool DEFAULT_OPEN = false;   // TODO: Remove
+uint32_t COMPARE_KEY = 47;
+uint32_t CYCLE_KEY = 48;
+std::chrono::milliseconds HOLD_THRESHOLD(500);
+
+const int EQUIPPED_ITEM_ARRAY_SIZE = 6;
+const int SELECTED_ITEM_ARRAY_SIZE = 8;
+
+namespace ActorUtils
+{
+    RE::Actor *currentActor;
+    int index = 0;
+    std::vector<RE::Actor *> followers;
+
+    void GetActiveFollowers()
+    {
+        std::vector<RE::Actor *> result;
+
+        auto processLists = RE::ProcessLists::GetSingleton();
+        if (!processLists)
+        {
+            followers = result;
+            return;
+        }
+        logger::debug("Got process lists");
+        auto faction = RE::TESForm::LookupByID<RE::TESFaction>(0x0005C84E); // CurrentFollowerFaction
+        if (!faction)
+        {
+            followers = result;
+            return;
+        }
+        logger::debug("Got faction");
+        for (auto &handle : processLists->highActorHandles)
+        {
+            if (auto actor = handle.get().get())
+            {
+                if (actor->IsInFaction(faction))
+                {
+                    result.push_back(actor);
+                }
+            }
+        }
+        followers = result;
+        return;
+    }
+
+    void SetActorToPlayer()
+    {
+        currentActor = RE::PlayerCharacter::GetSingleton();
+    }
+
+    bool IsActorValid(RE::Actor *actor)
+    {
+        if (!actor->Is3DLoaded() || actor->IsDead() || actor->IsDeleted() || actor->IsDisabled())
+        {
+            return false;
+        }
+        return true;
+    }
+
+    void SetActorToNextFollower()
+    {
+        if (followers.size() == 0)
+        {
+            SetActorToPlayer();
+            return;
+        }
+        if (index >= followers.size())
+            index = 0;
+        RE::Actor *potentialActor = followers.at(index);
+        if (!IsActorValid(potentialActor))
+        {
+            followers.erase(followers.begin() + index);
+            SetActorToNextFollower();
+            return;
+        }
+        currentActor = potentialActor;
+        index++;
+    }
+}
+
 namespace CEMenu
 {
     std::string basename = "CompareEquipmentMenu_";
-    auto temp = basename + std::to_string(BACKGROUND_ALPHA) + "_" + (DEFAULT_OPEN ? "1" : "0");
+    auto temp = basename + std::to_string(BACKGROUND_ALPHA) + "_" + std::to_string(DEFAULT_OPEN);
     auto MENU_NAME = temp.c_str();
     // constexpr auto MENU_NAME = "CompareEquipmentMenu";
     static constexpr std::string_view SWF_PATH{"CompareEquipment.swf"};
-    bool displayed = true;
+
     RE::GFxValue GetMenu_mc()
     {
         auto UISingleton = RE::UI::GetSingleton();
@@ -36,147 +117,210 @@ namespace CEMenu
         return ceMenu;
     }
 
+    bool IsMenuVisible()
+    {
+        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
+        if (ceMenu.IsNull())
+            return false;
+        RE::GFxValue result;
+        ceMenu.Invoke("getVisible", &result);
+        if (result.IsBool())
+            return result.GetBool();
+        return false;
+    }
     void ShowMenu()
     {
+        if (IsMenuVisible())
+            return;
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
         if (ceMenu.IsNull())
             return;
         ceMenu.Invoke("showMenu");
-        displayed = true;
         logger::debug("showMenu called");
     }
 
     void HideMenu()
     {
+        if (!IsMenuVisible())
+            return;
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
         if (ceMenu.IsNull())
             return;
         ceMenu.Invoke("hideMenu");
-        displayed = false;
         logger::debug("hideMenu called");
     }
 
     void ToggleMenu()
     {
-        if (!displayed)
-        {
-            ShowMenu();
-        }
-        else
-        {
+        if (IsMenuVisible())
             HideMenu();
+        else
+            ShowMenu();
+    }
+
+    void CreateComparisonItemCards(std::vector<std::array<RE::GFxValue, EQUIPPED_ITEM_ARRAY_SIZE>> item_arr)
+    {
+        auto manager = RE::Inventory3DManager::GetSingleton();
+        if (manager)
+            manager->Clear3D();
+        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
+        if (ceMenu.IsNull())
+            return;
+        RE::GFxValue count[1];
+        count[0].SetNumber(static_cast<double>(item_arr.size()));
+        ceMenu.Invoke("setItemCardCount", nullptr, count, 1);
+        for (auto itemInfo : item_arr)
+        {
+            ceMenu.Invoke("createComparisonItemCard", nullptr, itemInfo);
         }
     }
 
-    void ChangeText(std::string_view text)
+    void ResetMenu()
+    {
+        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
+        if (ceMenu.IsNull())
+            return;
+        ceMenu.Invoke("reset");
+    }
+
+    void SetActor(std::string actorName)
     {
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
         if (ceMenu.IsNull())
             return;
         RE::GFxValue args[1];
-        args[0].SetString(text);
-        ceMenu.Invoke("set_text", nullptr, args, 1);
+        args[0].SetString(actorName);
+        ceMenu.Invoke("setActor", nullptr, args, 1);
+    }
+
+    void CreateSelectedItemCard(std::array<RE::GFxValue, SELECTED_ITEM_ARRAY_SIZE> itemInfo)
+    {
+        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
+        if (ceMenu.IsNull())
+            return;
+        ceMenu.Invoke("populateSelectedItemCard", nullptr, itemInfo);
     }
 
     void DestroyMenu()
     {
-        logger::debug("        Destroying Menu");
+        logger::debug("Destroying Menu");
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
         if (ceMenu.IsNull())
-        {
-            logger::debug("Failed to get {}", MENU_NAME);
             return;
-        }
 
         if (!ceMenu.Invoke("removeMovieClip"))
-        {
-            logger::debug("Failed to remove {}", MENU_NAME);
             return;
-        }
+
         logger::debug("Removed {}", MENU_NAME);
     }
     void CreateMenu()
     {
-        logger::debug("          Creating Menu");
+        logger::debug("Creating Menu");
         RE::GFxValue Menu_mc = GetMenu_mc();
         if (Menu_mc.IsNull())
-        {
-            logger::debug("Failed to get Menu_mc");
             return;
-        }
+
         RE::GFxValue _ceMenu = GetCEMenu(Menu_mc);
         if (!_ceMenu.IsNull())
-        {
-            logger::debug("{} already created", MENU_NAME);
             return;
-        }
+
         RE::GFxValue args[2];
         RE::GFxValue ceMenuMovieClip;
         args[0].SetString(MENU_NAME); // name
-        args[1] = 3999;               // depth
+        args[1] = 9999;               // depth
         if (!Menu_mc.Invoke("createEmptyMovieClip", &ceMenuMovieClip, args, 2))
-        {
-            logger::debug("failed to create {} movie clip via invoke", MENU_NAME);
             return;
-        }
+
         logger::debug("Created {} movie clip via invoke", MENU_NAME);
 
         RE::GFxValue ceMenu = GetCEMenu(Menu_mc);
         if (ceMenu.IsNull())
-        {
-            logger::debug("Failed to get {}", MENU_NAME);
             return;
-        }
+
         logger::debug("Got {}", MENU_NAME);
 
         RE::GFxValue result2;
         RE::GFxValue args2[1];
         args2[0].SetString(SWF_PATH); // name
         if (!ceMenu.Invoke("loadMovie", &result2, args2, 1))
-        {
-            logger::debug("Failed to load {} via invoke", args2[0].GetString());
             return;
-        }
+
         logger::debug("Loaded {} via invoke", args2[0].GetString());
 
         RE::GFxValue xNumber;
         xNumber.SetNumber(X_ORIGIN);
         if (!ceMenu.SetMember("_x", xNumber))
-        {
-            logger::debug("Failed to set _x");
             return;
-        }
+
         RE::GFxValue yNumber;
         yNumber.SetNumber(Y_ORIGIN);
         if (!ceMenu.SetMember("_y", yNumber))
-        {
-            logger::debug("Failed to set _y");
             return;
-        }
-        if (!DEFAULT_OPEN)
-        {
-            displayed = false;
-        }
+
+        ActorUtils::GetActiveFollowers();
     }
 }
 
 namespace InventoryMenu
 {
-    static std::string s_text;
-
-    void GetEquippedInSlots(RE::FormID formId)
+    RE::FormID currentFormID;
+    const char *GetArmorTypeString(RE::BGSBipedObjectForm::ArmorType type)
     {
-        if (auto form = RE::TESForm::LookupByID(formId))
+        switch (type)
+        {
+        case RE::BGSBipedObjectForm::ArmorType::kClothing:
+            return "Cloth";
+        case RE::BGSBipedObjectForm::ArmorType::kHeavyArmor:
+            return "Heavy";
+        case RE::BGSBipedObjectForm::ArmorType::kLightArmor:
+            return "Light";
+        default:
+            return "Unknown";
+        }
+    }
+
+    std::string GetEnchantmentString(RE::TESObjectARMO *armor, std::string description, float magnitude)
+    {
+        auto index = description.find("<mag>");
+        if (index != std::string::npos)
+            return description.substr(0, index) + std::format("{:.1f}", magnitude) + description.substr(index + 5) + "\n";
+        else if (description == "")
+        {
+            RE::BSString str;
+            armor->GetDescription(str, nullptr);
+            return static_cast<std::string>(str) + "\n";
+        }
+        else
+            return description + "\n";
+    }
+
+    std::string GetArmorDescription(RE::TESObjectARMO *armor, std::string text)
+    {
+        RE::BSString str;
+        armor->GetDescription(str, nullptr);
+        std::string description = static_cast<std::string>(str) + "\n";
+        if (description.size() > 3)
+            text = description;
+        return text;
+    }
+
+    void GetEquippedInSlots(RE::FormID selectedFormId)
+    {
+        if (auto form = RE::TESForm::LookupByID(selectedFormId))
         {
             if (auto armor = form->As<RE::TESObjectARMO>())
             {
                 auto biped = armor->bipedModelData;
                 auto slots = biped.bipedObjectSlots;
-                auto player = RE::PlayerCharacter::GetSingleton();
-                if (!player)
+                auto actor = ActorUtils::currentActor;
+                if (!actor)
                 {
+                    ActorUtils::SetActorToNextFollower();
                     return;
                 }
+                auto player = RE::PlayerCharacter::GetSingleton();
+                if (!actor)
+                    return;
 
                 using Slot = RE::BGSBipedObjectForm::BipedObjectSlot;
 
@@ -215,26 +359,107 @@ namespace InventoryMenu
                     {Slot::kShield, "Shield"},
                     {Slot::kTail, "Tail"},
                 };
-                std::string text = std::string(armor->GetName()) + " would replace slots:";
+                const auto &inv = actor->GetInventory();
+                auto selectedName = armor->GetName();
+                auto selectedType = GetArmorTypeString(armor->GetArmorType());
+                auto selectedValue = armor->GetGoldValue();
+                auto selectedEnchantment = armor->formEnchanting;
+                std::string selectedEnchantmentInfo = "None";
+                if (selectedEnchantment)
+                {
+                    selectedEnchantmentInfo = "";
+                    auto effects = selectedEnchantment->effects;
+                    for (auto effect : effects)
+                    {
+                        float magnitude = effect->GetMagnitude();
+                        std::string description = static_cast<std::string>(effect->baseEffect->magicItemDescription);
+                        selectedEnchantmentInfo += GetEnchantmentString(armor, description, magnitude);
+                    }
+                }
+                else
+                    selectedEnchantmentInfo = GetArmorDescription(armor, selectedEnchantmentInfo);
+
+                int32_t equippedAccumulateValue = 0;
+                float selectedRating = 0.0f;
+                RE::InventoryEntryData *selectedEntryData;
+                for (auto &[item, data] : inv)
+                {
+                    if (item && item->GetFormID() == selectedFormId)
+                    {
+                        selectedEntryData = data.second.get();
+                        selectedRating = player->GetArmorValue(selectedEntryData);
+                        break;
+                    }
+                }
+                float equippedAccumulatedRating = 0.0f;
+
+                std::vector<std::array<RE::GFxValue, EQUIPPED_ITEM_ARRAY_SIZE>> item_arr;
+
                 for (auto &[slot, name] : slotList)
                 {
                     if ((slots & slot) != Slot::kNone)
                     {
-                        auto equipped = player->GetWornArmor(slot);
+                        auto equipped = actor->GetWornArmor(slot);
                         if (equipped)
                         {
-                            logger::debug("Hovered item would use {} slot, currently equipped: {}", name, equipped->GetName());
+                            auto formId = equipped->GetFormID();
+                            if (selectedFormId != formId)
+                            {
+                                auto equippedName = equipped->GetName();
+                                auto equippedType = GetArmorTypeString(equipped->GetArmorType());
+                                auto equippedValue = equipped->GetGoldValue();
+                                auto equippedEnchantment = equipped->formEnchanting;
+                                std::string equippedEnchantmentInfo = "None";
+                                if (equippedEnchantment)
+                                {
+                                    equippedEnchantmentInfo = "";
+                                    auto effects = equippedEnchantment->effects;
+                                    for (auto effect : effects)
+                                    {
+                                        auto magnitude = effect->GetMagnitude();
+                                        std::string description = static_cast<std::string>(effect->baseEffect->magicItemDescription);
+                                        selectedEnchantmentInfo += GetEnchantmentString(equipped, description, magnitude);
+                                    }
+                                }
+                                else
+                                    selectedEnchantmentInfo = GetArmorDescription(armor, selectedEnchantmentInfo);
+
+                                equippedAccumulateValue += equippedValue;
+                                float equippedRating = 0.0f;
+                                RE::InventoryEntryData *equippedEntryData;
+                                for (auto &[item, data] : inv)
+                                {
+                                    if (item && item->GetFormID() == formId)
+                                    {
+                                        equippedEntryData = data.second.get();
+                                        equippedRating = player->GetArmorValue(equippedEntryData);
+                                        break;
+                                    }
+                                }
+                                equippedAccumulatedRating += equippedRating;
+
+                                std::array<RE::GFxValue, EQUIPPED_ITEM_ARRAY_SIZE>
+                                    itemInfo = {equippedName, "SlotsTBD", equippedType,
+                                                equippedRating, equippedValue, equippedEnchantmentInfo.c_str()};
+                                item_arr.push_back(itemInfo);
+                            }
                         }
-                        else
-                        {
-                            logger::debug("Hovered item would use {} slot, nothing equipped", name);
-                        }
-                        text += "\n   " + std::string(name) + " -> ";
-                        text += equipped ? equipped->GetName() : "(empty)";
                     }
                 }
-                s_text = text;
-                CEMenu::ChangeText(text.c_str());
+                if (equippedAccumulatedRating > 0.0f)
+                    equippedAccumulatedRating = selectedRating - equippedAccumulatedRating;
+                if (equippedAccumulateValue > 0)
+                    equippedAccumulateValue = selectedValue - equippedAccumulateValue;
+                std::array<RE::GFxValue, SELECTED_ITEM_ARRAY_SIZE>
+                    selectedItemInfo = {selectedName, "SlotsTBD", selectedType,
+                                        selectedRating, equippedAccumulatedRating,
+                                        selectedValue, equippedAccumulateValue,
+                                        selectedEnchantmentInfo.c_str()};
+                CEMenu::ResetMenu();
+                CEMenu::SetActor(actor->GetName());
+                CEMenu::CreateSelectedItemCard(selectedItemInfo);
+                CEMenu::CreateComparisonItemCards(item_arr);
+                CEMenu::ShowMenu();
             }
         }
     }
@@ -255,13 +480,13 @@ namespace InventoryMenu
             !selectedEntry.IsObject() ||
             !selectedEntry.GetMember("formId", &formId))
             return;
-
         InventoryMenu::GetEquippedInSlots(static_cast<RE::FormID>(formId.GetUInt()));
     }
 }
 
 namespace Events
 {
+    std::chrono::steady_clock::time_point cycleButtonDownStart;
     class InputEvent : public RE::BSTEventSink<RE::InputEvent *>
     {
     public:
@@ -280,18 +505,31 @@ namespace Events
                 {
                     if (auto btn = e->AsButtonEvent(); btn)
                     {
-                        if (!btn->IsUp())
-                        {
-                            return RE::BSEventNotifyControl::kContinue;
-                        }
-                        if (btn->GetIDCode() == 47) // value for 'V' key
-                        {
-                            InventoryMenu::GetItem();
-                        }
-                        if (btn->GetIDCode() == TOGGLE_KEY) // value for 'B' key
+                        if (btn->GetIDCode() == COMPARE_KEY && !btn->IsUp()) // value for 'V' key
                         {
                             SKSE::GetTaskInterface()->AddTask([]()
-                                                              { CEMenu::ToggleMenu(); });
+                                                              { InventoryMenu::GetItem(); });
+                        }
+                        if (btn->GetIDCode() == CYCLE_KEY) // value for 'B' key
+                        {
+                            if (!btn->IsUp())
+                            {
+                                cycleButtonDownStart = std::chrono::steady_clock::now();
+                                return RE::BSEventNotifyControl::kContinue;
+                            }
+                            auto heldDuration = std::chrono::steady_clock::now() - cycleButtonDownStart;
+                            if (heldDuration >= HOLD_THRESHOLD)
+                            {
+                                SKSE::GetTaskInterface()->AddTask([]()
+                                                                  { ActorUtils::SetActorToPlayer(); 
+                                                                    InventoryMenu::GetItem(); });
+                            }
+                            else
+                            {
+                                SKSE::GetTaskInterface()->AddTask([]()
+                                                                  { ActorUtils::SetActorToNextFollower(); 
+                                                                    InventoryMenu::GetItem(); });
+                            }
                         }
                     }
                 }
@@ -339,6 +577,7 @@ namespace Events
             return &singleton;
         }
     };
+
 }
 
 namespace
