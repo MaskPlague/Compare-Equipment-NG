@@ -16,6 +16,31 @@ namespace CompareEquipmentNG
         spdlog::flush_on(spdlog::level::trace);
     }
 
+    void SetLogLevel()
+    {
+        switch (CEGlobals::LOG_LEVEL)
+        {
+        case 0:
+            spdlog::set_level(spdlog::level::err);
+            break;
+        case 1:
+            spdlog::set_level(spdlog::level::warn);
+            break;
+        case 2:
+            spdlog::set_level(spdlog::level::info);
+            break;
+        case 3:
+            spdlog::set_level(spdlog::level::debug);
+            break;
+        case 4:
+            spdlog::set_level(spdlog::level::trace);
+            break;
+        default:
+            CEGlobals::LOG_LEVEL = 2;
+            spdlog::set_level(spdlog::level::info);
+        }
+    }
+
     void OnPostLoadGame()
     {
         logger::debug("Creating Event Sink");
@@ -40,6 +65,7 @@ namespace CompareEquipmentNG
 
         SetupLog();
         CEGlobals::LoadConfig();
+        SetLogLevel();
 
         logger::info("Compare Equipment NG Plugin Starting");
         auto *messaging = SKSE::GetMessagingInterface();
