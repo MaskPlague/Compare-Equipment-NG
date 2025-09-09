@@ -106,8 +106,9 @@ namespace CEMenu
         RE::GFxValue count[1];
         count[0].SetNumber(static_cast<double>(item_arr.size()));
         ceMenu.Invoke("setItemCardCount", nullptr, count, 1);
-        for (auto itemInfo : item_arr)
+        for (std::array<RE::GFxValue, CEGlobals::EQUIPPED_ITEM_ARRAY_SIZE> itemInfo : item_arr)
         {
+            logger::info("itemInfo[5]: {}", itemInfo.at(5).GetString());
             ceMenu.Invoke("createComparisonItemCard", nullptr, itemInfo);
         }
     }
