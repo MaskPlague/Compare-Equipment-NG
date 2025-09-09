@@ -36,7 +36,12 @@ add_compile_definitions(-D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
 
 # Setup your SKSE plugin as an SKSE plugin!
 find_package(CommonLibSSE CONFIG REQUIRED)
-add_commonlibsse_plugin(${PROJECT_NAME} SOURCES src/main.cpp)
+add_commonlibsse_plugin(${PROJECT_NAME} SOURCES src/CEGlobals.cpp
+                                                src/main.cpp 
+                                                src/CEActorUtils.cpp 
+                                                src/CEMenu.cpp
+                                                src/CEGameMenuUtils.cpp
+                                                src/CEGameEvents.cpp)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23) # <--- use C++23 standard
 target_precompile_headers(${PROJECT_NAME} PRIVATE src/pch.h)
 
