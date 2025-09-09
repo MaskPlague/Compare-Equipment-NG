@@ -4,6 +4,7 @@
 #include "SKSE/SKSE.h"
 #include <spdlog/sinks/basic_file_sink.h>
 #include <windows.h>
+#include "SimpleIni.h"
 
 #define DLLEXPORT __declspec(dllexport)
 
