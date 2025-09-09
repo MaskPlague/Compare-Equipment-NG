@@ -224,7 +224,6 @@ namespace CEGameMenuUtils
 
     bool GetItem()
     {
-        logger::trace("");
         RE::GFxValue Menu_mc = CEMenu::GetMenu_mc();
         if (Menu_mc.IsNull())
             return false;
