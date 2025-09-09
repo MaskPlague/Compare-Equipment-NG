@@ -1,10 +1,6 @@
 #pragma once
 namespace CEGameEvents
 {
-    extern std::chrono::steady_clock::time_point cycleButtonDownStart;
-    extern std::chrono::steady_clock::time_point cycleButtonLastHit;
-    extern bool cycleButtonHit;
-
     extern class InputEvent : public RE::BSTEventSink<RE::InputEvent *>
     {
     public:

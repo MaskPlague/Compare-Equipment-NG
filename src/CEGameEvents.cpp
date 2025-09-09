@@ -3,15 +3,14 @@ namespace logger = SKSE::log;
 namespace CEGameEvents
 {
     std::chrono::steady_clock::time_point cycleButtonDownStart;
+    std::chrono::steady_clock::time_point cycleButtonDownForSettingsStart;
     std::chrono::steady_clock::time_point cycleButtonLastHit;
-    bool cycleButtonHit = false;
-    bool pressOne = false;
+    std::chrono::steady_clock::time_point openedMenuTime;
+    bool cycleButtonHeld = false;
+    bool heldTriggered = false;
+    bool cycleButtonHeldForSettings = false;
+    bool heldForSettingsTriggered = false;
     bool pressTwo = false;
-
-    std::chrono::steady_clock::time_point GetNow()
-    {
-        return std::chrono::steady_clock::now();
-    }
 
     long long NanoToLongMilli(std::chrono::nanoseconds time_point)
     {
@@ -24,7 +23,7 @@ namespace CEGameEvents
     {
         if (!a_event)
         {
-            logger::trace("CEGameEvents: Invalid input event.");
+            logger::trace("Invalid input event.");
             return RE::BSEventNotifyControl::kContinue;
         }
 
@@ -35,68 +34,85 @@ namespace CEGameEvents
             {
                 if (auto btn = e->AsButtonEvent(); btn)
                 {
-                    if (btn->GetIDCode() == CEGlobals::COMPARE_KEY && !btn->IsUp())
+                    if (btn->GetIDCode() == CEGlobals::COMPARE_KEY)
                     {
-                        logger::trace("CEGameEvents: Compare Key pressed, getting hovered item.");
-                        SKSE::GetTaskInterface()->AddTask([]()
-                                                          { CEGameMenuUtils::GetItem(); });
-                    }
-
-                    if (btn->GetIDCode() == CEGlobals::CYCLE_KEY)
-                    {
-                        if (btn->IsUp())
+                        auto currentTime = std::chrono::steady_clock::now();
+                        if (!btn->IsUp() && !cycleButtonHeld && !cycleButtonHeldForSettings)
                         {
-                            auto upNow = GetNow();
-                            auto hitDiff = NanoToLongMilli(upNow - cycleButtonLastHit);
-                            if (hitDiff <= CEGlobals::TRIPLE_HIT_TIME.count() / 2)
-                            {
-                                if (pressOne && pressTwo)
-                                    logger::info("Triple hit detected");
-                                if (!pressTwo && pressOne)
-                                    pressTwo = true;
-                                if (!pressOne)
-                                    pressOne = true;
-                            }
-                            else
-                            {
-                                pressOne = false;
-                                pressTwo = false;
-                            }
-                        }
-                        if (!btn->IsUp() && !cycleButtonHit)
-                        {
-                            logger::trace("CEGameEvents: Cycle key pressed, setting start time.");
-                            cycleButtonHit = true;
-                            cycleButtonDownStart = GetNow();
-                            return RE::BSEventNotifyControl::kContinue;
+                            cycleButtonHeld = true;
+                            heldTriggered = false;
+                            cycleButtonDownStart = currentTime;
                         }
 
-                        auto cycleButtonReleased = GetNow();
-                        auto heldDuration = NanoToLongMilli(cycleButtonReleased - cycleButtonDownStart);
-
-                        if (!btn->IsUp() && heldDuration < CEGlobals::HOLD_THRESHOLD.count())
-                            return RE::BSEventNotifyControl::kContinue;
-
-                        if (btn->IsUp())
-                            cycleButtonHit = false;
-
-                        if (heldDuration >= CEGlobals::HOLD_THRESHOLD.count())
+                        if (!btn->IsUp() && !cycleButtonHeldForSettings)
                         {
-                            logger::trace("CEGameEvents: Cycle key held past threshold, setting actor to player.");
+                            cycleButtonHeldForSettings = true;
+                            heldForSettingsTriggered = false;
+                            cycleButtonDownForSettingsStart = currentTime;
+                        }
+
+                        auto heldDuration = NanoToLongMilli(currentTime - cycleButtonDownStart);
+                        if (heldDuration >= CEGlobals::HOLD_THRESHOLD.count() && !heldTriggered)
+                        {
+                            logger::trace("Key held past threshold, setting actor to player.");
+                            heldTriggered = true;
                             SKSE::GetTaskInterface()->AddTask([]()
                                                               { CEActorUtils::SetActorToPlayer();
                                                                 if (!CEGameMenuUtils::GetItem()) {
                                                                     CEGameMenuUtils::ActorChangedUpdateMenu();
                                                                 } });
+
+                            return RE::BSEventNotifyControl::kContinue;
                         }
-                        else
+
+                        auto heldDurationForSettings = NanoToLongMilli(currentTime - cycleButtonDownForSettingsStart);
+                        if (heldDurationForSettings >= CEGlobals::GET_SETTINGS_THRESHOLD.count() && !heldForSettingsTriggered)
                         {
-                            logger::trace("CEGameEvents: Cycle key pressed, cycling Actor.");
+                            heldForSettingsTriggered = true;
                             SKSE::GetTaskInterface()->AddTask([]()
-                                                              { CEActorUtils::SetActorToNextFollower();
-                                                                if (!CEGameMenuUtils::GetItem()) {
-                                                                    CEGameMenuUtils::ActorChangedUpdateMenu();
-                                                                } });
+                                                              { CEGlobals::LoadConfig(); 
+                                                                CEMenu::DestroyMenu();
+                                                                CEMenu::CreateMenu(CEMenu::openedMenuName); 
+                                                                CEMenu::ShowMenu(); });
+                        }
+
+                        if (btn->IsUp() && !heldForSettingsTriggered)
+                        {
+                            cycleButtonHeld = false;
+                            cycleButtonHeldForSettings = false;
+                            auto hitDiff = NanoToLongMilli(currentTime - cycleButtonLastHit);
+                            logger::trace("hitDiff: {}", hitDiff);
+                            if (hitDiff <= CEGlobals::TRIPLE_HIT_WINDOW.count() / 2)
+                            {
+                                if (pressTwo)
+                                {
+                                    logger::trace("Key triple tapped, cycling follower.");
+                                    SKSE::GetTaskInterface()->AddTask([]()
+                                                                      { CEActorUtils::SetActorToNextFollower();
+                                                                        if (!CEGameMenuUtils::GetItem()) {
+                                                                            CEGameMenuUtils::ActorChangedUpdateMenu();
+                                                                        } });
+                                    currentTime = openedMenuTime;
+                                    pressTwo = false;
+                                }
+                                else if (!pressTwo)
+                                {
+                                    pressTwo = true;
+                                }
+                            }
+                            else
+                            {
+                                logger::trace("Key pressed, getting hovered item.");
+                                SKSE::GetTaskInterface()->AddTask([]()
+                                                                  { CEGameMenuUtils::GetItem(); });
+                                pressTwo = false;
+                            }
+                            cycleButtonLastHit = currentTime;
+                        }
+                        else if (btn->IsUp() && heldForSettingsTriggered)
+                        {
+                            cycleButtonHeld = false;
+                            cycleButtonHeldForSettings = false;
                         }
                     }
                 }
@@ -130,13 +146,14 @@ namespace CEGameEvents
         {
             if (a_event->opening)
             {
-                logger::trace("CEGameEvents: {} opened", menuName);
+                logger::trace("{} opened", menuName);
                 CEMenu::CreateMenu(menuName);
+                openedMenuTime = std::chrono::steady_clock::now();
                 RE::BSInputDeviceManager::GetSingleton()->AddEventSink(CEGameEvents::InputEvent::GetSingleton());
             }
             else
             {
-                logger::trace("CEGameEvents: {} closed", menuName);
+                logger::trace("{} closed", menuName);
                 CEMenu::DestroyMenu();
                 RE::BSInputDeviceManager::GetSingleton()->RemoveEventSink(CEGameEvents::InputEvent::GetSingleton());
             }
