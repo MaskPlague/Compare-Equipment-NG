@@ -13,3 +13,6 @@ build
 .vs
 .vscode
 src/main backup.cpp
+release/CompareEquipmentNG/CompareEquipmentNG.zip
+release/CompareEquipmentNG/SKSE/Plugins/CompareEquipmentNG.dll
+release/CompareEquipmentNG/SKSE/Plugins/CompareEquipmentNG.pdb
