@@ -16,14 +16,14 @@ namespace CEActorUtils
             followers = result;
             return;
         }
-        logger::debug("Got process lists");
+        logger::trace("Got process lists");
         auto faction = RE::TESForm::LookupByID<RE::TESFaction>(0x0005C84E); // CurrentFollowerFaction
         if (!faction)
         {
             followers = result;
             return;
         }
-        logger::debug("Got faction");
+        logger::trace("Got faction");
         for (auto &handle : processLists->highActorHandles)
         {
             if (auto actor = handle.get().get())
@@ -40,7 +40,7 @@ namespace CEActorUtils
 
     void SetActorToPlayer()
     {
-        logger::trace("CEActorUtils: Setting currentActor to player");
+        logger::trace("Setting currentActor to player");
         currentActor = RE::PlayerCharacter::GetSingleton();
     }
 
@@ -57,7 +57,7 @@ namespace CEActorUtils
     {
         if (followers.size() == 0)
         {
-            logger::trace("CEActorUtils: No valid followers detected calling SetActorToPlayer()");
+            logger::trace("No valid followers detected calling SetActorToPlayer()");
             CEActorUtils::SetActorToPlayer();
             return;
         }
@@ -66,7 +66,7 @@ namespace CEActorUtils
         RE::Actor *potentialActor = followers.at(index);
         if (!IsActorValid(potentialActor))
         {
-            logger::trace("CEActorUtils: Follower invalid, getting next follower.");
+            logger::trace("Follower invalid, getting next follower.");
             followers.erase(followers.begin() + index);
             SetActorToNextFollower();
             return;

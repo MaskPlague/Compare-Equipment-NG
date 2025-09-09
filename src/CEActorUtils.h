@@ -10,7 +10,5 @@ namespace CEActorUtils
 
     void SetActorToPlayer();
 
-    bool IsActorValid(RE::Actor *actor);
-
     void SetActorToNextFollower();
 }
