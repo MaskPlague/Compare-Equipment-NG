@@ -66,14 +66,14 @@ namespace CEGameEvents
                         }
 
                         auto heldDurationForSettings = NanoToLongMilli(currentTime - cycleButtonDownForSettingsStart);
-                        if (heldDurationForSettings >= CEGlobals::GET_SETTINGS_THRESHOLD.count() && !heldForSettingsTriggered)
+                        if (heldDurationForSettings >= CEGlobals::SETTING_HOLD_THRESHOLD.count() && !heldForSettingsTriggered)
                         {
                             heldForSettingsTriggered = true;
                             SKSE::GetTaskInterface()->AddTask([]()
                                                               { CEGlobals::LoadConfig(); 
                                                                 CEMenu::DestroyMenu();
                                                                 CEMenu::CreateMenu(CEMenu::openedMenuName); 
-                                                                CEMenu::ShowMenu(); });
+                                                                CEMenu::ShowMenuDelayed(); });
                         }
 
                         if (btn->IsUp() && !heldForSettingsTriggered)
