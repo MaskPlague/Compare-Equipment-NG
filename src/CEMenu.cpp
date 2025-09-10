@@ -8,32 +8,38 @@ namespace CEMenu
 
     RE::GFxValue GetMenu_mc()
     {
+        logger::trace("Getting ui singleton");
         auto UISingleton = RE::UI::GetSingleton();
+        logger::trace("inventoryMenu");
         auto inventoryMenu = UISingleton ? UISingleton->GetMenu(openedMenuName) : nullptr;
+        logger::trace("getting view");
         RE::GFxMovieView *view = inventoryMenu ? inventoryMenu->uiMovie.get() : nullptr;
         RE::GFxValue Menu_mc;
-
+        logger::trace("getting menu_mc");
         if (!UISingleton || !inventoryMenu || !view || !view->GetVariable(&Menu_mc, "_root.Menu_mc"))
         {
             return nullptr;
         }
+        logger::trace("got menu_mc");
         return Menu_mc;
     }
 
     RE::GFxValue GetCEMenu(RE::GFxValue Menu_mc)
     {
         RE::GFxValue ceMenu;
+        logger::trace("getting ceMenu");
         if (Menu_mc.IsNull() || !Menu_mc.GetMember(MENU_NAME, &ceMenu))
         {
             return nullptr;
         }
+        logger::trace("Got ceMenu");
         return ceMenu;
     }
 
     bool IsMenuVisible()
     {
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
-        if (ceMenu.IsNull())
+        if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return false;
         RE::GFxValue result;
         ceMenu.Invoke("getVisible", &result);
@@ -47,7 +53,7 @@ namespace CEMenu
         if (IsMenuVisible())
             return;
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
-        if (ceMenu.IsNull())
+        if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
         logger::trace("Showing menu.");
         ceMenu.Invoke("showMenu");
@@ -55,42 +61,19 @@ namespace CEMenu
 
     void ShowMenuDelayed()
     {
-        std::thread([]()
-                    {   
-            std::this_thread::sleep_for(std::chrono::milliseconds(50)); 
-            ShowMenuInstant(); })
-            .detach();
+        logger::trace("ShowMenuDelayed");
+        SKSE::GetTaskInterface()->AddTask([]()
+                                          { std::thread([]()
+                                                        {   
+                                                            std::this_thread::sleep_for(std::chrono::milliseconds(50)); 
+                                                            ShowMenuInstant(); })
+                                                .detach(); });
     }
 
-    void SetBackgroundAlpha()
-    {
-        std::thread([]()
-                    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
-        if (ceMenu.IsNull())
-            return;
-        logger::trace("Setting Background Alpha");
-        RE::GFxValue args[1];
-        args[0].SetNumber(CEGlobals::BACKGROUND_ALPHA);
-        ceMenu.Invoke("setBackgroundAlpha", nullptr, args, 1); })
-            .detach();
-    }
-
-    /*void HideMenu()
-    {
-        if (!IsMenuVisible() || CEGlobals::PERMANENT_OPEN)
-            return;
-        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
-        if (ceMenu.IsNull())
-            return;
-        ceMenu.Invoke("hideMenu");
-    }*/
-
-    /*void ToggleMenu()
     void CreateComparisonItemCard(std::array<RE::GFxValue, CEGlobals::EQUIPPED_ITEM_ARRAY_SIZE> itemInfo, RE::GFxValue ceMenu)
     {
         logger::trace("Checking if ceMenu is null");
+        if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
         logger::trace("ceMenu exists, creating comparison item card");
         ceMenu.Invoke("createComparisonItemCard", nullptr, itemInfo);
@@ -99,7 +82,7 @@ namespace CEMenu
     void ResetMenu()
     {
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
-        if (ceMenu.IsNull())
+        if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
         ceMenu.Invoke("reset");
     }
@@ -107,7 +90,7 @@ namespace CEMenu
     void SetActor(std::string actorName)
     {
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
-        if (ceMenu.IsNull())
+        if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
         RE::GFxValue args[1];
         args[0].SetString(actorName);
@@ -117,7 +100,7 @@ namespace CEMenu
     void CreateSelectedItemCard(std::array<RE::GFxValue, CEGlobals::SELECTED_ITEM_ARRAY_SIZE> itemInfo)
     {
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
-        if (ceMenu.IsNull())
+        if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
         ceMenu.Invoke("populateSelectedItemCard", nullptr, itemInfo);
     }
@@ -126,7 +109,7 @@ namespace CEMenu
     {
         logger::debug("Destroying Menu");
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
-        if (ceMenu.IsNull())
+        if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
 
         if (!ceMenu.Invoke("removeMovieClip"))
@@ -140,7 +123,7 @@ namespace CEMenu
         openedMenuName = menuName;
         logger::debug("Creating Menu");
         RE::GFxValue Menu_mc = GetMenu_mc();
-        if (Menu_mc.IsNull())
+        if (Menu_mc.IsNull() || Menu_mc.IsUndefined() || !Menu_mc.IsObject())
             return;
 
         RE::GFxValue _ceMenu = GetCEMenu(Menu_mc);
@@ -157,7 +140,7 @@ namespace CEMenu
         logger::debug("Created {} movie clip via invoke", MENU_NAME);
 
         RE::GFxValue ceMenu = GetCEMenu(Menu_mc);
-        if (ceMenu.IsNull())
+        if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
 
         logger::debug("Got {}", MENU_NAME);
@@ -180,7 +163,6 @@ namespace CEMenu
         if (!ceMenu.SetMember("_y", yNumber))
             return;
 
-        SetBackgroundAlpha();
         CEActorUtils::GetActiveFollowers();
     }
 }
