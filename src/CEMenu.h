@@ -14,7 +14,7 @@ namespace CEMenu
 
     void ShowMenuDelayed();
 
-    void CreateComparisonItemCards(std::vector<std::array<RE::GFxValue, CEGlobals::EQUIPPED_ITEM_ARRAY_SIZE>> item_arr);
+    void CreateComparisonItemCard(std::array<RE::GFxValue, CEGlobals::EQUIPPED_ITEM_ARRAY_SIZE> itemInfo, RE::GFxValue ceMenu);
 
     void ResetMenu();
 

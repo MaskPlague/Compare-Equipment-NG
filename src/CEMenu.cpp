@@ -88,29 +88,12 @@ namespace CEMenu
     }*/
 
     /*void ToggleMenu()
+    void CreateComparisonItemCard(std::array<RE::GFxValue, CEGlobals::EQUIPPED_ITEM_ARRAY_SIZE> itemInfo, RE::GFxValue ceMenu)
     {
-        if (IsMenuVisible())
-            HideMenu();
-        else
-            ShowMenu();
-    }*/
-
-    void CreateComparisonItemCards(std::vector<std::array<RE::GFxValue, CEGlobals::EQUIPPED_ITEM_ARRAY_SIZE>> item_arr)
-    {
-        auto manager = RE::Inventory3DManager::GetSingleton();
-        if (manager)
-            manager->Clear3D();
-        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
-        if (ceMenu.IsNull())
+        logger::trace("Checking if ceMenu is null");
             return;
-        RE::GFxValue count[1];
-        count[0].SetNumber(static_cast<double>(item_arr.size()));
-        ceMenu.Invoke("setItemCardCount", nullptr, count, 1);
-        for (std::array<RE::GFxValue, CEGlobals::EQUIPPED_ITEM_ARRAY_SIZE> itemInfo : item_arr)
-        {
-            logger::info("itemInfo[5]: {}", itemInfo.at(5).GetString());
-            ceMenu.Invoke("createComparisonItemCard", nullptr, itemInfo);
-        }
+        logger::trace("ceMenu exists, creating comparison item card");
+        ceMenu.Invoke("createComparisonItemCard", nullptr, itemInfo);
     }
 
     void ResetMenu()
