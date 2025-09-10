@@ -260,17 +260,18 @@ namespace CEGameMenuUtils
                                 RE::InventoryEntryData *equippedEntryData;
                                 bool gotEquippedRating = false;
                                 std::string equippedRatingString;
-                                for (auto &[item, data] : inv)
-                                {
-                                    if (item && item->GetFormID() == formId)
+                                if (gotSelectedRating)
+                                    for (auto &[item, data] : inv)
                                     {
-                                        equippedEntryData = data.second.get();
-                                        equippedRating = static_cast<int>(player->GetArmorValue(equippedEntryData));
-                                        equippedRatingString = std::to_string(equippedRating);
-                                        gotEquippedRating = true;
-                                        break;
+                                        if (item && item->GetFormID() == formId)
+                                        {
+                                            equippedEntryData = data.second.get();
+                                            equippedRating = static_cast<int>(player->GetArmorValue(equippedEntryData));
+                                            equippedRatingString = std::to_string(equippedRating);
+                                            gotEquippedRating = true;
+                                            break;
+                                        }
                                     }
-                                }
                                 if (!gotEquippedRating)
                                 {
                                     equippedRating = static_cast<int>(equippedArmor->armorRating / 100);
