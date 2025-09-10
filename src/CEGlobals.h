@@ -4,6 +4,7 @@ namespace CEGlobals
 {
     extern double X_ORIGIN;
     extern double Y_ORIGIN;
+    extern int SCALE;
     extern int BACKGROUND_ALPHA;
     extern uint32_t COMPARE_KEY;
     extern uint32_t CYCLE_KEY;

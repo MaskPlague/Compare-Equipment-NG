@@ -34,8 +34,15 @@ namespace CEGameMenuUtils
         return str;
     }
 
+    void ltrim(std::string &s)
+    {
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch)
+                                        { return !std::isspace(ch); }));
+    }
+
     std::string GetEnchantmentString(RE::TESObjectARMO *armor, std::string description, float magnitude)
     {
+        ltrim(description);
         auto index = description.find("<mag>");
         if (index != std::string::npos)
             return description.substr(0, index) + std::format("{:.1f}", magnitude) + description.substr(index + 5) + "\n";
@@ -43,7 +50,13 @@ namespace CEGameMenuUtils
         {
             RE::BSString str;
             armor->GetDescription(str, nullptr);
-            return cleanPercentage(static_cast<std::string>(str)) + "\n";
+            std::string string = static_cast<std::string>(str);
+            ltrim(string);
+            cleanPercentage(string);
+            if (string == "")
+                return "";
+            else
+                return cleanPercentage(string) + "\n";
         }
         else
             return cleanPercentage(description) + "\n";
@@ -175,6 +188,8 @@ namespace CEGameMenuUtils
                         std::string description = static_cast<std::string>(effect->baseEffect->magicItemDescription);
                         selectedEnchantmentInfo += GetEnchantmentString(selectedArmor, description, magnitude);
                     }
+                    if (selectedEnchantmentInfo == "")
+                        selectedEnchantmentInfo = "None";
                 }
                 else
                     selectedEnchantmentInfo = GetArmorDescription(selectedArmor);
@@ -204,6 +219,7 @@ namespace CEGameMenuUtils
 
                 int equippedAccumulatedRating = 0;
                 std::vector<RE::FormID> pushedFormIds;
+                bool selectedIsEquipped = false;
                 for (auto slot : slotList)
                 {
                     if ((slots & slot) != Slot::kNone)
@@ -212,6 +228,8 @@ namespace CEGameMenuUtils
                         if (equippedArmor)
                         {
                             auto formId = equippedArmor->GetFormID();
+                            if (selectedFormId == formId)
+                                selectedIsEquipped = true;
                             bool alreadyPushed = std::find(pushedFormIds.begin(), pushedFormIds.end(), formId) != pushedFormIds.end();
                             if (selectedFormId != formId && !alreadyPushed)
                             {
@@ -231,9 +249,11 @@ namespace CEGameMenuUtils
                                         std::string description = static_cast<std::string>(effect->baseEffect->magicItemDescription);
                                         equippedEnchantmentInfo += GetEnchantmentString(equippedArmor, description, magnitude);
                                     }
+                                    if (equippedEnchantmentInfo == "")
+                                        equippedEnchantmentInfo = "None";
                                 }
                                 else
-                                    equippedEnchantmentInfo += GetArmorDescription(equippedArmor);
+                                    equippedEnchantmentInfo = GetArmorDescription(equippedArmor);
 
                                 equippedAccumulateValue += equippedValue;
                                 int equippedRating = 0;
@@ -266,7 +286,7 @@ namespace CEGameMenuUtils
                         }
                     }
                 }
-                if (pushedFormIds.size() > 0)
+                if (pushedFormIds.size() > 0 || (pushedFormIds.size() == 0 && !selectedIsEquipped))
                 {
                     equippedAccumulatedRating = selectedRating - equippedAccumulatedRating;
                     equippedAccumulateValue = selectedValue - equippedAccumulateValue;
@@ -282,7 +302,7 @@ namespace CEGameMenuUtils
                 CEMenu::CreateSelectedItemCard(selectedItemInfo);
                 logger::trace("Positioning and displaying item cards");
                 std::array<RE::GFxValue, CEGlobals::EQUIPPED_ITEM_ARRAY_SIZE>
-                    displayCommand = {"DISPLAY", CEGlobals::BACKGROUND_ALPHA, "", "", "", ""};
+                    displayCommand = {"DISPLAY", CEGlobals::BACKGROUND_ALPHA, CEGlobals::SCALE, "", "", ""};
                 CEMenu::CreateComparisonItemCard(displayCommand, ceMenu);
             }
         }
