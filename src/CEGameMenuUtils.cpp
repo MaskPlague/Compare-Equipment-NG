@@ -40,6 +40,15 @@ namespace CEGameMenuUtils
                                         { return !std::isspace(ch); }));
     }
 
+    const char *ltrim(const char *s)
+    {
+        if (!s)
+            return nullptr;
+        while (*s && std::isspace(static_cast<unsigned char>(*s)))
+            ++s;
+        return s;
+    }
+
     std::string GetEnchantmentString(RE::TESObjectARMO *armor, std::string description, float magnitude)
     {
         ltrim(description);
@@ -64,7 +73,7 @@ namespace CEGameMenuUtils
 
     std::string GetArmorDescription(RE::TESObjectARMO *armor)
     {
-        std::string text = "None";
+        std::string text = "";
         RE::BSString str;
         armor->GetDescription(str, nullptr);
         std::string description = static_cast<std::string>(str) + "\n";
@@ -90,6 +99,90 @@ namespace CEGameMenuUtils
             }
         }
         return slotsString;
+    }
+
+    bool GetUserEnchantmentAndName(RE::FormID formId, std::string &effectInfo, RE::TESObjectARMO *armor, const char *&name)
+    {
+        RE::UI *uiSingleton = RE::UI::GetSingleton();
+        RE::BSTArray<RE::ItemList::Item *> items;
+        if (RE::InventoryMenu::MENU_NAME == CEMenu::openedMenuName)
+        {
+            RE::GPtr<RE::InventoryMenu> menu = uiSingleton->GetMenu<RE::InventoryMenu>();
+            if (!menu)
+                return false;
+            items = menu->GetRuntimeData().itemList->items;
+        }
+        else if (RE::ContainerMenu::MENU_NAME == CEMenu::openedMenuName)
+        {
+            RE::GPtr<RE::ContainerMenu> menu = uiSingleton->GetMenu<RE::ContainerMenu>();
+            if (!menu)
+                return false;
+            items = menu->GetRuntimeData().itemList->items;
+        }
+        else if (RE::BarterMenu::MENU_NAME == CEMenu::openedMenuName)
+        {
+            RE::GPtr<RE::BarterMenu> menu = uiSingleton->GetMenu<RE::BarterMenu>();
+            if (!menu)
+                return false;
+            items = menu->GetRuntimeData().itemList->items;
+        }
+        else if (RE::GiftMenu::MENU_NAME == CEMenu::openedMenuName)
+        {
+            RE::GPtr<RE::GiftMenu> menu = uiSingleton->GetMenu<RE::GiftMenu>();
+            if (!menu)
+                return false;
+            items = menu->GetRuntimeData().itemList->items;
+        }
+        else
+            return false;
+        logger::trace("Got items");
+        RE::InventoryEntryData *desc = nullptr;
+        for (RE::ItemList::Item *item : items)
+        {
+            if (item && item->data.objDesc->object->GetFormID() == formId)
+            {
+                desc = item->data.objDesc;
+                break;
+            }
+        }
+        if (!desc)
+            return false;
+        logger::trace("Got item to check");
+        RE::BSSimpleList<RE::ExtraDataList *> *lists = desc->extraLists;
+        const char *displayName = desc->GetDisplayName();
+        if (displayName)
+            name = ltrim(displayName);
+
+        if (!lists)
+            return false;
+
+        logger::trace("Got extra lists");
+        for (auto &list : *lists)
+        {
+            if (!list)
+                continue;
+            auto xEnch = list->GetByType<RE::ExtraEnchantment>();
+            if (!xEnch)
+                continue;
+            ;
+
+            auto ench = xEnch->enchantment;
+            if (!ench)
+                continue;
+
+            for (auto &effect : ench->effects)
+            {
+                if (!effect || !effect->baseEffect)
+                    continue;
+
+                float magnitude = effect->GetMagnitude();
+                std::string description = effect->baseEffect->magicItemDescription.c_str();
+                effectInfo += GetEnchantmentString(armor, description, magnitude);
+            }
+        }
+        if (effectInfo == "")
+            return false;
+        return true;
     }
 
     void GetEquippedInSlots(RE::FormID selectedFormId)
@@ -178,21 +271,21 @@ namespace CEGameMenuUtils
                 auto selectedValue = selectedArmor->GetGoldValue();
                 logger::trace("Getting enchantment info");
                 auto selectedEnchantment = selectedArmor->formEnchanting;
-                std::string selectedEnchantmentInfo = "";
-                if (selectedEnchantment)
+                std::string selectedEffectInfo = "";
+                selectedEffectInfo = GetArmorDescription(selectedArmor);
+                if (selectedEnchantment && selectedEffectInfo == "")
                 {
                     auto effects = selectedEnchantment->effects;
                     for (auto effect : effects)
                     {
                         float magnitude = effect->GetMagnitude();
                         std::string description = static_cast<std::string>(effect->baseEffect->magicItemDescription);
-                        selectedEnchantmentInfo += GetEnchantmentString(selectedArmor, description, magnitude);
+                        selectedEffectInfo += GetEnchantmentString(selectedArmor, description, magnitude);
                     }
-                    if (selectedEnchantmentInfo == "")
-                        selectedEnchantmentInfo = "None";
                 }
-                else
-                    selectedEnchantmentInfo = GetArmorDescription(selectedArmor);
+                if (selectedEffectInfo == "")
+                    if (!GetUserEnchantmentAndName(selectedFormId, selectedEffectInfo, selectedArmor, selectedName))
+                        selectedEffectInfo = "None";
 
                 logger::trace("Getting armor rating");
                 int32_t equippedAccumulateValue = 0;
@@ -236,24 +329,24 @@ namespace CEGameMenuUtils
                                 pushedFormIds.push_back(formId);
                                 const char *equippedName = equippedArmor->GetName();
                                 std::string equippedSlots = GetArmorSlotsString(equippedArmor);
-                                std::string equippedEnchantmentInfo = "";
+                                std::string equippedEffectInfo = "";
                                 const char *equippedType = GetArmorTypeString(equippedArmor->GetArmorType());
                                 int32_t equippedValue = equippedArmor->GetGoldValue();
                                 auto equippedEnchantment = equippedArmor->formEnchanting;
-                                if (equippedEnchantment)
+                                equippedEffectInfo = GetArmorDescription(equippedArmor);
+                                if (equippedEnchantment && equippedEffectInfo == "")
                                 {
                                     auto effects = equippedEnchantment->effects;
                                     for (auto effect : effects)
                                     {
                                         auto magnitude = effect->GetMagnitude();
                                         std::string description = static_cast<std::string>(effect->baseEffect->magicItemDescription);
-                                        equippedEnchantmentInfo += GetEnchantmentString(equippedArmor, description, magnitude);
+                                        equippedEffectInfo += GetEnchantmentString(equippedArmor, description, magnitude);
                                     }
-                                    if (equippedEnchantmentInfo == "")
-                                        equippedEnchantmentInfo = "None";
                                 }
-                                else
-                                    equippedEnchantmentInfo = GetArmorDescription(equippedArmor);
+                                if (equippedEffectInfo == "")
+                                    if (!GetUserEnchantmentAndName(formId, equippedEffectInfo, equippedArmor, equippedName))
+                                        equippedEffectInfo = "None";
 
                                 equippedAccumulateValue += equippedValue;
                                 int equippedRating = 0;
@@ -281,7 +374,7 @@ namespace CEGameMenuUtils
                                 equippedAccumulatedRating += equippedRating;
                                 std::array<RE::GFxValue, CEGlobals::EQUIPPED_ITEM_ARRAY_SIZE>
                                     itemInfo = {equippedName, equippedSlots.c_str(), equippedType,
-                                                equippedRatingString.c_str(), equippedValue, equippedEnchantmentInfo.c_str()};
+                                                equippedRatingString.c_str(), equippedValue, equippedEffectInfo.c_str()};
                                 CEMenu::CreateComparisonItemCard(itemInfo, ceMenu);
                             }
                         }
@@ -297,7 +390,7 @@ namespace CEGameMenuUtils
                     selectedItemInfo = {selectedName, selectedSlots.c_str(), selectedType,
                                         selectedRatingString.c_str(), equippedAccumulatedRating,
                                         selectedValue, equippedAccumulateValue,
-                                        selectedEnchantmentInfo.c_str()};
+                                        selectedEffectInfo.c_str()};
 
                 logger::trace("Populating selected item card");
                 CEMenu::CreateSelectedItemCard(selectedItemInfo);
