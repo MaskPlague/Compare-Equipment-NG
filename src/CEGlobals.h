@@ -2,6 +2,7 @@
 
 namespace CEGlobals
 {
+    extern std::string EXPECTED_SWF_VERSION;
     extern double X_ORIGIN;
     extern double Y_ORIGIN;
     extern int SCALE;

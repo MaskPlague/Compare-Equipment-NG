@@ -2,6 +2,7 @@ namespace logger = SKSE::log;
 
 namespace CEGlobals
 {
+    std::string EXPECTED_SWF_VERSION = "0";
     double X_ORIGIN = 590.0f;
     double Y_ORIGIN = 250.0f;
     int SCALE = 100;
@@ -34,6 +35,7 @@ namespace CEGlobals
         LOG_LEVEL = ini.GetLongValue("Debug", "LoggingLevel", 2);
 
         logger::debug("Version                  {}", SKSE::PluginDeclaration::GetSingleton()->GetVersion());
+        logger::debug("Expected SWF Version:    {}", EXPECTED_SWF_VERSION);
         logger::debug("X Offset:                {:.2f}", X_ORIGIN);
         logger::debug("Y Offset:                {:.2f}", Y_ORIGIN);
         logger::debug("Scale:                   {}", SCALE);

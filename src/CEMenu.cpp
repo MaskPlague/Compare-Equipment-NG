@@ -2,7 +2,8 @@ namespace logger = SKSE::log;
 
 namespace CEMenu
 {
-    const char *MENU_NAME = "CompareEquipmentMenu";
+    std::string temp = "CompareEquipmentMenu_" + CEGlobals::EXPECTED_SWF_VERSION;
+    const char *MENU_NAME = temp.c_str();
     std::string_view SWF_PATH{"CompareEquipment.swf"};
     std::string_view openedMenuName = RE::InventoryMenu::MENU_NAME;
 
