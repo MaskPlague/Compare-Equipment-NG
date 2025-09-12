@@ -7,6 +7,7 @@ namespace CEGlobals
     extern double Y_ORIGIN;
     extern int SCALE;
     extern int BACKGROUND_ALPHA;
+    extern int ROWS;
     extern uint32_t COMPARE_KEY;
     extern uint32_t CYCLE_KEY;
     extern std::chrono::milliseconds HOLD_THRESHOLD;

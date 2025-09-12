@@ -7,6 +7,7 @@ namespace CEGlobals
     double Y_ORIGIN = 250.0f;
     int SCALE = 100;
     int BACKGROUND_ALPHA = 95;
+    int ROWS = 4;
     uint32_t COMPARE_KEY = 47;
     std::chrono::milliseconds HOLD_THRESHOLD(500);
     std::chrono::milliseconds TRIPLE_HIT_WINDOW(500);
@@ -27,7 +28,16 @@ namespace CEGlobals
         X_ORIGIN = ini.GetDoubleValue("General", "Xoffset", 590.0f);
         Y_ORIGIN = ini.GetDoubleValue("General", "Yoffset", 250.0f);
         SCALE = ini.GetLongValue("General", "Scale", 100);
+        if (SCALE <= 0)
+            SCALE = 100;
         BACKGROUND_ALPHA = ini.GetLongValue("General", "BackgroundAlpha", 95);
+        if (BACKGROUND_ALPHA < 0 || BACKGROUND_ALPHA > 100)
+            BACKGROUND_ALPHA = 100;
+        ROWS = ini.GetLongValue("General", "MaximumRows", 4);
+        if (ROWS > 4)
+            ROWS = 4;
+        if (ROWS < 1)
+            ROWS = 1;
         COMPARE_KEY = ini.GetLongValue("General", "CompareKey", 47);
         HOLD_THRESHOLD = static_cast<std::chrono::milliseconds>(ini.GetLongValue("General", "HoldDuration", 500));
         TRIPLE_HIT_WINDOW = static_cast<std::chrono::milliseconds>(ini.GetLongValue("General", "TripleHitWindow", 400));
@@ -40,6 +50,7 @@ namespace CEGlobals
         logger::debug("Y Offset:                {:.2f}", Y_ORIGIN);
         logger::debug("Scale:                   {}", SCALE);
         logger::debug("Background Alpha         {}", BACKGROUND_ALPHA);
+        logger::debug("Maximum Rows:            {}", ROWS);
         logger::debug("Compare Key:             {}", COMPARE_KEY);
         logger::debug("Hold Duration:           {} milliseconds", HOLD_THRESHOLD.count());
         logger::debug("Triple Hit Window:       {} milliseconds", TRIPLE_HIT_WINDOW.count());
@@ -49,6 +60,7 @@ namespace CEGlobals
         ini.SetDoubleValue("General", "Yoffset", Y_ORIGIN);
         ini.SetLongValue("General", "Scale", SCALE);
         ini.SetLongValue("General", "BackgroundAlpha", BACKGROUND_ALPHA);
+        ini.SetLongValue("General", "MaximumRows", ROWS);
         ini.SetLongValue("General", "CompareKey", COMPARE_KEY);
         ini.SetLongValue("General", "HoldDuration", static_cast<long>(HOLD_THRESHOLD.count()));
         ini.SetLongValue("General", "TrippleHitWindow", static_cast<long>(TRIPLE_HIT_WINDOW.count()));

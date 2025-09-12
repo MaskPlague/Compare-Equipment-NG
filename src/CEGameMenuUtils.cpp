@@ -365,7 +365,7 @@ namespace CEGameMenuUtils
                 CEMenu::CreateSelectedItemCard(selectedItemInfo);
                 logger::trace("Positioning and displaying item cards");
                 std::array<RE::GFxValue, CEGlobals::EQUIPPED_ITEM_ARRAY_SIZE>
-                    displayCommand = {"DISPLAY", CEGlobals::BACKGROUND_ALPHA, CEGlobals::SCALE, "", "", ""};
+                    displayCommand = {"DISPLAY", CEGlobals::BACKGROUND_ALPHA, CEGlobals::SCALE, CEGlobals::ROWS, "", ""};
                 CEMenu::CreateComparisonItemCard(displayCommand, ceMenu);
             }
         }
