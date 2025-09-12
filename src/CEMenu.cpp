@@ -131,10 +131,9 @@ namespace CEMenu
             return;
 
         RE::GFxValue args[2];
-        RE::GFxValue ceMenuMovieClip;
         args[0].SetString(MENU_NAME); // name
         args[1] = 3999;               // depth
-        if (!Menu_mc.Invoke("createEmptyMovieClip", &ceMenuMovieClip, args, 2))
+        if (!Menu_mc.Invoke("createEmptyMovieClip", nullptr, args, 2))
             return;
 
         logger::debug("Created {} movie clip via invoke", MENU_NAME);
@@ -145,12 +144,10 @@ namespace CEMenu
 
         logger::debug("Got {}", MENU_NAME);
 
-        RE::GFxValue result2;
         RE::GFxValue args2[1];
         args2[0].SetString(SWF_PATH); // name
-        if (!ceMenu.Invoke("loadMovie", &result2, args2, 1))
+        if (!ceMenu.Invoke("loadMovie", nullptr, args2, 1))
             return;
-
         logger::debug("Loaded {} via invoke", args2[0].GetString());
 
         RE::GFxValue xNumber;
