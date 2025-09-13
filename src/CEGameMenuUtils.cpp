@@ -221,16 +221,20 @@ namespace CEGameMenuUtils
                     return;
                 }
 
-                logger::trace("Resetting menu");
-                CEMenu::ResetMenu();
-                logger::trace("Setting actor name");
-                CEMenu::SetActor(actor->GetName());
-                logger::trace("Getting 3d manager");
-                auto manager = RE::Inventory3DManager::GetSingleton();
-                if (manager)
-                    manager->Clear3D();
-                logger::trace("Getting ceMenu");
-                RE::GFxValue ceMenu = CEMenu::GetCEMenu(CEMenu::GetMenu_mc());
+        logger::trace("Resetting menu");
+        CEMenu::ResetMenu();
+        logger::trace("Setting actor name");
+        CEMenu::SetActor(actor->GetName());
+        logger::trace("Getting 3d manager");
+        auto manager = RE::Inventory3DManager::GetSingleton();
+        if (manager)
+        {
+            auto zoom = manager->GetRuntimeData().zoomProgress;
+            if (zoom == 0.0f)
+                manager->Clear3D();
+        }
+        logger::trace("Getting ceMenu");
+        RE::GFxValue ceMenu = CEMenu::GetCEMenu(CEMenu::GetMenu_mc());
 
                 logger::trace("Retrieving player");
                 auto player = RE::PlayerCharacter::GetSingleton();
