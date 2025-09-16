@@ -1,20 +1,115 @@
 namespace logger = SKSE::log;
+using namespace CEThumbStick;
 
 namespace CEGameEvents
 {
-    std::chrono::steady_clock::time_point cycleButtonDownStart;
-    std::chrono::steady_clock::time_point cycleButtonDownForSettingsStart;
     std::chrono::steady_clock::time_point cycleButtonLastHit;
     std::chrono::steady_clock::time_point openedMenuTime;
-    bool cycleButtonHeld = false;
     bool heldTriggered = false;
-    bool cycleButtonHeldForSettings = false;
     bool heldForSettingsTriggered = false;
     bool pressTwo = false;
+
+    VirtualButton rightThumbStick;
 
     long long NanoToLongMilli(std::chrono::nanoseconds time_point)
     {
         return std::chrono::duration_cast<std::chrono::milliseconds>(time_point).count();
+    }
+
+    bool Is3dZoomedIn()
+    {
+        auto manager = RE::Inventory3DManager::GetSingleton();
+        if (manager)
+        {
+            auto zoom = manager->GetRuntimeData().zoomProgress;
+            if (zoom != 0.0f)
+            {
+                logger::debug("3d menu open, aborting");
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void ButtonProcessor(bool btnUp, float heldDuration)
+    {
+        logger::trace("buttonUp : {}, heldDuration: {}", btnUp, heldDuration);
+        auto currentTime = std::chrono::steady_clock::now();
+        if (btnUp && heldDuration < CEGlobals::HOLD_THRESHOLD)
+        {
+            heldTriggered = false;
+            heldForSettingsTriggered = false;
+        }
+
+        if (heldDuration >= CEGlobals::HOLD_THRESHOLD && !heldTriggered)
+        {
+            if (Is3dZoomedIn())
+                return;
+            logger::debug("Key held past threshold, setting actor to player.");
+            heldTriggered = true;
+            SKSE::GetTaskInterface()->AddTask([]()
+                                              { 
+                CEActorUtils::SetActorToPlayer();
+                if (!CEGameMenuUtils::GetItem()) {
+                    CEGameMenuUtils::ActorChangedUpdateMenu();
+                } });
+
+            return;
+        }
+
+        if (heldDuration >= CEGlobals::SETTING_HOLD_THRESHOLD && !heldForSettingsTriggered)
+        {
+            if (Is3dZoomedIn())
+                return;
+            heldForSettingsTriggered = true;
+            SKSE::GetTaskInterface()->AddTask([]()
+                                              { 
+                CEMenu::DestroyMenu();
+                CEGlobals::LoadConfig();
+                std::thread([]()
+                            {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                    CEMenu::CreateMenu(CEMenu::openedMenuName); 
+                    CEMenu::ShowMenuDelayed(); })
+                    .detach(); });
+        }
+
+        if (btnUp && !heldForSettingsTriggered)
+        {
+            auto hitDiff = NanoToLongMilli(currentTime - cycleButtonLastHit);
+            logger::trace("hitDiff: {}", hitDiff);
+            if (hitDiff <= CEGlobals::TRIPLE_HIT_WINDOW * 500)
+            {
+                if (pressTwo)
+                {
+                    if (Is3dZoomedIn())
+                        return;
+                    logger::debug("Key triple tapped, cycling follower.");
+                    SKSE::GetTaskInterface()->AddTask([]()
+                                                      { 
+                        CEActorUtils::SetActorToNextFollower();
+                        if (!CEGameMenuUtils::GetItem()) {
+                            CEGameMenuUtils::ActorChangedUpdateMenu();
+                        } });
+                    currentTime = openedMenuTime;
+                    pressTwo = false;
+                }
+                else if (!pressTwo)
+                {
+                    pressTwo = true;
+                }
+            }
+            else
+            {
+                if (Is3dZoomedIn())
+                    return;
+                logger::debug("Key pressed, getting hovered item.");
+                SKSE::GetTaskInterface()->AddTask([]()
+                                                  { CEGameMenuUtils::GetItem(); });
+                pressTwo = false;
+            }
+            cycleButtonLastHit = currentTime;
+        }
     }
 
     RE::BSEventNotifyControl InputEvent::ProcessEvent(
@@ -23,97 +118,40 @@ namespace CEGameEvents
     {
         if (!a_event)
         {
-            logger::trace("Invalid input event.");
             return RE::BSEventNotifyControl::kContinue;
         }
 
         if (auto e = *a_event; e)
         {
             auto eventType = e->GetEventType();
+            if (eventType == RE::INPUT_EVENT_TYPE::kThumbstick)
+            {
+                if (auto id = e->AsIDEvent(); id)
+                {
+                    if (id->GetIDCode() == 12)
+                    {
+                        if (auto ts = static_cast<RE::ThumbstickEvent *>(e); ts)
+                        {
+                            auto state = UpdateVirtualButton(rightThumbStick, ts->xValue, 0.9f);
+                            if (state != VirtualButtonState::kUp)
+                            {
+                                bool buttonUp = (state != VirtualButtonState::kHeld && state != VirtualButtonState::kPressed);
+                                ButtonProcessor(buttonUp, rightThumbStick.heldDownSecs);
+                            }
+                            return RE::BSEventNotifyControl::kContinue;
+                        }
+                    }
+                }
+            }
+
             if (eventType == RE::INPUT_EVENT_TYPE::kButton)
             {
                 if (auto btn = e->AsButtonEvent(); btn)
                 {
                     if (btn->GetIDCode() == CEGlobals::COMPARE_KEY)
                     {
-                        auto currentTime = std::chrono::steady_clock::now();
-                        if (!btn->IsUp() && !cycleButtonHeld && !cycleButtonHeldForSettings)
-                        {
-                            cycleButtonHeld = true;
-                            heldTriggered = false;
-                            cycleButtonDownStart = currentTime;
-                        }
-
-                        if (!btn->IsUp() && !cycleButtonHeldForSettings)
-                        {
-                            cycleButtonHeldForSettings = true;
-                            heldForSettingsTriggered = false;
-                            cycleButtonDownForSettingsStart = currentTime;
-                        }
-
-                        auto heldDuration = NanoToLongMilli(currentTime - cycleButtonDownStart);
-                        if (heldDuration >= CEGlobals::HOLD_THRESHOLD.count() && !heldTriggered)
-                        {
-                            logger::trace("Key held past threshold, setting actor to player.");
-                            heldTriggered = true;
-                            SKSE::GetTaskInterface()->AddTask([]()
-                                                              { CEActorUtils::SetActorToPlayer();
-                                                                if (!CEGameMenuUtils::GetItem()) {
-                                                                    CEGameMenuUtils::ActorChangedUpdateMenu();
-                                                                } });
-
-                            return RE::BSEventNotifyControl::kContinue;
-                        }
-
-                        auto heldDurationForSettings = NanoToLongMilli(currentTime - cycleButtonDownForSettingsStart);
-                        if (heldDurationForSettings >= CEGlobals::SETTING_HOLD_THRESHOLD.count() && !heldForSettingsTriggered)
-                        {
-                            heldForSettingsTriggered = true;
-                            SKSE::GetTaskInterface()->AddTask([]()
-                                                              { CEGlobals::LoadConfig(); 
-                                                                CEMenu::DestroyMenu();
-                                                                CEMenu::CreateMenu(CEMenu::openedMenuName); 
-                                                                CEMenu::ShowMenuDelayed(); });
-                        }
-
-                        if (btn->IsUp() && !heldForSettingsTriggered)
-                        {
-                            cycleButtonHeld = false;
-                            cycleButtonHeldForSettings = false;
-                            auto hitDiff = NanoToLongMilli(currentTime - cycleButtonLastHit);
-                            logger::trace("hitDiff: {}", hitDiff);
-                            if (hitDiff <= CEGlobals::TRIPLE_HIT_WINDOW.count() / 2)
-                            {
-                                if (pressTwo)
-                                {
-                                    logger::trace("Key triple tapped, cycling follower.");
-                                    SKSE::GetTaskInterface()->AddTask([]()
-                                                                      { CEActorUtils::SetActorToNextFollower();
-                                                                        if (!CEGameMenuUtils::GetItem()) {
-                                                                            CEGameMenuUtils::ActorChangedUpdateMenu();
-                                                                        } });
-                                    currentTime = openedMenuTime;
-                                    pressTwo = false;
-                                }
-                                else if (!pressTwo)
-                                {
-                                    pressTwo = true;
-                                }
-                            }
-                            else
-                            {
-                                logger::trace("Key pressed, getting hovered item.");
-                                SKSE::GetTaskInterface()->AddTask([]()
-                                                                  { CEGameMenuUtils::GetItem(); });
-                                pressTwo = false;
-                            }
-                            cycleButtonLastHit = currentTime;
-                        }
-                        else if (btn->IsUp() && heldForSettingsTriggered)
-                        {
-                            cycleButtonHeld = false;
-                            cycleButtonHeldForSettings = false;
-                        }
+                        ButtonProcessor(btn->IsUp(), btn->HeldDuration());
+                        return RE::BSEventNotifyControl::kContinue;
                     }
                 }
             }
@@ -126,6 +164,28 @@ namespace CEGameEvents
     InputEvent *InputEvent::GetSingleton()
     {
         static InputEvent singleton;
+        return &singleton;
+    }
+
+    RE::BSEventNotifyControl DeviceInputEvent::ProcessEvent(
+        RE::InputEvent *const *a_event,
+        RE::BSTEventSource<RE::InputEvent *> *) noexcept
+    {
+        if (!a_event)
+        {
+            return RE::BSEventNotifyControl::kContinue;
+        }
+
+        if (auto e = *a_event; e)
+        {
+            CEGlobals::lastInputDevice = e->GetDevice();
+        }
+        return RE::BSEventNotifyControl::kContinue;
+    }
+
+    DeviceInputEvent *DeviceInputEvent::GetSingleton()
+    {
+        static DeviceInputEvent singleton;
         return &singleton;
     }
 
