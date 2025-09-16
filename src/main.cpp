@@ -43,9 +43,10 @@ namespace CompareEquipmentNG
 
     void OnPostLoadGame()
     {
-        logger::debug("Creating Event Sink");
+        logger::debug("Creating Event Sinks");
         RE::UI::GetSingleton()->AddEventSink(CEGameEvents::UIEvent::GetSingleton());
-        logger::debug("Created Event Sink");
+        RE::BSInputDeviceManager::GetSingleton()->AddEventSink(CEGameEvents::DeviceInputEvent::GetSingleton());
+        logger::debug("Created Event Sinks");
         CEActorUtils::SetActorToPlayer();
     }
 
