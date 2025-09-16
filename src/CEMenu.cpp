@@ -2,10 +2,22 @@ namespace logger = SKSE::log;
 
 namespace CEMenu
 {
-    std::string temp = "CompareEquipmentMenu_" + CEGlobals::EXPECTED_SWF_VERSION;
+    std::string temp = "CompareEquipmentMenu_" + CEGlobals::EXPECTED_SWF_VERSION + "_" + std::to_string(CEGlobals::COMPARE_KEY);
     const char *MENU_NAME = temp.c_str();
     std::string_view SWF_PATH{"CompareEquipment.swf"};
     std::string_view openedMenuName = RE::InventoryMenu::MENU_NAME;
+
+    void UpdateMenuName()
+    {
+        std::string stringMenuName{openedMenuName};
+        std::string key = std::to_string(CEGlobals::COMPARE_KEY);
+        if (CEGlobals::lastInputDevice == RE::INPUT_DEVICE::kGamepad)
+        {
+            key = "273";
+        }
+        temp = "CompareEquipmentMenu_" + CEGlobals::EXPECTED_SWF_VERSION + "_" + key + "_" + stringMenuName;
+        MENU_NAME = temp.c_str();
+    }
 
     RE::GFxValue GetMenu_mc()
     {
