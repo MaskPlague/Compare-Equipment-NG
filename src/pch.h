@@ -10,6 +10,7 @@
 #include "CEMenu.h"
 #include "CEGameMenuUtils.h"
 #include "CEGameEvents.h"
+#include "CEThumbStick.h"
 
 #define DLLEXPORT __declspec(dllexport)
 
