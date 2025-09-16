@@ -2,17 +2,17 @@ namespace logger = SKSE::log;
 
 namespace CEGlobals
 {
-    std::string EXPECTED_SWF_VERSION = "0";
     double X_ORIGIN = 590.0f;
     double Y_ORIGIN = 250.0f;
     int SCALE = 100;
     int BACKGROUND_ALPHA = 95;
     int ROWS = 4;
-    uint32_t COMPARE_KEY = 47;
-    std::chrono::milliseconds HOLD_THRESHOLD(500);
-    std::chrono::milliseconds TRIPLE_HIT_WINDOW(500);
-    std::chrono::milliseconds SETTING_HOLD_THRESHOLD(3000);
+    uint32_t COMPARE_KEY = 0;
+    float HOLD_THRESHOLD = 500 * 0.001;
+    float TRIPLE_HIT_WINDOW = 500 * 0.001;
+    float SETTING_HOLD_THRESHOLD = 3000 * 0.001;
     int LOG_LEVEL = 2;
+    RE::INPUT_DEVICE lastInputDevice = RE::INPUT_DEVICE::kNone;
 
     void LoadConfig()
     {
@@ -39,9 +39,9 @@ namespace CEGlobals
         if (ROWS < 1)
             ROWS = 1;
         COMPARE_KEY = ini.GetLongValue("General", "CompareKey", 47);
-        HOLD_THRESHOLD = static_cast<std::chrono::milliseconds>(ini.GetLongValue("General", "HoldDuration", 500));
-        TRIPLE_HIT_WINDOW = static_cast<std::chrono::milliseconds>(ini.GetLongValue("General", "TripleHitWindow", 400));
-        SETTING_HOLD_THRESHOLD = static_cast<std::chrono::milliseconds>(ini.GetLongValue("General", "SettingHoldDuration", 3000));
+        HOLD_THRESHOLD = static_cast<float>(ini.GetLongValue("General", "HoldDuration", 500) * 0.001);
+        TRIPLE_HIT_WINDOW = static_cast<float>(ini.GetLongValue("General", "TripleHitWindow", 400) * 0.001);
+        SETTING_HOLD_THRESHOLD = static_cast<float>(ini.GetLongValue("General", "SettingHoldDuration", 3000) * 0.001);
         LOG_LEVEL = ini.GetLongValue("Debug", "LoggingLevel", 2);
 
         logger::debug("Version                  {}", SKSE::PluginDeclaration::GetSingleton()->GetVersion());
@@ -52,9 +52,9 @@ namespace CEGlobals
         logger::debug("Background Alpha         {}", BACKGROUND_ALPHA);
         logger::debug("Maximum Rows:            {}", ROWS);
         logger::debug("Compare Key:             {}", COMPARE_KEY);
-        logger::debug("Hold Duration:           {} milliseconds", HOLD_THRESHOLD.count());
-        logger::debug("Triple Hit Window:       {} milliseconds", TRIPLE_HIT_WINDOW.count());
-        logger::debug("Setting Hold Duration:   {} milliseconds", SETTING_HOLD_THRESHOLD.count());
+        logger::debug("Hold Duration:           {} milliseconds", HOLD_THRESHOLD * 1000);
+        logger::debug("Triple Hit Window:       {} milliseconds", TRIPLE_HIT_WINDOW * 1000);
+        logger::debug("Setting Hold Duration:   {} milliseconds", SETTING_HOLD_THRESHOLD * 1000);
 
         ini.SetDoubleValue("General", "Xoffset", X_ORIGIN);
         ini.SetDoubleValue("General", "Yoffset", Y_ORIGIN);
@@ -62,12 +62,14 @@ namespace CEGlobals
         ini.SetLongValue("General", "BackgroundAlpha", BACKGROUND_ALPHA);
         ini.SetLongValue("General", "MaximumRows", ROWS);
         ini.SetLongValue("General", "CompareKey", COMPARE_KEY);
-        ini.SetLongValue("General", "HoldDuration", static_cast<long>(HOLD_THRESHOLD.count()));
-        ini.SetLongValue("General", "TrippleHitWindow", static_cast<long>(TRIPLE_HIT_WINDOW.count()));
-        ini.SetLongValue("General", "SettingHoldDuration", static_cast<long>(SETTING_HOLD_THRESHOLD.count()));
+        ini.SetLongValue("General", "HoldDuration", static_cast<long>(HOLD_THRESHOLD * 1000));
+        ini.SetLongValue("General", "TripleHitWindow", static_cast<long>(TRIPLE_HIT_WINDOW * 1000));
+        ini.SetLongValue("General", "SettingHoldDuration", static_cast<long>(SETTING_HOLD_THRESHOLD * 1000));
 
         ini.SetLongValue("Debug", "LoggingLevel", LOG_LEVEL);
 
         ini.SaveFile("Data\\SKSE\\Plugins\\CompareEquipmentNG.ini");
+
+        CEMenu::UpdateMenuName();
     }
 }

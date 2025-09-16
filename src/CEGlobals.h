@@ -2,21 +2,24 @@
 
 namespace CEGlobals
 {
-    extern std::string EXPECTED_SWF_VERSION;
     extern double X_ORIGIN;
     extern double Y_ORIGIN;
     extern int SCALE;
     extern int BACKGROUND_ALPHA;
     extern int ROWS;
     extern uint32_t COMPARE_KEY;
-    extern uint32_t CYCLE_KEY;
-    extern std::chrono::milliseconds HOLD_THRESHOLD;
-    extern std::chrono::milliseconds TRIPLE_HIT_WINDOW;
-    extern std::chrono::milliseconds SETTING_HOLD_THRESHOLD;
+    extern float HOLD_THRESHOLD;
+    extern float TRIPLE_HIT_WINDOW;
+    extern float SETTING_HOLD_THRESHOLD;
     extern int LOG_LEVEL;
 
-    const int EQUIPPED_ITEM_ARRAY_SIZE = 6;
-    const int SELECTED_ITEM_ARRAY_SIZE = 8;
+    extern RE::INPUT_DEVICE lastInputDevice;
+
+    const int EQUIPPED_ARMOR_ITEM_ARRAY_SIZE = 6;
+    const int SELECTED_ARMOR_ITEM_ARRAY_SIZE = 8;
+    const int EQUIPPED_WEAPON_ITEM_ARRAY_SIZE = 9;
+    const int SELECTED_WEAPON_ITEM_ARRAY_SIZE = 14;
+    const std::string EXPECTED_SWF_VERSION = "1";
 
     void LoadConfig();
 }
