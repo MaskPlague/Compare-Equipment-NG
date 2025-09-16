@@ -48,8 +48,8 @@ namespace CEGameMenuUtils
             ++s;
         return s;
     }
-
-    std::string GetEnchantmentString(RE::TESObjectARMO *armor, std::string description, float magnitude)
+    template <class T>
+    std::string GetEnchantmentString(T *item, std::string description, float magnitude)
     {
         ltrim(description);
         auto index = description.find("<mag>");
@@ -58,7 +58,7 @@ namespace CEGameMenuUtils
         else if (description == "")
         {
             RE::BSString str;
-            armor->GetDescription(str, nullptr);
+            item->GetDescription(str, nullptr);
             std::string string = static_cast<std::string>(str);
             ltrim(string);
             cleanPercentage(string);
@@ -71,11 +71,12 @@ namespace CEGameMenuUtils
             return cleanPercentage(description) + "\n";
     }
 
-    std::string GetArmorDescription(RE::TESObjectARMO *armor)
+    template <class T>
+    std::string GetDescription(T *item)
     {
         std::string text = "";
         RE::BSString str;
-        armor->GetDescription(str, nullptr);
+        item->GetDescription(str, nullptr);
         std::string description = static_cast<std::string>(str) + "\n";
         if (description.size() > 3)
             text = cleanPercentage(description);
@@ -116,18 +117,20 @@ namespace CEGameMenuUtils
         return false;
     }
 
-    void GetEnchantmentInfo(std::string &effectInfo, RE::EnchantmentItem *enchantment, RE::TESObjectARMO *armor)
+    template <class T>
+    void GetEnchantmentInfo(std::string &effectInfo, RE::EnchantmentItem *enchantment, T *item)
     {
         auto effects = enchantment->effects;
         for (auto effect : effects)
         {
             float magnitude = effect->GetMagnitude();
             std::string description = effect->baseEffect->magicItemDescription.c_str();
-            effectInfo += GetEnchantmentString(armor, description, magnitude);
+            effectInfo += GetEnchantmentString(item, description, magnitude);
         }
     }
 
-    bool GetUserEnchantmentAndName(RE::FormID formId, std::string &effectInfo, RE::TESObjectARMO *armor, const char *&name)
+    template <class T>
+    bool GetUserEnchantmentAndName(RE::FormID formId, std::string &effectInfo, T *item, const char *&name)
     {
         RE::UI *uiSingleton = RE::UI::GetSingleton();
         RE::BSTArray<RE::ItemList::Item *> items;
@@ -163,11 +166,11 @@ namespace CEGameMenuUtils
             return false;
         logger::trace("Got items");
         RE::InventoryEntryData *desc = nullptr;
-        for (RE::ItemList::Item *item : items)
+        for (RE::ItemList::Item *itm : items)
         {
-            if (item && item->data.objDesc->object->GetFormID() == formId)
+            if (itm && itm->data.objDesc->object->GetFormID() == formId)
             {
-                desc = item->data.objDesc;
+                desc = itm->data.objDesc;
                 break;
             }
         }
@@ -194,32 +197,27 @@ namespace CEGameMenuUtils
             auto ench = xEnch->enchantment;
             if (!ench)
                 continue;
-            GetEnchantmentInfo(effectInfo, ench, armor);
+            GetEnchantmentInfo(effectInfo, ench, item);
         }
         if (effectInfo == "")
             return false;
         return true;
     }
 
-    void GetEquippedInSlots(RE::FormID selectedFormId)
+    void GetSelectedAndEquippedArmorInfo(RE::FormID selectedFormId, RE::TESObjectARMO *selectedArmor)
     {
-        if (auto selectedForm = RE::TESForm::LookupByID(selectedFormId))
+        logger::trace("Form is armor, getting bipedModelData");
+        RE::BIPED_MODEL biped = selectedArmor->bipedModelData;
+        logger::trace("Getting bipedObjectSlots");
+        SKSE::stl::enumeration<RE::BIPED_MODEL::BipedObjectSlot, uint32_t> slots = biped.bipedObjectSlots;
+        logger::trace("Retrieving currentActor");
+        auto actor = CEActorUtils::currentActor;
+        if (!CEActorUtils::IsActorValid(actor))
         {
-            logger::trace("Form exists");
-            if (auto selectedArmor = selectedForm->As<RE::TESObjectARMO>())
-            {
-                logger::trace("Form is armor, getting bipedModelData");
-                RE::BIPED_MODEL biped = selectedArmor->bipedModelData;
-                logger::trace("Getting bipedObjectSlots");
-                SKSE::stl::enumeration<RE::BIPED_MODEL::BipedObjectSlot, uint32_t> slots = biped.bipedObjectSlots;
-                logger::trace("Retrieving currentActor");
-                auto actor = CEActorUtils::currentActor;
-                if (!CEActorUtils::IsActorValid(actor))
-                {
-                    logger::trace("Current actor isn't valid");
-                    CEActorUtils::SetActorToNextFollower();
-                    return;
-                }
+            logger::trace("Current actor isn't valid");
+            CEActorUtils::SetActorToNextFollower();
+            return;
+        }
 
         logger::trace("Resetting menu");
         CEMenu::ResetMenu();
@@ -236,141 +234,362 @@ namespace CEGameMenuUtils
         logger::trace("Getting ceMenu");
         RE::GFxValue ceMenu = CEMenu::GetCEMenu(CEMenu::GetMenu_mc());
 
-                logger::trace("Retrieving player");
-                auto player = RE::PlayerCharacter::GetSingleton();
-                if (!player)
-                    return;
+        logger::trace("Retrieving player");
+        auto player = RE::PlayerCharacter::GetSingleton();
+        if (!player)
+            return;
 
-                using Slot = RE::BGSBipedObjectForm::BipedObjectSlot;
-                std::vector<Slot> slotList = {
-                    Slot::kAmulet,
-                    Slot::kBody,
-                    Slot::kCalves,
-                    Slot::kCirclet,
-                    Slot::kDecapitate,
-                    Slot::kDecapitateHead,
-                    Slot::kEars,
-                    Slot::kFeet,
-                    Slot::kForearms,
-                    Slot::kFX01,
-                    Slot::kHair,
-                    Slot::kHands,
-                    Slot::kHead,
-                    Slot::kLongHair,
-                    Slot::kModArmLeft,
-                    Slot::kModArmRight,
-                    Slot::kModBack,
-                    Slot::kModChestPrimary,
-                    Slot::kModChestSecondary,
-                    Slot::kModFaceJewelry,
-                    Slot::kModLegLeft,
-                    Slot::kModLegRight,
-                    Slot::kModMisc1,
-                    Slot::kModMisc2,
-                    Slot::kModMouth,
-                    Slot::kModNeck,
-                    Slot::kModPelvisPrimary,
-                    Slot::kModPelvisSecondary,
-                    Slot::kModShoulder,
-                    Slot::kNone,
-                    Slot::kRing,
-                    Slot::kShield,
-                    Slot::kTail,
-                };
-                const RE::TESObjectREFR::InventoryItemMap &inv = actor->GetInventory();
-                auto selectedName = selectedArmor->GetName();
-                std::string selectedSlots = "";
-                selectedSlots += GetArmorSlotsString(selectedArmor);
-                const char *selectedType = GetArmorTypeString(selectedArmor->GetArmorType());
-                auto selectedValue = selectedArmor->GetGoldValue();
-                auto selectedEnchantment = selectedArmor->formEnchanting;
-                std::string selectedEffectInfo = GetArmorDescription(selectedArmor);
-                if (selectedEnchantment && selectedEffectInfo == "")
-                {
-                    GetEnchantmentInfo(selectedEffectInfo, selectedEnchantment, selectedArmor);
-                }
-                if (selectedEffectInfo == "")
-                    if (!GetUserEnchantmentAndName(selectedFormId, selectedEffectInfo, selectedArmor, selectedName))
-                        selectedEffectInfo = "None";
+        using Slot = RE::BGSBipedObjectForm::BipedObjectSlot;
+        std::vector<Slot> slotList = {
+            Slot::kAmulet,
+            Slot::kBody,
+            Slot::kCalves,
+            Slot::kCirclet,
+            Slot::kDecapitate,
+            Slot::kDecapitateHead,
+            Slot::kEars,
+            Slot::kFeet,
+            Slot::kForearms,
+            Slot::kFX01,
+            Slot::kHair,
+            Slot::kHands,
+            Slot::kHead,
+            Slot::kLongHair,
+            Slot::kModArmLeft,
+            Slot::kModArmRight,
+            Slot::kModBack,
+            Slot::kModChestPrimary,
+            Slot::kModChestSecondary,
+            Slot::kModFaceJewelry,
+            Slot::kModLegLeft,
+            Slot::kModLegRight,
+            Slot::kModMisc1,
+            Slot::kModMisc2,
+            Slot::kModMouth,
+            Slot::kModNeck,
+            Slot::kModPelvisPrimary,
+            Slot::kModPelvisSecondary,
+            Slot::kModShoulder,
+            Slot::kNone,
+            Slot::kRing,
+            Slot::kShield,
+            Slot::kTail,
+        };
+        const RE::TESObjectREFR::InventoryItemMap &inv = actor->GetInventory();
+        auto selectedName = selectedArmor->GetName();
+        std::string selectedSlots = "";
+        selectedSlots += GetArmorSlotsString(selectedArmor);
+        const char *selectedType = GetArmorTypeString(selectedArmor->GetArmorType());
+        auto selectedValue = selectedArmor->GetGoldValue();
+        auto selectedEnchantment = selectedArmor->formEnchanting;
+        std::string selectedEffectInfo = GetDescription(selectedArmor);
+        if (selectedEnchantment && selectedEffectInfo == "")
+        {
+            GetEnchantmentInfo(selectedEffectInfo, selectedEnchantment, selectedArmor);
+        }
+        if (selectedEffectInfo == "")
+            if (!GetUserEnchantmentAndName(selectedFormId, selectedEffectInfo, selectedArmor, selectedName))
+                selectedEffectInfo = "None";
 
-                int32_t equippedAccumulateValue = 0;
-                int selectedRating = 0;
-                bool gotSelectedRatingScaled = true;
-                std::string selectedRatingString;
-                if (!GetRatingInfo(selectedFormId, inv, player, selectedRating, selectedRatingString))
-                {
-                    selectedRating = static_cast<int>(selectedArmor->armorRating / 100);
-                    selectedRatingString = std::to_string(selectedRating) + " (Unscaled)";
-                    gotSelectedRatingScaled = false;
-                }
+        int32_t equippedAccumulateValue = 0;
+        int selectedRating = 0;
+        bool gotSelectedRatingScaled = true;
+        std::string selectedRatingString;
+        if (!GetRatingInfo(selectedFormId, inv, player, selectedRating, selectedRatingString))
+        {
+            selectedRating = static_cast<int>(selectedArmor->armorRating / 100);
+            selectedRatingString = std::to_string(selectedRating) + " (Unscaled)";
+            gotSelectedRatingScaled = false;
+        }
 
-                int equippedAccumulatedRating = 0;
-                std::vector<RE::FormID> pushedFormIds;
-                bool selectedIsEquipped = false;
-                for (auto slot : slotList)
+        int equippedAccumulatedRating = 0;
+        std::vector<RE::FormID> pushedFormIds;
+        bool selectedIsEquipped = false;
+        for (auto slot : slotList)
+        {
+            if ((slots & slot) != Slot::kNone)
+            {
+                auto equippedArmor = actor->GetWornArmor(slot);
+                if (equippedArmor)
                 {
-                    if ((slots & slot) != Slot::kNone)
+                    auto formId = equippedArmor->GetFormID();
+                    if (selectedFormId == formId)
+                        selectedIsEquipped = true;
+                    bool alreadyPushed = std::find(pushedFormIds.begin(), pushedFormIds.end(), formId) != pushedFormIds.end();
+                    if (selectedFormId != formId && !alreadyPushed)
                     {
-                        auto equippedArmor = actor->GetWornArmor(slot);
-                        if (equippedArmor)
+                        pushedFormIds.push_back(formId);
+                        const char *equippedName = equippedArmor->GetName();
+                        std::string equippedSlots = GetArmorSlotsString(equippedArmor);
+                        const char *equippedType = GetArmorTypeString(equippedArmor->GetArmorType());
+                        int32_t equippedValue = equippedArmor->GetGoldValue();
+                        auto equippedEnchantment = equippedArmor->formEnchanting;
+                        std::string equippedEffectInfo = GetDescription(equippedArmor);
+                        if (equippedEnchantment && equippedEffectInfo == "")
                         {
-                            auto formId = equippedArmor->GetFormID();
-                            if (selectedFormId == formId)
-                                selectedIsEquipped = true;
-                            bool alreadyPushed = std::find(pushedFormIds.begin(), pushedFormIds.end(), formId) != pushedFormIds.end();
-                            if (selectedFormId != formId && !alreadyPushed)
-                            {
-                                pushedFormIds.push_back(formId);
-                                const char *equippedName = equippedArmor->GetName();
-                                std::string equippedSlots = GetArmorSlotsString(equippedArmor);
-                                const char *equippedType = GetArmorTypeString(equippedArmor->GetArmorType());
-                                int32_t equippedValue = equippedArmor->GetGoldValue();
-                                auto equippedEnchantment = equippedArmor->formEnchanting;
-                                std::string equippedEffectInfo = GetArmorDescription(equippedArmor);
-                                if (equippedEnchantment && equippedEffectInfo == "")
-                                {
-                                    GetEnchantmentInfo(equippedEffectInfo, equippedEnchantment, equippedArmor);
-                                }
-                                if (equippedEffectInfo == "")
-                                    if (!GetUserEnchantmentAndName(formId, equippedEffectInfo, equippedArmor, equippedName))
-                                        equippedEffectInfo = "None";
-
-                                equippedAccumulateValue += equippedValue;
-                                int equippedRating = 0;
-                                std::string equippedRatingString;
-                                if (!gotSelectedRatingScaled || !GetRatingInfo(formId, inv, player, equippedRating, equippedRatingString))
-                                {
-                                    equippedRating = static_cast<int>(equippedArmor->armorRating / 100);
-                                    equippedRatingString = std::to_string(equippedRating) + " (Unscaled)";
-                                }
-
-                                equippedAccumulatedRating += equippedRating;
-                                std::array<RE::GFxValue, CEGlobals::EQUIPPED_ITEM_ARRAY_SIZE>
-                                    itemInfo = {equippedName, equippedSlots.c_str(), equippedType,
-                                                equippedRatingString.c_str(), equippedValue, equippedEffectInfo.c_str()};
-                                CEMenu::CreateComparisonItemCard(itemInfo, ceMenu);
-                            }
+                            GetEnchantmentInfo(equippedEffectInfo, equippedEnchantment, equippedArmor);
                         }
+                        if (equippedEffectInfo == "")
+                            if (!GetUserEnchantmentAndName(formId, equippedEffectInfo, equippedArmor, equippedName))
+                                equippedEffectInfo = "None";
+
+                        equippedAccumulateValue += equippedValue;
+                        int equippedRating = 0;
+                        std::string equippedRatingString;
+                        if (!gotSelectedRatingScaled || !GetRatingInfo(formId, inv, player, equippedRating, equippedRatingString))
+                        {
+                            equippedRating = static_cast<int>(equippedArmor->armorRating / 100);
+                            equippedRatingString = std::to_string(equippedRating) + " (Unscaled)";
+                        }
+
+                        equippedAccumulatedRating += equippedRating;
+                        std::array<RE::GFxValue, CEGlobals::EQUIPPED_ARMOR_ITEM_ARRAY_SIZE>
+                            itemInfo = {equippedName, equippedSlots.c_str(), equippedType,
+                                        equippedRatingString.c_str(), equippedValue, equippedEffectInfo.c_str()};
+                        CEMenu::CreateArmorComparisonItemCard(itemInfo, ceMenu);
                     }
                 }
-                if (pushedFormIds.size() > 0 || (pushedFormIds.size() == 0 && !selectedIsEquipped))
-                {
-                    equippedAccumulatedRating = selectedRating - equippedAccumulatedRating;
-                    equippedAccumulateValue = selectedValue - equippedAccumulateValue;
-                }
-                logger::trace("Creating selectedItemInfo");
-                std::array<RE::GFxValue, CEGlobals::SELECTED_ITEM_ARRAY_SIZE>
-                    selectedItemInfo = {selectedName, selectedSlots.c_str(), selectedType,
-                                        selectedRatingString.c_str(), equippedAccumulatedRating,
-                                        selectedValue, equippedAccumulateValue,
-                                        selectedEffectInfo.c_str()};
+            }
+        }
+        if (pushedFormIds.size() > 0 || (pushedFormIds.size() == 0 && !selectedIsEquipped))
+        {
+            equippedAccumulatedRating = selectedRating - equippedAccumulatedRating;
+            equippedAccumulateValue = selectedValue - equippedAccumulateValue;
+        }
+        logger::trace("Creating selectedItemInfo");
+        std::array<RE::GFxValue, CEGlobals::SELECTED_ARMOR_ITEM_ARRAY_SIZE>
+            selectedItemInfo = {selectedName, selectedSlots.c_str(), selectedType,
+                                selectedRatingString.c_str(), equippedAccumulatedRating,
+                                selectedValue, equippedAccumulateValue,
+                                selectedEffectInfo.c_str()};
 
-                logger::trace("Populating selected item card");
-                CEMenu::CreateSelectedItemCard(selectedItemInfo);
-                logger::trace("Positioning and displaying item cards");
-                std::array<RE::GFxValue, CEGlobals::EQUIPPED_ITEM_ARRAY_SIZE>
-                    displayCommand = {"DISPLAY", CEGlobals::BACKGROUND_ALPHA, CEGlobals::SCALE, CEGlobals::ROWS, "", ""};
-                CEMenu::CreateComparisonItemCard(displayCommand, ceMenu);
+        logger::trace("Populating selected item card");
+        CEMenu::CreateSelectedArmorItemCard(selectedItemInfo, ceMenu);
+        logger::trace("Positioning and displaying item cards");
+        std::array<RE::GFxValue, CEGlobals::EQUIPPED_ARMOR_ITEM_ARRAY_SIZE>
+            displayCommand = {"DISPLAY", CEGlobals::BACKGROUND_ALPHA, CEGlobals::SCALE, CEGlobals::ROWS, "", ""};
+        CEMenu::CreateArmorComparisonItemCard(displayCommand, ceMenu);
+    }
+
+    bool GetDamageInfo(RE::FormID formId, const RE::TESObjectREFR::InventoryItemMap &inv, RE::PlayerCharacter *player, float &damage, std::string &damageString)
+    {
+        for (auto &[item, data] : inv)
+        {
+            if (item && item->GetFormID() == formId)
+            {
+                RE::InventoryEntryData *entryData = data.second.get();
+                damage = player->GetDamage(entryData);
+                damageString = std::format("{:.2f}", damage);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void GetFullWeaponInformation(RE::FormID formId, RE::TESObjectWEAP *weapon, RE::PlayerCharacter *player, RE::GFxValue ceMenu, std::string type, bool flag,
+                                  int &valueDiff, float &speedDiff, float &reachDiff, float &staggerDiff, float &critDiff, float &damageDiff)
+    {
+        const char *name = weapon->GetName();
+        int value = weapon->GetGoldValue();
+        float speed = weapon->GetSpeed();
+        float reach = weapon->GetReach();
+        float stagger = weapon->GetStagger();
+        int crit = weapon->GetCritDamage();
+        RE::WEAPON_TYPE weaponType = weapon->GetWeaponType();
+        std::set<RE::WEAPON_TYPE> rangedWeapons = {RE::WEAPON_TYPE::kBow, RE::WEAPON_TYPE::kCrossbow, RE::WEAPON_TYPE::kStaff};
+        if (rangedWeapons.contains(weaponType))
+            reach = 99.999f;
+        float damage;
+        std::string damageString;
+        auto inv = player->GetInventory();
+        if (!CEActorUtils::currentActor->IsPlayerRef() || !GetDamageInfo(formId, inv, player, damage, damageString))
+        {
+            damage = weapon->GetAttackDamage();
+            damageString = std::format("{:.2f}", damage) + " (Unscaled)";
+        }
+        auto enchantment = weapon->formEnchanting;
+        std::string effectInfo = GetDescription(weapon);
+        if (enchantment && effectInfo == "")
+        {
+            GetEnchantmentInfo(effectInfo, enchantment, weapon);
+        }
+        if (effectInfo == "")
+            if (!GetUserEnchantmentAndName(formId, effectInfo, weapon, name))
+                effectInfo = "None";
+        std::string handLabel;
+        if (flag)
+            handLabel = "Both Hands";
+        else if (type == "left")
+            handLabel = "Left Hand";
+        else if (type == "right")
+            handLabel = "Right Hand";
+        if (type == "selected")
+        {
+            if (flag)
+            {
+                damageDiff = damage - damageDiff;
+                critDiff = crit - critDiff;
+                speedDiff = speed - speedDiff;
+                valueDiff = value - valueDiff;
+                staggerDiff = stagger - staggerDiff;
+                reachDiff = reach - reachDiff;
+            }
+            std::array<RE::GFxValue, CEGlobals::SELECTED_WEAPON_ITEM_ARRAY_SIZE>
+                itemInfo = {
+                    name, damageString.c_str(), damageDiff, crit, critDiff, value, valueDiff,
+                    speed, speedDiff, stagger, staggerDiff, reach, reachDiff, effectInfo.c_str()};
+            CEMenu::CreateSelectedWeaponItemCard(itemInfo, ceMenu);
+            return;
+        }
+        damageDiff += damage;
+        critDiff += crit;
+        speedDiff += speed;
+        valueDiff += value;
+        staggerDiff += stagger;
+        reachDiff += reach;
+        std::array<RE::GFxValue, CEGlobals::EQUIPPED_WEAPON_ITEM_ARRAY_SIZE>
+            itemInfo = {
+                handLabel.c_str(), name, damageString.c_str(), crit, value,
+                speed, stagger, reach, effectInfo.c_str()};
+        CEMenu::CreateWeaponComparisonItemCard(itemInfo, ceMenu);
+    }
+
+    void GetSelectedAndEquippedWeaponInfo(RE::FormID selectedFormId, RE::TESObjectWEAP *selectedWeapon)
+    {
+        auto actor = CEActorUtils::currentActor;
+        if (!CEActorUtils::IsActorValid(actor))
+        {
+            logger::trace("Current actor isn't valid");
+            CEActorUtils::SetActorToNextFollower();
+            return;
+        }
+
+        logger::trace("Resetting menu");
+        CEMenu::ResetMenu();
+        logger::trace("Setting actor name");
+        CEMenu::SetActor(actor->GetName());
+        logger::trace("Getting 3d manager");
+        auto manager = RE::Inventory3DManager::GetSingleton();
+        if (manager)
+        {
+            auto zoom = manager->GetRuntimeData().zoomProgress;
+            if (zoom == 0.0f)
+                manager->Clear3D();
+        }
+        logger::trace("Getting ceMenu");
+        RE::GFxValue ceMenu = CEMenu::GetCEMenu(CEMenu::GetMenu_mc());
+
+        logger::trace("Retrieving player");
+        auto player = RE::PlayerCharacter::GetSingleton();
+        if (!player)
+            return;
+
+        int valueDiff = 0;
+        float speedDiff = 0.0f;
+        float reachDiff = 0.0f;
+        float staggerDiff = 0.0f;
+        float critDiff = 0;
+        float damageDiff = 0;
+        auto left = actor->GetEquippedObject(true);
+        auto right = actor->GetEquippedObject(false);
+        bool both = false;
+        bool leftIsWeapon = false;
+        bool rightIsWeapon = false;
+        RE::FormID leftFormId = 0;
+        if (left && left->IsWeapon())
+        {
+            leftIsWeapon = true;
+            leftFormId = left->GetFormID();
+        }
+        RE::FormID rightFormId = 0;
+        if (right && right->IsWeapon())
+        {
+            rightIsWeapon = true;
+            rightFormId = right->GetFormID();
+        }
+        if (leftIsWeapon && rightIsWeapon && leftFormId == rightFormId)
+        {
+            both = true;
+        }
+        bool selectedIsLeft = (leftIsWeapon && (leftFormId == selectedFormId));
+        bool selectedIsRight = (rightIsWeapon && (rightFormId == selectedFormId));
+        auto selectedWeaponType = selectedWeapon->GetWeaponType();
+        std::set<RE::WEAPON_TYPE> oneHandedTypes = {RE::WEAPON_TYPE::kOneHandAxe,
+                                                    RE::WEAPON_TYPE::kOneHandDagger,
+                                                    RE::WEAPON_TYPE::kOneHandMace,
+                                                    RE::WEAPON_TYPE::kOneHandSword,
+                                                    RE::WEAPON_TYPE::kStaff};
+        // TODO: change to only use this calculation for two handed weapons, and different for one handed.
+        bool aWeaponIsEquipped = false;
+        bool oneHanded = oneHandedTypes.contains(selectedWeaponType);
+        int weaponCount = 0;
+        if (leftIsWeapon && leftFormId != selectedFormId && !selectedIsRight)
+        {
+            aWeaponIsEquipped = true;
+            weaponCount++;
+            GetFullWeaponInformation(left->GetFormID(), left->As<RE::TESObjectWEAP>(), player, ceMenu, "left", both,
+                                     valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff);
+            if (oneHanded)
+                GetFullWeaponInformation(selectedFormId, selectedWeapon, player, ceMenu, "selected", aWeaponIsEquipped,
+                                         valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff);
+        }
+        float reachMax = 0.0f;
+        if (rightIsWeapon && rightFormId != selectedFormId && !selectedIsLeft && !both)
+        {
+            aWeaponIsEquipped = true;
+            weaponCount++;
+            if (oneHanded)
+            {
+                valueDiff = 0;
+                speedDiff = 0.0f;
+                staggerDiff = 0.0f;
+                critDiff = 0.0f;
+                damageDiff = 0;
+                reachDiff = 0.0f;
+            }
+            else
+            {
+                reachMax = reachDiff;
+                reachDiff = 0.0f;
+            }
+
+            GetFullWeaponInformation(right->GetFormID(), right->As<RE::TESObjectWEAP>(), player, ceMenu, "right", false,
+                                     valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff);
+            if (oneHanded)
+                GetFullWeaponInformation(selectedFormId, selectedWeapon, player, ceMenu, "selected", aWeaponIsEquipped,
+                                         valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff);
+        }
+        if (!aWeaponIsEquipped || !oneHanded)
+        {
+            if (weaponCount > 0)
+            {
+                speedDiff /= weaponCount;
+                staggerDiff /= weaponCount;
+                critDiff /= weaponCount;
+                damageDiff /= weaponCount;
+            }
+            std::string labelText = "selected_" + std::to_string(oneHanded);
+            GetFullWeaponInformation(selectedFormId, selectedWeapon, player, ceMenu, "selected", aWeaponIsEquipped,
+                                     valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff);
+        }
+
+        std::array<RE::GFxValue, CEGlobals::EQUIPPED_WEAPON_ITEM_ARRAY_SIZE>
+            displayCommand = {"DISPLAY", CEGlobals::BACKGROUND_ALPHA, CEGlobals::SCALE, "", "", "", "", "", ""};
+        CEMenu::CreateWeaponComparisonItemCard(displayCommand, ceMenu);
+    }
+
+    void GetArmorOrWeapon(RE::FormID selectedFormId)
+    {
+        if (auto selectedForm = RE::TESForm::LookupByID(selectedFormId))
+        {
+            logger::trace("Form exists");
+            if (auto selectedArmor = selectedForm->As<RE::TESObjectARMO>())
+            {
+                GetSelectedAndEquippedArmorInfo(selectedFormId, selectedArmor);
+            }
+            else if (auto selectedWeapon = selectedForm->As<RE::TESObjectWEAP>())
+            {
+                GetSelectedAndEquippedWeaponInfo(selectedFormId, selectedWeapon);
             }
         }
     }
@@ -398,7 +617,7 @@ namespace CEGameMenuUtils
         logger::trace("Setting currentFormID");
         currentFormID = fid;
         logger::trace("Calling GetEquippedInSlots()");
-        GetEquippedInSlots(fid);
+        GetArmorOrWeapon(fid);
         return true;
     }
 
@@ -408,6 +627,6 @@ namespace CEGameMenuUtils
         {
             return;
         }
-        GetEquippedInSlots(currentFormID);
+        GetArmorOrWeapon(currentFormID);
     }
 }

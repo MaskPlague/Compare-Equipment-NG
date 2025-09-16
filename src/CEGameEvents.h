@@ -10,6 +10,15 @@ namespace CEGameEvents
         static InputEvent *GetSingleton();
     };
 
+    extern class DeviceInputEvent : public RE::BSTEventSink<RE::InputEvent *>
+    {
+    public:
+        virtual RE::BSEventNotifyControl ProcessEvent(
+            RE::InputEvent *const *a_event,
+            RE::BSTEventSource<RE::InputEvent *> *) noexcept override;
+        static DeviceInputEvent *GetSingleton();
+    };
+
     extern class UIEvent : public RE::BSTEventSink<RE::MenuOpenCloseEvent>
     {
     public:
