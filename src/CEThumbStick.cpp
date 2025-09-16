@@ -1,9 +1,10 @@
+namespace logger = SKSE::log;
+
 namespace CEThumbStick
 {
-    VirtualButtonState UpdateVirtualButton(VirtualButton &vb, float value, float threshold)
+    VirtualButtonState UpdateVirtualButton(VirtualButton &vb, float valueX, float valueY)
     {
-        bool down = (value >= threshold);
-
+        bool down = (valueX * CEGlobals::thumbstickX + valueY * CEGlobals::thumbstickY) >= CEGlobals::thumbstickThreshold;
         if (down)
         {
             if (!vb.isDown)

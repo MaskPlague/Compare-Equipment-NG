@@ -12,12 +12,12 @@ namespace CEThumbStick
 
     struct VirtualButton
     {
-        bool isDown = false; // last raw state
+        bool isDown = false;
         std::chrono::steady_clock::time_point downStart;
         float heldDownSecs = 0.0f;
         VirtualButtonState state = VirtualButtonState::kUp;
         bool IsUp() { return (state != VirtualButtonState::kPressed && state != VirtualButtonState::kHeld); }
     };
 
-    VirtualButtonState UpdateVirtualButton(VirtualButton &vb, float value, float threshold = 0.9f);
+    VirtualButtonState UpdateVirtualButton(VirtualButton &vb, float valueX, float valueY);
 }

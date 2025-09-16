@@ -132,7 +132,7 @@ namespace CEGameEvents
                     {
                         if (auto ts = static_cast<RE::ThumbstickEvent *>(e); ts)
                         {
-                            auto state = UpdateVirtualButton(rightThumbStick, ts->xValue, 0.9f);
+                            auto state = UpdateVirtualButton(rightThumbStick, ts->xValue, ts->yValue);
                             if (state != VirtualButtonState::kUp)
                             {
                                 bool buttonUp = (state != VirtualButtonState::kHeld && state != VirtualButtonState::kPressed);

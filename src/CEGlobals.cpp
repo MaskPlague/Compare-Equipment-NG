@@ -11,6 +11,9 @@ namespace CEGlobals
     float HOLD_THRESHOLD = 500 * 0.001;
     float TRIPLE_HIT_WINDOW = 500 * 0.001;
     float SETTING_HOLD_THRESHOLD = 3000 * 0.001;
+    float thumbstickX = 0.0f;
+    float thumbstickY = 0.9f;
+    float thumbstickThreshold = 0.9f;
     int LOG_LEVEL = 2;
     RE::INPUT_DEVICE lastInputDevice = RE::INPUT_DEVICE::kNone;
 
@@ -42,6 +45,15 @@ namespace CEGlobals
         HOLD_THRESHOLD = static_cast<float>(ini.GetLongValue("General", "HoldDuration", 500) * 0.001);
         TRIPLE_HIT_WINDOW = static_cast<float>(ini.GetLongValue("General", "TripleHitWindow", 400) * 0.001);
         SETTING_HOLD_THRESHOLD = static_cast<float>(ini.GetLongValue("General", "SettingHoldDuration", 3000) * 0.001);
+        int angle = ini.GetLongValue("General", "ThumbstickAngle", 0);
+        if (angle > 180 || angle < -180)
+            angle = 0;
+        thumbstickThreshold = static_cast<float>(ini.GetDoubleValue("General", "ThumbstickThreshold", 0.9f));
+        if (thumbstickThreshold >= 1.0)
+            thumbstickThreshold = 0.9f;
+        float radians = static_cast<float>(angle) * RE::NI_PI / 180.0f;
+        thumbstickX = std::sin(radians);
+        thumbstickY = std::cos(radians);
         LOG_LEVEL = ini.GetLongValue("Debug", "LoggingLevel", 2);
 
         logger::debug("Version                  {}", SKSE::PluginDeclaration::GetSingleton()->GetVersion());
@@ -55,6 +67,8 @@ namespace CEGlobals
         logger::debug("Hold Duration:           {} milliseconds", HOLD_THRESHOLD * 1000);
         logger::debug("Triple Hit Window:       {} milliseconds", TRIPLE_HIT_WINDOW * 1000);
         logger::debug("Setting Hold Duration:   {} milliseconds", SETTING_HOLD_THRESHOLD * 1000);
+        logger::debug("Thumbstick Angle:        {}", angle);
+        logger::debug("Thumbstick Threshold:    {}", thumbstickThreshold);
 
         ini.SetDoubleValue("General", "Xoffset", X_ORIGIN);
         ini.SetDoubleValue("General", "Yoffset", Y_ORIGIN);
@@ -65,6 +79,8 @@ namespace CEGlobals
         ini.SetLongValue("General", "HoldDuration", static_cast<long>(HOLD_THRESHOLD * 1000));
         ini.SetLongValue("General", "TripleHitWindow", static_cast<long>(TRIPLE_HIT_WINDOW * 1000));
         ini.SetLongValue("General", "SettingHoldDuration", static_cast<long>(SETTING_HOLD_THRESHOLD * 1000));
+        ini.SetLongValue("General", "ThumbstickAngle", angle);
+        ini.SetDoubleValue("General", "ThumbstickThreshold", thumbstickThreshold);
 
         ini.SetLongValue("Debug", "LoggingLevel", LOG_LEVEL);
 

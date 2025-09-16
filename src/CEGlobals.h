@@ -11,6 +11,9 @@ namespace CEGlobals
     extern float HOLD_THRESHOLD;
     extern float TRIPLE_HIT_WINDOW;
     extern float SETTING_HOLD_THRESHOLD;
+    extern float thumbstickX;
+    extern float thumbstickY;
+    extern float thumbstickThreshold;
     extern int LOG_LEVEL;
 
     extern RE::INPUT_DEVICE lastInputDevice;
