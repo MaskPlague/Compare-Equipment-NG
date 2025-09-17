@@ -14,6 +14,7 @@ namespace CEGlobals
     extern float thumbstickX;
     extern float thumbstickY;
     extern float thumbstickThreshold;
+    extern std::string effectCheckOrder;
     extern int LOG_LEVEL;
 
     extern RE::INPUT_DEVICE lastInputDevice;

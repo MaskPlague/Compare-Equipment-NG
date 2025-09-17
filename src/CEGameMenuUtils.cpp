@@ -130,7 +130,7 @@ namespace CEGameMenuUtils
     }
 
     template <class T>
-    bool GetUserEnchantmentAndName(RE::FormID formId, std::string &effectInfo, T *item, const char *&name)
+    bool GetPlayerAddedEnchantmentAndName(RE::FormID formId, std::string &effectInfo, T *item, const char *&name)
     {
         RE::UI *uiSingleton = RE::UI::GetSingleton();
         RE::BSTArray<RE::ItemList::Item *> items;
@@ -202,6 +202,27 @@ namespace CEGameMenuUtils
         if (effectInfo == "")
             return false;
         return true;
+    }
+
+    template <class T>
+    void GetEffectsInfo(RE::FormID formId, std::string &effectInfo, RE::EnchantmentItem *enchantment, T *item, const char *&name)
+    {
+        for (auto token : CEGlobals::effectCheckOrder)
+        {
+            if (effectInfo == "")
+            {
+                if (token == 'D')
+                    effectInfo = GetDescription(item);
+                if (token == 'E' && enchantment)
+                    GetEnchantmentInfo(effectInfo, enchantment, item);
+                if (token == 'P')
+                    GetPlayerAddedEnchantmentAndName(formId, effectInfo, item, name);
+            }
+            else
+                break;
+        }
+        if (effectInfo == "")
+            effectInfo = "None";
     }
 
     void GetSelectedAndEquippedArmorInfo(RE::FormID selectedFormId, RE::TESObjectARMO *selectedArmor)
@@ -282,14 +303,17 @@ namespace CEGameMenuUtils
         const char *selectedType = GetArmorTypeString(selectedArmor->GetArmorType());
         auto selectedValue = selectedArmor->GetGoldValue();
         auto selectedEnchantment = selectedArmor->formEnchanting;
+        std::string selectedEffectInfo = "";
+        GetEffectsInfo(selectedFormId, selectedEffectInfo, selectedEnchantment, selectedArmor, selectedName);
+        /*
         std::string selectedEffectInfo = GetDescription(selectedArmor);
         if (selectedEnchantment && selectedEffectInfo == "")
         {
             GetEnchantmentInfo(selectedEffectInfo, selectedEnchantment, selectedArmor);
         }
         if (selectedEffectInfo == "")
-            if (!GetUserEnchantmentAndName(selectedFormId, selectedEffectInfo, selectedArmor, selectedName))
-                selectedEffectInfo = "None";
+            if (!GetPlayerAddedEnchantmentAndName(selectedFormId, selectedEffectInfo, selectedArmor, selectedName))
+                selectedEffectInfo = "None";*/
 
         int32_t equippedAccumulateValue = 0;
         int selectedRating = 0;
@@ -324,14 +348,17 @@ namespace CEGameMenuUtils
                         const char *equippedType = GetArmorTypeString(equippedArmor->GetArmorType());
                         int32_t equippedValue = equippedArmor->GetGoldValue();
                         auto equippedEnchantment = equippedArmor->formEnchanting;
+                        std::string equippedEffectInfo = "";
+                        GetEffectsInfo(formId, equippedEffectInfo, equippedEnchantment, equippedArmor, equippedName);
+                        /*
                         std::string equippedEffectInfo = GetDescription(equippedArmor);
                         if (equippedEnchantment && equippedEffectInfo == "")
                         {
                             GetEnchantmentInfo(equippedEffectInfo, equippedEnchantment, equippedArmor);
                         }
                         if (equippedEffectInfo == "")
-                            if (!GetUserEnchantmentAndName(formId, equippedEffectInfo, equippedArmor, equippedName))
-                                equippedEffectInfo = "None";
+                            if (!GetPlayerAddedEnchantmentAndName(formId, equippedEffectInfo, equippedArmor, equippedName))
+                                equippedEffectInfo = "None";*/
 
                         equippedAccumulateValue += equippedValue;
                         int equippedRating = 0;
@@ -408,14 +435,17 @@ namespace CEGameMenuUtils
             damageString = std::format("{:.2f}", damage) + " (Unscaled)";
         }
         auto enchantment = weapon->formEnchanting;
+        std::string effectInfo = "";
+        GetEffectsInfo(formId, effectInfo, enchantment, weapon, name);
+        /*
         std::string effectInfo = GetDescription(weapon);
         if (enchantment && effectInfo == "")
         {
             GetEnchantmentInfo(effectInfo, enchantment, weapon);
         }
         if (effectInfo == "")
-            if (!GetUserEnchantmentAndName(formId, effectInfo, weapon, name))
-                effectInfo = "None";
+            if (!GetPlayerAddedEnchantmentAndName(formId, effectInfo, weapon, name))
+                effectInfo = "None";*/
         std::string handLabel;
         if (flag)
             handLabel = "Both Hands";
