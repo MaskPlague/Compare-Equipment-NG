@@ -164,7 +164,6 @@ namespace CEGameMenuUtils
         }
         else
             return false;
-        logger::trace("Got items");
         RE::InventoryEntryData *desc = nullptr;
         for (RE::ItemList::Item *itm : items)
         {
@@ -176,7 +175,6 @@ namespace CEGameMenuUtils
         }
         if (!desc)
             return false;
-        logger::trace("Got item to check");
         RE::BSSimpleList<RE::ExtraDataList *> *lists = desc->extraLists;
         const char *displayName = desc->GetDisplayName();
         if (displayName)
@@ -185,7 +183,6 @@ namespace CEGameMenuUtils
         if (!lists)
             return false;
 
-        logger::trace("Got extra lists");
         for (auto &list : *lists)
         {
             if (!list)
@@ -227,24 +224,16 @@ namespace CEGameMenuUtils
 
     void GetSelectedAndEquippedArmorInfo(RE::FormID selectedFormId, RE::TESObjectARMO *selectedArmor)
     {
-        logger::trace("Form is armor, getting bipedModelData");
         RE::BIPED_MODEL biped = selectedArmor->bipedModelData;
-        logger::trace("Getting bipedObjectSlots");
         SKSE::stl::enumeration<RE::BIPED_MODEL::BipedObjectSlot, uint32_t> slots = biped.bipedObjectSlots;
-        logger::trace("Retrieving currentActor");
         auto actor = CEActorUtils::currentActor;
         if (!CEActorUtils::IsActorValid(actor))
         {
-            logger::trace("Current actor isn't valid");
             CEActorUtils::SetActorToNextFollower();
             return;
         }
-
-        logger::trace("Resetting menu");
         CEMenu::ResetMenu();
-        logger::trace("Setting actor name");
         CEMenu::SetActor(actor->GetName());
-        logger::trace("Getting 3d manager");
         auto manager = RE::Inventory3DManager::GetSingleton();
         if (manager)
         {
@@ -252,10 +241,9 @@ namespace CEGameMenuUtils
             if (zoom == 0.0f)
                 manager->Clear3D();
         }
-        logger::trace("Getting ceMenu");
+
         RE::GFxValue ceMenu = CEMenu::GetCEMenu(CEMenu::GetMenu_mc());
 
-        logger::trace("Retrieving player");
         auto player = RE::PlayerCharacter::GetSingleton();
         if (!player)
             return;
@@ -305,15 +293,6 @@ namespace CEGameMenuUtils
         auto selectedEnchantment = selectedArmor->formEnchanting;
         std::string selectedEffectInfo = "";
         GetEffectsInfo(selectedFormId, selectedEffectInfo, selectedEnchantment, selectedArmor, selectedName);
-        /*
-        std::string selectedEffectInfo = GetDescription(selectedArmor);
-        if (selectedEnchantment && selectedEffectInfo == "")
-        {
-            GetEnchantmentInfo(selectedEffectInfo, selectedEnchantment, selectedArmor);
-        }
-        if (selectedEffectInfo == "")
-            if (!GetPlayerAddedEnchantmentAndName(selectedFormId, selectedEffectInfo, selectedArmor, selectedName))
-                selectedEffectInfo = "None";*/
 
         int32_t equippedAccumulateValue = 0;
         int selectedRating = 0;
@@ -350,15 +329,6 @@ namespace CEGameMenuUtils
                         auto equippedEnchantment = equippedArmor->formEnchanting;
                         std::string equippedEffectInfo = "";
                         GetEffectsInfo(formId, equippedEffectInfo, equippedEnchantment, equippedArmor, equippedName);
-                        /*
-                        std::string equippedEffectInfo = GetDescription(equippedArmor);
-                        if (equippedEnchantment && equippedEffectInfo == "")
-                        {
-                            GetEnchantmentInfo(equippedEffectInfo, equippedEnchantment, equippedArmor);
-                        }
-                        if (equippedEffectInfo == "")
-                            if (!GetPlayerAddedEnchantmentAndName(formId, equippedEffectInfo, equippedArmor, equippedName))
-                                equippedEffectInfo = "None";*/
 
                         equippedAccumulateValue += equippedValue;
                         int equippedRating = 0;
@@ -383,14 +353,12 @@ namespace CEGameMenuUtils
             equippedAccumulatedRating = selectedRating - equippedAccumulatedRating;
             equippedAccumulateValue = selectedValue - equippedAccumulateValue;
         }
-        logger::trace("Creating selectedItemInfo");
         std::array<RE::GFxValue, CEGlobals::SELECTED_ARMOR_ITEM_ARRAY_SIZE>
             selectedItemInfo = {selectedName, selectedSlots.c_str(), selectedType,
                                 selectedRatingString.c_str(), equippedAccumulatedRating,
                                 selectedValue, equippedAccumulateValue,
                                 selectedEffectInfo.c_str()};
 
-        logger::trace("Populating selected item card");
         CEMenu::CreateSelectedArmorItemCard(selectedItemInfo, ceMenu);
         int scale = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_SCALE : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_SCALE : CEGlobals::MENU_SCALE);
         int alpha = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_BACKGROUND_ALPHA : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_BACKGROUND_ALPHA : CEGlobals::MENU_BACKGROUND_ALPHA);
@@ -439,15 +407,7 @@ namespace CEGameMenuUtils
         auto enchantment = weapon->formEnchanting;
         std::string effectInfo = "";
         GetEffectsInfo(formId, effectInfo, enchantment, weapon, name);
-        /*
-        std::string effectInfo = GetDescription(weapon);
-        if (enchantment && effectInfo == "")
-        {
-            GetEnchantmentInfo(effectInfo, enchantment, weapon);
-        }
-        if (effectInfo == "")
-            if (!GetPlayerAddedEnchantmentAndName(formId, effectInfo, weapon, name))
-                effectInfo = "None";*/
+
         std::string handLabel;
         if (flag)
             handLabel = "Both Hands";
@@ -491,16 +451,12 @@ namespace CEGameMenuUtils
         auto actor = CEActorUtils::currentActor;
         if (!CEActorUtils::IsActorValid(actor))
         {
-            logger::trace("Current actor isn't valid");
             CEActorUtils::SetActorToNextFollower();
             return;
         }
 
-        logger::trace("Resetting menu");
         CEMenu::ResetMenu();
-        logger::trace("Setting actor name");
         CEMenu::SetActor(actor->GetName());
-        logger::trace("Getting 3d manager");
         auto manager = RE::Inventory3DManager::GetSingleton();
         if (manager)
         {
@@ -508,10 +464,7 @@ namespace CEGameMenuUtils
             if (zoom == 0.0f)
                 manager->Clear3D();
         }
-        logger::trace("Getting ceMenu");
         RE::GFxValue ceMenu = CEMenu::GetCEMenu(CEMenu::GetMenu_mc());
-
-        logger::trace("Retrieving player");
         auto player = RE::PlayerCharacter::GetSingleton();
         if (!player)
             return;
@@ -551,7 +504,7 @@ namespace CEGameMenuUtils
                                                     RE::WEAPON_TYPE::kOneHandMace,
                                                     RE::WEAPON_TYPE::kOneHandSword,
                                                     RE::WEAPON_TYPE::kStaff};
-        // TODO: change to only use this calculation for two handed weapons, and different for one handed.
+
         bool aWeaponIsEquipped = false;
         bool oneHanded = oneHandedTypes.contains(selectedWeaponType);
         int weaponCount = 0;
@@ -616,7 +569,6 @@ namespace CEGameMenuUtils
     {
         if (auto selectedForm = RE::TESForm::LookupByID(selectedFormId))
         {
-            logger::trace("Form exists");
             if (auto selectedArmor = selectedForm->As<RE::TESObjectARMO>())
             {
                 GetSelectedAndEquippedArmorInfo(selectedFormId, selectedArmor);
@@ -630,7 +582,6 @@ namespace CEGameMenuUtils
 
     bool GetItem()
     {
-        logger::trace("Getting Menu_mc");
         RE::GFxValue Menu_mc = CEMenu::GetMenu_mc();
         if (Menu_mc.IsNull())
             return false;
@@ -638,7 +589,6 @@ namespace CEGameMenuUtils
         RE::GFxValue itemList;
         RE::GFxValue selectedEntry;
         RE::GFxValue formId;
-        logger::trace("Getting InventoryLists > itemList > selectedEntry > formId");
         if (!Menu_mc.GetMember("inventoryLists", &inventoryLists) ||
             !inventoryLists.GetMember("itemList", &itemList) ||
             !itemList.GetMember("selectedEntry", &selectedEntry) ||
@@ -646,11 +596,8 @@ namespace CEGameMenuUtils
             !selectedEntry.GetMember("formId", &formId) ||
             formId.IsNull())
             return false;
-        logger::trace("Casting from RE::GFxValue to RE::FormID");
         RE::FormID fid = static_cast<RE::FormID>(formId.GetUInt());
-        logger::trace("Setting currentFormID");
         currentFormID = fid;
-        logger::trace("Calling GetEquippedInSlots()");
         GetArmorOrWeapon(fid);
         return true;
     }

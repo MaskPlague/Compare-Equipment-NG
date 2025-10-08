@@ -24,7 +24,6 @@ namespace CEGameEvents
             auto zoom = manager->GetRuntimeData().zoomProgress;
             if (zoom != 0.0f)
             {
-                logger::debug("3d menu open, aborting");
                 return true;
             }
         }
@@ -33,7 +32,6 @@ namespace CEGameEvents
 
     void ButtonProcessor(bool btnUp, float heldDuration)
     {
-        logger::trace("buttonUp : {}, heldDuration: {}", btnUp, heldDuration);
         auto currentTime = std::chrono::steady_clock::now();
         if (btnUp && heldDuration < CEGlobals::HOLD_THRESHOLD)
         {
@@ -45,7 +43,6 @@ namespace CEGameEvents
         {
             if (Is3dZoomedIn())
                 return;
-            logger::debug("Key held past threshold, setting actor to player.");
             heldTriggered = true;
             SKSE::GetTaskInterface()->AddTask([]()
                                               { 
@@ -77,14 +74,12 @@ namespace CEGameEvents
         if (btnUp && !heldForSettingsTriggered)
         {
             auto hitDiff = NanoToLongMilli(currentTime - cycleButtonLastHit);
-            logger::trace("hitDiff: {}", hitDiff);
             if (hitDiff <= CEGlobals::TRIPLE_HIT_WINDOW * 500)
             {
                 if (pressTwo)
                 {
                     if (Is3dZoomedIn())
                         return;
-                    logger::debug("Key triple tapped, cycling follower.");
                     SKSE::GetTaskInterface()->AddTask([]()
                                                       { 
                         CEActorUtils::SetActorToNextFollower();
@@ -103,7 +98,6 @@ namespace CEGameEvents
             {
                 if (Is3dZoomedIn())
                     return;
-                logger::debug("Key pressed, getting hovered item.");
                 SKSE::GetTaskInterface()->AddTask([]()
                                                   { CEGameMenuUtils::GetItem(); });
                 pressTwo = false;
@@ -219,7 +213,6 @@ namespace CEGameEvents
                 RE::BSInputDeviceManager::GetSingleton()->RemoveEventSink(CEGameEvents::InputEvent::GetSingleton());
             }
         }
-
         return RE::BSEventNotifyControl::kContinue;
     }
 

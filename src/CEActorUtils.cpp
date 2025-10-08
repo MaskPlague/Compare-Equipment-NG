@@ -11,19 +11,12 @@ namespace CEActorUtils
         std::vector<RE::Actor *> result;
 
         auto processLists = RE::ProcessLists::GetSingleton();
-        if (!processLists)
-        {
-            followers = result;
-            return;
-        }
-        logger::trace("Got process lists");
         auto faction = RE::TESForm::LookupByID<RE::TESFaction>(0x0005C84E); // CurrentFollowerFaction
-        if (!faction)
+        if (!processLists || !faction)
         {
             followers = result;
             return;
         }
-        logger::trace("Got faction");
         for (auto &handle : processLists->highActorHandles)
         {
             if (auto actor = handle.get().get())
@@ -40,7 +33,6 @@ namespace CEActorUtils
 
     void SetActorToPlayer()
     {
-        logger::trace("Setting currentActor to player");
         currentActor = RE::PlayerCharacter::GetSingleton();
     }
 
