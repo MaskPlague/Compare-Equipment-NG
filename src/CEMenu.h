@@ -12,9 +12,17 @@ namespace CEMenu
 
     void UpdateMenuName();
 
+    void SetMenuOffsets(RE::GFxValue ceMenu);
+
+    bool IsMenuVisible();
+
+    void ShowOrHideQLIEHint(bool forceDelete = false);
+
     void ShowMenuInstant();
 
     void ShowMenuDelayed();
+
+    void HideMenu();
 
     void CreateArmorComparisonItemCard(std::array<RE::GFxValue, CEGlobals::EQUIPPED_ARMOR_ITEM_ARRAY_SIZE> itemInfo, RE::GFxValue ceMenu);
 

@@ -202,7 +202,8 @@ namespace CEGameEvents
         if ((menuName == RE::InventoryMenu::MENU_NAME ||
              menuName == RE::ContainerMenu::MENU_NAME ||
              menuName == RE::BarterMenu::MENU_NAME ||
-             menuName == RE::GiftMenu::MENU_NAME))
+             menuName == RE::GiftMenu::MENU_NAME ||
+             (CEGlobals::QLIE_ALLOWED && menuName == "LootMenu")))
         {
             if (a_event->opening)
             {
@@ -226,5 +227,76 @@ namespace CEGameEvents
     {
         static UIEvent singleton;
         return &singleton;
+    }
+
+    void QuickLootSelectItemHandler(QuickLoot::Events::SelectItemEvent *event)
+    {
+        if (!CEGlobals::QLIE_ALLOWED)
+            return;
+        logger::debug("QuickLoot Select Item Event triggered");
+        if (!event->elements->object || !event->elements->object->formID)
+            return;
+        auto fid = event->elements->object->formID;
+        auto form = RE::TESForm::LookupByID(fid);
+        if (!form)
+            return;
+        CEGameMenuUtils::currentFormID = fid;
+        CEMenu::ResetMenu();
+        auto diff = NanoToLongMilli(std::chrono::steady_clock::now() - openedMenuTime);
+        if (diff > 200)
+        {
+            openedMenuTime = std::chrono::steady_clock::now();
+            CEMenu::ShowOrHideQLIEHint();
+        }
+    }
+
+    void QuickLootCloseHandler(QuickLoot::Events::CloseLootMenuEvent *)
+    {
+        if (!CEGlobals::QLIE_ALLOWED)
+            return;
+        CEMenu::ResetMenu();
+        CEGameMenuUtils::currentFormID = NULL;
+        auto diff = NanoToLongMilli(std::chrono::steady_clock::now() - openedMenuTime);
+        if (diff > 200)
+        {
+            openedMenuTime = std::chrono::steady_clock::now();
+            CEMenu::ShowOrHideQLIEHint(true);
+        }
+    }
+
+    void QuickLootOpenHandler(QuickLoot::Events::OpenLootMenuEvent *event)
+    {
+        if (!CEGlobals::QLIE_ALLOWED)
+            return;
+        logger::debug("QuickLoot Open Event triggered");
+        auto cont = event->container->GetBaseObject()->As<RE::TESObjectCONT>();
+        int count = cont ? cont->numContainerObjects : 0;
+        if (count <= 0)
+            return;
+        std::vector<std::pair<std::string, RE::FormID>> objects;
+        for (int i = 0; i < count; i++)
+        {
+            std::optional<RE::ContainerObject *> oCObj = cont->GetContainerObjectAt(i);
+            RE::ContainerObject *cobj = oCObj ? oCObj.value() : nullptr;
+            RE::TESBoundObject *obj = cobj ? cobj->obj : nullptr;
+            if (!oCObj || !cobj || !obj)
+                continue;
+            std::string name = obj->GetName();
+            RE::FormID fid = obj->GetFormID();
+            if (!name.empty() && fid)
+                objects.push_back(std::make_pair(name, fid));
+        }
+        if (objects.size() <= 0)
+            return;
+        std::sort(objects.begin(), objects.end(), [](const auto &a, const auto &b)
+                  { return a.first < b.first; });
+        auto firstObj = objects.at(0);
+        CEGameMenuUtils::currentFormID = firstObj.second;
+        auto diff = NanoToLongMilli(std::chrono::steady_clock::now() - openedMenuTime);
+        if (diff > 200)
+        {
+            openedMenuTime = std::chrono::steady_clock::now();
+            CEMenu::ShowOrHideQLIEHint();
+        }
     }
 }

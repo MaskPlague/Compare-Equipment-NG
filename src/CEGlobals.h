@@ -2,10 +2,14 @@
 
 namespace CEGlobals
 {
-    extern double X_ORIGIN;
-    extern double Y_ORIGIN;
-    extern int SCALE;
-    extern int BACKGROUND_ALPHA;
+    extern double MENU_X_ORIGIN;
+    extern double MENU_Y_ORIGIN;
+    extern double QLIE_X_ORIGIN;
+    extern double QLIE_Y_ORIGIN;
+    extern int MENU_SCALE;
+    extern int QLIE_SCALE;
+    extern int MENU_BACKGROUND_ALPHA;
+    extern int QLIE_BACKGROUND_ALPHA;
     extern int ROWS;
     extern uint32_t COMPARE_KEY;
     extern float HOLD_THRESHOLD;
@@ -17,6 +21,8 @@ namespace CEGlobals
     extern std::string effectCheckOrder;
     extern int LOG_LEVEL;
 
+    extern bool QLIE_ALLOWED;
+    extern bool ShowQLIEHint;
     extern RE::INPUT_DEVICE lastInputDevice;
 
     const int EQUIPPED_ARMOR_ITEM_ARRAY_SIZE = 6;

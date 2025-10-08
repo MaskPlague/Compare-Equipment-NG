@@ -5,7 +5,8 @@ namespace CEMenu
     std::string temp = "CompareEquipmentMenu_" + CEGlobals::EXPECTED_SWF_VERSION + "_" + std::to_string(CEGlobals::COMPARE_KEY);
     const char *MENU_NAME = temp.c_str();
     std::string_view SWF_PATH{"CompareEquipment.swf"};
-    std::string_view openedMenuName = RE::InventoryMenu::MENU_NAME;
+    std::string_view openedMenuName = "HUDMenu";
+    std::chrono::steady_clock::time_point lastInvalidation;
 
     void UpdateMenuName()
     {
@@ -19,17 +20,91 @@ namespace CEMenu
         MENU_NAME = temp.c_str();
     }
 
+    void Invalidate(RE::GFxValue buttonBar)
+    {
+        if (CEGameEvents::NanoToLongMilli(std::chrono::steady_clock::now() - lastInvalidation) > 150)
+        {
+            lastInvalidation = std::chrono::steady_clock::now();
+            buttonBar.Invoke("invalidateData");
+        }
+    }
+
+    void ShowOrHideQLIEHint(bool forceDelete)
+    {
+        if (!CEGlobals::ShowQLIEHint)
+            return;
+        auto UISingleton = RE::UI::GetSingleton();
+        auto menu = UISingleton ? UISingleton->GetMenu("LootMenu") : nullptr;
+        RE::GFxMovieView *view = menu ? menu->uiMovie.get() : nullptr;
+
+        if (!UISingleton || !menu || !view)
+            return;
+        bool showButton = false;
+        if (auto form = RE::TESForm::LookupByID(CEGameMenuUtils::currentFormID))
+        {
+
+            if (auto armor = form->As<RE::TESObjectARMO>())
+                showButton = true;
+            else if (auto weapon = form->As<RE::TESObjectWEAP>())
+                showButton = true;
+        }
+        RE::GFxValue buttonBar;
+        RE::GFxValue dataProvider;
+        if (view->GetVariable(&buttonBar, "_root.lootMenu.buttonBar"))
+        {
+            if (buttonBar.GetMember("dataProvider", &dataProvider))
+            {
+                RE::GFxValue lastObj;
+                dataProvider.GetElement(dataProvider.GetArraySize() - 1, &lastObj);
+                if (lastObj.IsObject())
+                {
+                    RE::GFxValue lastObjCENG;
+                    lastObj.GetMember("CENG", &lastObjCENG);
+                    if (lastObjCENG.IsBool() && (!showButton || forceDelete))
+                    {
+                        Invalidate(buttonBar);
+                        dataProvider.RemoveElement(dataProvider.GetArraySize() - 1);
+                        lastObj.SetNull();
+                    }
+                    if (lastObjCENG.IsBool() && showButton)
+                        return;
+                }
+                if (!showButton)
+                    return;
+
+                RE::GFxValue obj;
+                view->CreateObject(&obj);
+                obj.SetMember("label", "Compare");
+                obj.SetMember("index", CEGlobals::COMPARE_KEY);
+                obj.SetMember("stolen", false);
+                obj.SetMember("CENG", true);
+                Invalidate(buttonBar);
+                dataProvider.PushBack(obj);
+            }
+        }
+    }
+
     RE::GFxValue GetMenu_mc()
     {
-        logger::trace("Getting ui singleton");
+        logger::debug("In GetMenu_mc");
         auto UISingleton = RE::UI::GetSingleton();
-        logger::trace("Getting inventoryMenu");
-        auto inventoryMenu = UISingleton ? UISingleton->GetMenu(openedMenuName) : nullptr;
-        logger::trace("Getting view");
-        RE::GFxMovieView *view = inventoryMenu ? inventoryMenu->uiMovie.get() : nullptr;
+        auto menuToGet = openedMenuName != "HUDMenu" ? openedMenuName : RE::HUDMenu::MENU_NAME;
+        auto menu = UISingleton ? UISingleton->GetMenu(menuToGet) : nullptr;
+        RE::GFxMovieView *view = menu ? menu->uiMovie.get() : nullptr;
         RE::GFxValue Menu_mc;
-        logger::trace("Getting menu_mc");
-        if (!UISingleton || !inventoryMenu || !view || !view->GetVariable(&Menu_mc, "_root.Menu_mc"))
+        if (!UISingleton || !menu || !view)
+        {
+            logger::trace("UISingleton or menu or view is null");
+            return nullptr;
+        }
+        bool menuObtained = true;
+        if (openedMenuName == "LootMenu")
+            menuObtained = view->GetVariable(&Menu_mc, "_root.lootMenu");
+        else if (openedMenuName == "HUDMenu")
+            menuObtained = view->GetVariable(&Menu_mc, "_root");
+        else
+            menuObtained = view->GetVariable(&Menu_mc, "_root.Menu_mc");
+        if (!menuObtained)
         {
             logger::trace("Failed to get menu_mc");
             return nullptr;
@@ -41,7 +116,7 @@ namespace CEMenu
     RE::GFxValue GetCEMenu(RE::GFxValue Menu_mc)
     {
         RE::GFxValue ceMenu;
-        logger::trace("Getting ceMenu");
+        logger::debug("In GetCEMenu");
         if (Menu_mc.IsNull() || !Menu_mc.GetMember(MENU_NAME, &ceMenu))
         {
             logger::trace("Failed to ceMenu");

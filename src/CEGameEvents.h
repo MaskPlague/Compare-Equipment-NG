@@ -1,6 +1,8 @@
 #pragma once
 namespace CEGameEvents
 {
+    long long NanoToLongMilli(std::chrono::nanoseconds time_point);
+
     extern class InputEvent : public RE::BSTEventSink<RE::InputEvent *>
     {
     public:
@@ -28,4 +30,9 @@ namespace CEGameEvents
         static UIEvent *GetSingleton();
     };
 
+    void QuickLootSelectItemHandler(QuickLoot::Events::SelectItemEvent *event);
+
+    void QuickLootCloseHandler(QuickLoot::Events::CloseLootMenuEvent *);
+
+    void QuickLootOpenHandler(QuickLoot::Events::OpenLootMenuEvent *event);
 }

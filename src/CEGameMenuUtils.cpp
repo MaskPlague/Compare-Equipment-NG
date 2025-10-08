@@ -392,10 +392,12 @@ namespace CEGameMenuUtils
 
         logger::trace("Populating selected item card");
         CEMenu::CreateSelectedArmorItemCard(selectedItemInfo, ceMenu);
-        logger::trace("Positioning and displaying item cards");
+        int scale = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_SCALE : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_SCALE : CEGlobals::MENU_SCALE);
+        int alpha = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_BACKGROUND_ALPHA : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_BACKGROUND_ALPHA : CEGlobals::MENU_BACKGROUND_ALPHA);
         std::array<RE::GFxValue, CEGlobals::EQUIPPED_ARMOR_ITEM_ARRAY_SIZE>
-            displayCommand = {"DISPLAY", CEGlobals::BACKGROUND_ALPHA, CEGlobals::SCALE, CEGlobals::ROWS, "", ""};
+            displayCommand = {"DISPLAY", alpha, scale, CEGlobals::ROWS, "", ""};
         CEMenu::CreateArmorComparisonItemCard(displayCommand, ceMenu);
+        CEMenu::SetMenuOffsets(ceMenu);
     }
 
     bool GetDamageInfo(RE::FormID formId, const RE::TESObjectREFR::InventoryItemMap &inv, RE::PlayerCharacter *player, float &damage, std::string &damageString)
@@ -602,10 +604,12 @@ namespace CEGameMenuUtils
             GetFullWeaponInformation(selectedFormId, selectedWeapon, player, ceMenu, "selected", aWeaponIsEquipped,
                                      valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff);
         }
-
+        int scale = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_SCALE : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_SCALE : CEGlobals::MENU_SCALE);
+        int alpha = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_BACKGROUND_ALPHA : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_BACKGROUND_ALPHA : CEGlobals::MENU_BACKGROUND_ALPHA);
         std::array<RE::GFxValue, CEGlobals::EQUIPPED_WEAPON_ITEM_ARRAY_SIZE>
-            displayCommand = {"DISPLAY", CEGlobals::BACKGROUND_ALPHA, CEGlobals::SCALE, "", "", "", "", "", ""};
+            displayCommand = {"DISPLAY", alpha, scale, "", "", "", "", "", ""};
         CEMenu::CreateWeaponComparisonItemCard(displayCommand, ceMenu);
+        CEMenu::SetMenuOffsets(ceMenu);
     }
 
     void GetArmorOrWeapon(RE::FormID selectedFormId)

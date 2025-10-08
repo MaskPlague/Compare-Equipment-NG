@@ -43,11 +43,36 @@ namespace CompareEquipmentNG
 
     void OnPostLoadGame()
     {
+        CEActorUtils::SetActorToPlayer();
+
+        static bool eventSinksRegistered = false;
+        if (eventSinksRegistered)
+            return;
         logger::debug("Creating Event Sinks");
         RE::UI::GetSingleton()->AddEventSink(CEGameEvents::UIEvent::GetSingleton());
         RE::BSInputDeviceManager::GetSingleton()->AddEventSink(CEGameEvents::DeviceInputEvent::GetSingleton());
         logger::debug("Created Event Sinks");
-        CEActorUtils::SetActorToPlayer();
+        eventSinksRegistered = true;
+        if (CEGlobals::HUD_ALLOWED)
+        {
+            logger::trace("HUD_ALLOWED, creating the HUDMenu CEMenu");
+            CEMenu::CreateMenu("HUDMenu");
+        }
+        const auto dllHandle = GetModuleHandleA("QuickLootIE");
+        if (dllHandle == NULL)
+        {
+            logger::debug("QuickLoot IE not installed, skipping QuickLoot IE API initialization");
+            return;
+        }
+        static bool quickLootIEInitialized = false;
+        if (quickLootIEInitialized)
+            return;
+        logger::debug("Initializing QuickLoot IE API");
+        QuickLoot::QuickLootAPI::Init();
+        QuickLoot::QuickLootAPI::RegisterSelectItemHandler(CEGameEvents::QuickLootSelectItemHandler);
+        QuickLoot::QuickLootAPI::RegisterCloseLootMenuHandler(CEGameEvents::QuickLootCloseHandler);
+        QuickLoot::QuickLootAPI::RegisterOpenLootMenuHandler(CEGameEvents::QuickLootOpenHandler);
+        quickLootIEInitialized = true;
     }
 
     void MessageHandler(SKSE::MessagingInterface::Message *msg)
@@ -63,7 +88,6 @@ namespace CompareEquipmentNG
     extern "C" DLLEXPORT bool SKSEPlugin_Load(const SKSE::LoadInterface *skse)
     {
         SKSE::Init(skse);
-
         SetupLog();
         CEGlobals::LoadConfig();
         SetLogLevel();
