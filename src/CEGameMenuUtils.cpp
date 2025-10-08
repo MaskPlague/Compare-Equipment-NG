@@ -21,15 +21,24 @@ namespace CEGameMenuUtils
 
     std::string cleanPercentage(std::string str)
     {
-        auto pos1 = str.find('<');
-        if (pos1 != std::string::npos)
+        for (size_t i = 0; i < str.length(); i++)
         {
-            str.erase(pos1, 1);
-        }
-        auto pos2 = str.find('>');
-        if (pos2 != std::string::npos)
-        {
-            str.erase(pos2, 1);
+            auto pos1 = str.find('<', i);
+            if (pos1 != std::string::npos)
+            {
+                str.erase(pos1, 1);
+            }
+            else
+                break;
+            i = pos1 - 1;
+            auto pos2 = str.find('>', i);
+            if (pos2 != std::string::npos)
+            {
+                str.erase(pos2, 1);
+            }
+            else
+                break;
+            i = pos2 - 1;
         }
         return str;
     }
