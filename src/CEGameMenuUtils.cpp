@@ -613,7 +613,7 @@ namespace CEGameMenuUtils
         {
             if (CEMenu::IsMenuVisible())
             {
-                CEMenu::HideMenu();
+                CEMenu::HideMenu(true);
                 return true;
             }
             auto crosshair = RE::CrosshairPickData::GetSingleton();

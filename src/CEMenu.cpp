@@ -177,11 +177,11 @@ namespace CEMenu
                                                 .detach(); });
     }
 
-    void HideMenu()
+    void HideMenu(bool checked)
     {
-        SKSE::GetTaskInterface()->AddUITask([]()
+        SKSE::GetTaskInterface()->AddUITask([checked]()
                                             {
-        if (!IsMenuVisible())
+        if (!checked && !IsMenuVisible())
             return;
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
