@@ -28,6 +28,7 @@ namespace CEGlobals
     bool QLIE_ALLOWED = true;
     bool QLIE_SHOWHINT = true;
     bool HUD_ALLOWED = true;
+    bool HUD_TOGGLEMODE = true;
 
     RE::INPUT_DEVICE lastInputDevice = RE::INPUT_DEVICE::kNone;
 
@@ -41,7 +42,7 @@ namespace CEGlobals
         {
             logger::warn("Could not load CompareEquipmentNG.ini, using defaults");
         }
-        ROWS = ini.GetLongValue("General", "MaximumRows", 4);
+        ROWS = ini.GetLongValue("General", "Maximum Rows", 4);
         if (ROWS > 4)
             ROWS = 4;
         if (ROWS < 1)
@@ -49,52 +50,53 @@ namespace CEGlobals
 
         //------------------------------ In Menus ---------------------------------------------------------------
 
-        MENU_X_ORIGIN = ini.GetDoubleValue("InMenu", "Xoffset", 590.0f);
-        MENU_Y_ORIGIN = ini.GetDoubleValue("InMenu", "Yoffset", 250.0f);
+        MENU_X_ORIGIN = ini.GetDoubleValue("InMenu", "X Offset", 590.0f);
+        MENU_Y_ORIGIN = ini.GetDoubleValue("InMenu", "Y Offset", 250.0f);
         MENU_SCALE = ini.GetLongValue("InMenu", "Scale", 100);
         if (MENU_SCALE <= 0)
             MENU_SCALE = 100;
-        MENU_BACKGROUND_ALPHA = ini.GetLongValue("InMenu", "BackgroundAlpha", 95);
+        MENU_BACKGROUND_ALPHA = ini.GetLongValue("InMenu", "Background Alpha", 95);
         if (MENU_BACKGROUND_ALPHA < 0 || MENU_BACKGROUND_ALPHA > 100)
             MENU_BACKGROUND_ALPHA = 100;
 
         //------------------------------ Outside of Menus --------------------------------------------------------
 
         HUD_ALLOWED = ini.GetBoolValue("OutOfMenu", "Enabled", true);
-        HUD_X_ORIGIN = ini.GetDoubleValue("OutOfMenu", "Xoffset", 450.0f);
-        HUD_Y_ORIGIN = ini.GetDoubleValue("OutOfMenu", "Yoffset", 250.0f);
+        HUD_TOGGLEMODE = ini.GetBoolValue("OutOfMenu", "Toggle Mode", true);
+        HUD_X_ORIGIN = ini.GetDoubleValue("OutOfMenu", "X Offset", 450.0f);
+        HUD_Y_ORIGIN = ini.GetDoubleValue("OutOfMenu", "Y Offset", 250.0f);
         HUD_SCALE = ini.GetLongValue("OutOfMenu", "Scale", 100);
         if (HUD_SCALE <= 0)
             HUD_SCALE = 100;
-        HUD_BACKGROUND_ALPHA = ini.GetLongValue("OutOfMenu", "BackgroundAlpha", 85);
+        HUD_BACKGROUND_ALPHA = ini.GetLongValue("OutOfMenu", "Background Alpha", 85);
         if (HUD_BACKGROUND_ALPHA < 0 || HUD_BACKGROUND_ALPHA > 100)
             HUD_BACKGROUND_ALPHA = 100;
 
         //------------------------------- QuickLootIE ------------------------------------------------------------
 
         QLIE_ALLOWED = ini.GetBoolValue("QuickLootIE", "Enabled", true);
-        ShowQLIEHint = ini.GetBoolValue("QuickLootIE", "Show Hint", true);
-        QLIE_X_ORIGIN = ini.GetDoubleValue("QuickLootIE", "Xoffset", -1000.0f);
-        QLIE_Y_ORIGIN = ini.GetDoubleValue("QuickLootIE", "Yoffset", 0.0f);
+        QLIE_SHOWHINT = ini.GetBoolValue("QuickLootIE", "Show Hint", true);
+        QLIE_X_ORIGIN = ini.GetDoubleValue("QuickLootIE", "X Offset", -1000.0f);
+        QLIE_Y_ORIGIN = ini.GetDoubleValue("QuickLootIE", "Y Offset", 0.0f);
         QLIE_SCALE = ini.GetLongValue("QuickLootIE", "Scale", 150);
         if (QLIE_SCALE <= 0)
             QLIE_SCALE = 150;
-        QLIE_BACKGROUND_ALPHA = ini.GetLongValue("QuickLootIE", "BackgroundAlpha", 85);
+        QLIE_BACKGROUND_ALPHA = ini.GetLongValue("QuickLootIE", "Background Alpha", 85);
         if (QLIE_BACKGROUND_ALPHA < 0 || QLIE_BACKGROUND_ALPHA > 100)
             QLIE_BACKGROUND_ALPHA = 100;
 
         //-------------------------------- Controls ---------------------------------------------------------------
 
-        COMPARE_KEY = ini.GetLongValue("Controls", "CompareKey", 47);
-        HOLD_THRESHOLD = static_cast<float>(ini.GetLongValue("Controls", "HoldDuration", 500) * 0.001);
-        TRIPLE_HIT_WINDOW = static_cast<float>(ini.GetLongValue("Controls", "TripleHitWindow", 400) * 0.001);
+        COMPARE_KEY = ini.GetLongValue("Controls", "Compare Key", 47);
+        HOLD_THRESHOLD = static_cast<float>(ini.GetLongValue("Controls", "Hold Duration", 500) * 0.001);
+        TRIPLE_HIT_WINDOW = static_cast<float>(ini.GetLongValue("Controls", "Triple Hit Window", 400) * 0.001);
 
-        SETTING_HOLD_THRESHOLD = static_cast<float>(ini.GetLongValue("Controls", "SettingHoldDuration", 3000) * 0.001);
-        int angle = ini.GetLongValue("Controls", "ThumbstickAngle", 0);
+        SETTING_HOLD_THRESHOLD = static_cast<float>(ini.GetLongValue("Controls", "Setting Hold Duration", 3000) * 0.001);
+        int angle = ini.GetLongValue("Controls", "Thumbstick Angle", 0);
         if (angle > 180 || angle < -180)
             angle = 0;
 
-        thumbstickThreshold = static_cast<float>(ini.GetDoubleValue("Controls", "ThumbstickThreshold", 0.9f));
+        thumbstickThreshold = static_cast<float>(ini.GetDoubleValue("Controls", "Thumbstick Threshold", 0.9f));
         if (thumbstickThreshold >= 1.0)
             thumbstickThreshold = 0.9f;
 
@@ -102,7 +104,7 @@ namespace CEGlobals
         thumbstickX = std::sin(radians);
         thumbstickY = std::cos(radians);
 
-        long effectCheckOrderNum = ini.GetLongValue("Internal", "EffectsCheckOrder", 123);
+        long effectCheckOrderNum = ini.GetLongValue("Internal", "Effects Check Order", 123);
         effectCheckOrder.clear();
         bool valid = true;
         bool d = false;
@@ -135,12 +137,12 @@ namespace CEGlobals
 
         if (!valid || !d || !e || !p || temp.length() > 3)
         {
-            logger::warn("EffectsCheckOrder is invalid, only '1', '2', and '3' are valid, and there must be one of each.");
+            logger::warn("Effects Check Order is invalid, only '1', '2', and '3' are valid, and there must be one of each.");
             effectCheckOrderNum = 123;
             effectCheckOrder = "DEP";
         }
 
-        LOG_LEVEL = ini.GetLongValue("Debug", "LoggingLevel", 2);
+        LOG_LEVEL = ini.GetLongValue("Debug", "Logging Level", 2);
 
         logger::debug("Version                  {}", SKSE::PluginDeclaration::GetSingleton()->GetVersion());
         logger::debug("Expected SWF Version:    {}", EXPECTED_SWF_VERSION);
@@ -150,11 +152,13 @@ namespace CEGlobals
         logger::debug("Scale:                   {}", MENU_SCALE);
         logger::debug("Background Alpha         {}", MENU_BACKGROUND_ALPHA);
         logger::debug("HUD Enabled:             {}", HUD_ALLOWED);
+        logger::debug("HUD Toggle Mode:         {}", HUD_TOGGLEMODE);
         logger::debug("HUD X Offset:            {:.2f}", HUD_X_ORIGIN);
         logger::debug("HUD Offset:              {:.2f}", HUD_Y_ORIGIN);
         logger::debug("HUD Scale:               {}", HUD_SCALE);
         logger::debug("HUD Background Alpha     {}", HUD_BACKGROUND_ALPHA);
         logger::debug("QuickLootIE Enabled:     {}", QLIE_ALLOWED);
+        logger::debug("QuickLootIE Show Hint:   {}", QLIE_SHOWHINT);
         logger::debug("QuickLootIE X Offset:    {:.2f}", QLIE_X_ORIGIN);
         logger::debug("QuickLootIE Y Offset:    {:.2f}", QLIE_Y_ORIGIN);
         logger::debug("QuickLootIE Scale:       {}", QLIE_SCALE);
@@ -166,59 +170,63 @@ namespace CEGlobals
         logger::debug("Thumbstick Angle:        {}", angle);
         logger::debug("Thumbstick Threshold:    {}", thumbstickThreshold);
         logger::debug("Effects Check Order:     {}", effectCheckOrderNum);
+        logger::debug("Logging Level:           {}", LOG_LEVEL);
 
         const char *rowsComment = ("#Maximum number of compared item card rows, after this number of rows, a column will be created"
                                    "\n#Default 4, max 4, min 1");
-        ini.SetLongValue("General", "MaximumRows", ROWS, rowsComment);
+        ini.SetLongValue("General", "Maximum Rows", ROWS, rowsComment);
 
         //------------------------------ In Menus ---------------------------------------------------------------
-        ini.SetDoubleValue("InMenu", "Xoffset", MENU_X_ORIGIN, "#Selected Item's Item Card X offset in menus\n#Default 590.0");
-        ini.SetDoubleValue("InMenu", "Yoffset", MENU_Y_ORIGIN, "#Selected Item's Item Card Y offset in menus\n#Default 250.0");
+        ini.SetDoubleValue("InMenu", "X Offset", MENU_X_ORIGIN, "#Selected Item's item card X offset in menus\n#Default 590.0");
+        ini.SetDoubleValue("InMenu", "Y Offset", MENU_Y_ORIGIN, "#Selected Item's item card Y offset in menus\n#Default 250.0");
         ini.SetLongValue("InMenu", "Scale", MENU_SCALE, "#Scale of item cards in menus, default 100");
-        ini.SetLongValue("InMenu", "BackgroundAlpha", MENU_BACKGROUND_ALPHA, "#All item card's background alpha value in menus\n#Default 95, max 100, min 0");
+        ini.SetLongValue("InMenu", "Background Alpha", MENU_BACKGROUND_ALPHA, "#All item card's background alpha value in menus\n#Default 95, max 100, min 0");
 
         //------------------------------ Outside Of Menus ---------------------------------------------------------------
-        ini.SetBoolValue("OutOfMenu", "Enabled", HUD_ALLOWED, "#Toggle for Compare Equipment functionality outside of Menus, doesn't function with controller");
-        ini.SetDoubleValue("OutOfMenu", "Xoffset", HUD_X_ORIGIN, "#Selected Item's Item Card X offset outside of menus\n#Default 450.0");
-        ini.SetDoubleValue("OutOfMenu", "Yoffset", HUD_Y_ORIGIN, "#Selected Item's Item Card Y offset outside of menus\n#Default 250.0");
+        ini.SetBoolValue("OutOfMenu", "Enabled", HUD_ALLOWED, "#Toggle for Compare Equipment functionality outside of Menus, doesn't function with controller.\n#Default true");
+        ini.SetBoolValue("OutOfMenu", "Toggle Mode", HUD_TOGGLEMODE, "#If pressing the hotkey a second time will hide the item cards.\n#Default true");
+        ini.SetDoubleValue("OutOfMenu", "X Offset", HUD_X_ORIGIN, "#Selected Item's item card X offset outside of menus\n#Default 450.0");
+        ini.SetDoubleValue("OutOfMenu", "Y Offset", HUD_Y_ORIGIN, "#Selected Item's item card Y offset outside of menus\n#Default 250.0");
         ini.SetLongValue("OutOfMenu", "Scale", HUD_SCALE, "#Scale of item cards outside of menus, default 100");
-        ini.SetLongValue("OutOfMenu", "BackgroundAlpha", HUD_BACKGROUND_ALPHA, "#All item card's background alpha value outside of menus\n#Default 85, max 100, min 0");
+        ini.SetLongValue("OutOfMenu", "Background Alpha", HUD_BACKGROUND_ALPHA, "#All item card's background alpha value outside of menus\n#Default 85, max 100, min 0");
 
         //------------------------------ QuickLoot IE ---------------------------------------------------------------
-        ini.SetBoolValue("QuickLootIE", "Enabled", QLIE_ALLOWED, "#Toggle for Compare  Equipment functionality for QuickLoot IE, doesn't function with controller.");
-        ini.SetBoolValue("QuickLootIE", "Show Hint", ShowQLIEHint, "#Toggle the hint display, it is janky so you may want to disable it.");
-        ini.SetDoubleValue("QuickLootIE", "Xoffset", QLIE_X_ORIGIN, "#Selected Item's Item Card X offset for QuickLootIE\n#Default -1000.0");
-        ini.SetDoubleValue("QuickLootIE", "Yoffset", QLIE_Y_ORIGIN, "#Selected Item's Item Card Y offset for QuickLootIE\n#Default 0.0");
+        ini.SetBoolValue("QuickLootIE", "Enabled", QLIE_ALLOWED, "#Toggle for Compare  Equipment functionality for QuickLoot IE, doesn't function with controller.\n#Default true");
+        ini.SetBoolValue("QuickLootIE", "Show Hint", QLIE_SHOWHINT, "#Toggle the hint display, it is janky so you may want to disable it.\n#Default true");
+        ini.SetDoubleValue("QuickLootIE", "X Offset", QLIE_X_ORIGIN, "#Selected Item's item card X offset for QuickLootIE\n#Default -1000.0");
+        ini.SetDoubleValue("QuickLootIE", "Y Offset", QLIE_Y_ORIGIN, "#Selected Item's item card Y offset for QuickLootIE\n#Default 0.0");
         ini.SetLongValue("QuickLootIE", "Scale", QLIE_SCALE, "#Scale of item cards for QuickLootIE, default 150");
-        ini.SetLongValue("QuickLootIE", "BackgroundAlpha", QLIE_BACKGROUND_ALPHA, "#All item card's background alpha value for QuickLootIE\n#Default 85, max 100, min 0");
+        ini.SetLongValue("QuickLootIE", "Background Alpha", QLIE_BACKGROUND_ALPHA, "#All item card's background alpha value for QuickLootIE\n#Default 85, max 100, min 0");
 
         //------------------------------ Controls------------------------------------------------------------------------
         const char *compareKeyComment = ("#Key that will display the comparison item cards, triple tap to cycle followers, hold to select player."
                                          "\n#Does not work for controller users, see ThumbstickAngle and ThumbstickThreshold"
                                          "\n#Default 47(V key)Key Codes can be found here : https://ck.uesp.net/wiki/Input_Script");
-        ini.SetLongValue("Controls", "CompareKey", COMPARE_KEY, compareKeyComment);
+        ini.SetLongValue("Controls", "Compare Key", COMPARE_KEY, compareKeyComment);
         const char *holdPlayerComment = ("#Duration, in milliseconds, to hold the CompareKey to set the selected actor to the player"
                                          "\n#Default 500");
-        ini.SetLongValue("Controls", "HoldDuration", static_cast<long>(HOLD_THRESHOLD * 1000), holdPlayerComment);
+        ini.SetLongValue("Controls", "Hold Duration", static_cast<long>(HOLD_THRESHOLD * 1000), holdPlayerComment);
         const char *tripleHitComment = ("#Window, in milliseconds, to triple tap the CompareKey to cycle through active loaded followers"
                                         "\n#Recommended to set to around 600 for controller users"
                                         "\n#Default 400(400 / 2 = 200 milliseconds allowed between keypresses)");
-        ini.SetLongValue("Controls", "TripleHitWindow", static_cast<long>(TRIPLE_HIT_WINDOW * 1000), tripleHitComment);
-        const char *settingHoldComment = ("#Duration, in milliseconds, to hold the CompareKey to reload the settings from this ini file. Does not change active logging level."
+        ini.SetLongValue("Controls", "Triple Hit Window", static_cast<long>(TRIPLE_HIT_WINDOW * 1000), tripleHitComment);
+        const char *settingHoldComment = ("#Duration, in milliseconds, to hold the CompareKey to reload the settings from this ini file."
+                                          "\n#Does not change active logging level."
                                           "\n#Default 3000(3 seconds)");
-        ini.SetLongValue("Controls", "SettingHoldDuration", static_cast<long>(SETTING_HOLD_THRESHOLD * 1000), settingHoldComment);
-        const char *angleComment = ("#Angle to flick right thumbstick to activate 0 = up, 90 = right, 180/-180 = down, -90 = left. You can set whatever angle between -180 to 180"
+        ini.SetLongValue("Controls", "Setting Hold Duration", static_cast<long>(SETTING_HOLD_THRESHOLD * 1000), settingHoldComment);
+        const char *angleComment = ("#Angle to flick right thumbstick to activate 0 = up, 90 = right, 180/-180 = down, -90 = left."
+                                    "\n#You can set whatever angle between -180 to 180"
                                     "\n#Default 0 -> up ");
-        ini.SetLongValue("Controls", "ThumbstickAngle", angle, angleComment);
+        ini.SetLongValue("Controls", "Thumbstick Angle", angle, angleComment);
         const char *thumbstickThresholdComment = ("#Percent that is considered activated, 1.0 is all the way to the edge and 0.0 is centered"
                                                   "\n#Default 0.9 -> 90% ");
-        ini.SetDoubleValue("Controls", "ThumbstickThreshold", thumbstickThreshold, thumbstickThresholdComment);
+        ini.SetDoubleValue("Controls", "Thumbstick Threshold", thumbstickThreshold, thumbstickThresholdComment);
         const char *effectCheckOrderComment = ("\n#Order in which to check for effects strings, once a valid string is found it does not check for the others."
                                                "\n#1: Item Description, 2: ESP defined enchantment's MGEF description, 3: Player enchanted enchantment's MGEF description"
                                                "\n#Default is 123, must contain a 1, 2, and 3 in any order.");
-        ini.SetLongValue("Internals", "EffectsCheckOrder", effectCheckOrderNum, effectCheckOrderComment);
+        ini.SetLongValue("Internals", "Effects Check Order", effectCheckOrderNum, effectCheckOrderComment);
 
-        ini.SetLongValue("Debug", "LoggingLevel", LOG_LEVEL, "#0: Errors, 1: Warnings, 2: Info(default), 3: Debug, 4: Trace");
+        ini.SetLongValue("Debug", "Logging Level", LOG_LEVEL, "#0: Errors, 1: Warnings, 2: Info(default), 3: Debug, 4: Trace");
 
         ini.SaveFile("Data\\SKSE\\Plugins\\CompareEquipmentNG.ini");
 

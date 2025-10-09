@@ -86,43 +86,30 @@ namespace CEMenu
 
     RE::GFxValue GetMenu_mc()
     {
-        logger::debug("In GetMenu_mc");
         auto UISingleton = RE::UI::GetSingleton();
         auto menuToGet = openedMenuName != "HUDMenu" ? openedMenuName : RE::HUDMenu::MENU_NAME;
         auto menu = UISingleton ? UISingleton->GetMenu(menuToGet) : nullptr;
         RE::GFxMovieView *view = menu ? menu->uiMovie.get() : nullptr;
+        if (!view)
+            return nullptr;
+
         RE::GFxValue Menu_mc;
-        if (!UISingleton || !menu || !view)
-        {
-            logger::trace("UISingleton or menu or view is null");
-            return nullptr;
-        }
-        bool menuObtained = true;
-        if (openedMenuName == "LootMenu")
-            menuObtained = view->GetVariable(&Menu_mc, "_root.lootMenu");
-        else if (openedMenuName == "HUDMenu")
-            menuObtained = view->GetVariable(&Menu_mc, "_root");
-        else
-            menuObtained = view->GetVariable(&Menu_mc, "_root.Menu_mc");
+        bool menuObtained = view->GetVariable(
+            &Menu_mc,
+            openedMenuName == "LootMenu"  ? "_root.lootMenu"
+            : openedMenuName == "HUDMenu" ? "_root"
+                                          : "_root.Menu_mc");
         if (!menuObtained)
-        {
-            logger::trace("Failed to get menu_mc");
             return nullptr;
-        }
-        logger::trace("Got menu_mc");
+
         return Menu_mc;
     }
 
     RE::GFxValue GetCEMenu(RE::GFxValue Menu_mc)
     {
         RE::GFxValue ceMenu;
-        logger::debug("In GetCEMenu");
         if (Menu_mc.IsNull() || !Menu_mc.GetMember(MENU_NAME, &ceMenu))
-        {
-            logger::trace("Failed to ceMenu");
             return nullptr;
-        }
-        logger::trace("Got ceMenu");
         return ceMenu;
     }
 
@@ -168,7 +155,6 @@ namespace CEMenu
 
     void ShowMenuDelayed()
     {
-        logger::trace("ShowMenuDelayed");
         SKSE::GetTaskInterface()->AddTask([]()
                                           { std::thread([]()
                                                         {   
@@ -192,7 +178,6 @@ namespace CEMenu
 
     void CreateArmorComparisonItemCard(std::array<RE::GFxValue, CEGlobals::EQUIPPED_ARMOR_ITEM_ARRAY_SIZE> itemInfo, RE::GFxValue ceMenu)
     {
-        logger::trace("Checking if ceMenu is null");
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
         logger::trace("ceMenu exists, creating comparison item card");
@@ -201,7 +186,6 @@ namespace CEMenu
 
     void CreateWeaponComparisonItemCard(std::array<RE::GFxValue, CEGlobals::EQUIPPED_WEAPON_ITEM_ARRAY_SIZE> itemInfo, RE::GFxValue ceMenu)
     {
-        logger::trace("Checking if ceMenu is null");
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
         logger::trace("ceMenu exists, creating comparison item card");
@@ -265,32 +249,26 @@ namespace CEMenu
         RE::GFxValue Menu_mc = GetMenu_mc();
         if (Menu_mc.IsNull() || Menu_mc.IsUndefined() || !Menu_mc.IsObject())
             return;
-        logger::trace("Got Menu_mc for create menu");
+
         RE::GFxValue _ceMenu = GetCEMenu(Menu_mc);
         if (!_ceMenu.IsNull())
             _ceMenu.Invoke("removeMovieClip");
 
-        logger::trace("_ceMenu doesn't exist, proceeding");
         RE::GFxValue args[2];
         args[0].SetString(MENU_NAME); // name
         args[1] = 3999;               // depth
         if (!Menu_mc.Invoke("createEmptyMovieClip", nullptr, args, 2))
             return;
 
-        logger::trace("Created {} movie clip via invoke", MENU_NAME);
-
         RE::GFxValue ceMenu = GetCEMenu(Menu_mc);
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
-
-        logger::trace("Got {}", MENU_NAME);
 
         RE::GFxValue args2[1];
         args2[0].SetString(SWF_PATH); // name
         if (!ceMenu.Invoke("loadMovie", nullptr, args2, 1))
             return;
         logger::trace("Loaded {} via invoke", args2[0].GetString());
-        logger::debug("Created Menu for {}", menuName);
         CEActorUtils::GetActiveFollowers();
         CEMenu::ShowOrHideQLIEHint(); });
     }

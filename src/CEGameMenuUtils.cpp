@@ -611,7 +611,7 @@ namespace CEGameMenuUtils
         }
         else if (CEMenu::openedMenuName == "HUDMenu")
         {
-            if (CEMenu::IsMenuVisible())
+            if (CEGlobals::HUD_TOGGLEMODE && CEMenu::IsMenuVisible())
             {
                 CEMenu::HideMenu(true);
                 return true;
