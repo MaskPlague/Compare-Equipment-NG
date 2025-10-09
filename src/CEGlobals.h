@@ -26,7 +26,7 @@ namespace CEGlobals
     extern int LOG_LEVEL;
 
     extern bool QLIE_ALLOWED;
-    extern bool ShowQLIEHint;
+    extern bool QLIE_SHOWHINT;
     extern bool HUD_ALLOWED;
 
     extern RE::INPUT_DEVICE lastInputDevice;

@@ -26,7 +26,7 @@ namespace CEGlobals
     int LOG_LEVEL = 2;
 
     bool QLIE_ALLOWED = true;
-    bool ShowQLIEHint = true;
+    bool QLIE_SHOWHINT = true;
     bool HUD_ALLOWED = true;
 
     RE::INPUT_DEVICE lastInputDevice = RE::INPUT_DEVICE::kNone;

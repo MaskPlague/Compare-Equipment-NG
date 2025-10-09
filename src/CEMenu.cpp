@@ -31,7 +31,7 @@ namespace CEMenu
 
     void ShowOrHideQLIEHint(bool forceDelete)
     {
-        if (!CEGlobals::ShowQLIEHint)
+        if (!CEGlobals::QLIE_SHOWHINT)
             return;
         auto UISingleton = RE::UI::GetSingleton();
         auto menu = UISingleton ? UISingleton->GetMenu("LootMenu") : nullptr;
