@@ -589,8 +589,43 @@ namespace CEGameMenuUtils
         }
     }
 
+    void DiffCrosshairTargetCheck(RE::CrosshairPickData *crosshair, RE::ObjectRefHandle target)
+    {
+        SKSE::GetTaskInterface()->AddTask([crosshair, target]()
+                                          { std::thread([crosshair, target]()
+                                                        {
+                                                        while (crosshair && target && crosshair->target && (crosshair->target.get() == target.get()))
+                                                        {
+                                                            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+                                                        }
+                                                        CEMenu::HideMenu(); })
+                                                .detach(); });
+    }
+
     bool GetItem()
     {
+        if (CEMenu::openedMenuName == "LootMenu")
+        {
+            GetArmorOrWeapon(currentFormID);
+            return true;
+        }
+        else if (CEMenu::openedMenuName == "HUDMenu")
+        {
+            if (CEMenu::IsMenuVisible())
+            {
+                CEMenu::HideMenu();
+                return true;
+            }
+            auto crosshair = RE::CrosshairPickData::GetSingleton();
+            auto target = crosshair->target;
+            auto obj = target ? target.get() : nullptr;
+            auto bobj = obj ? obj->GetBaseObject() : nullptr;
+            auto fid = bobj ? bobj->GetFormID() : NULL;
+            currentFormID = fid;
+            GetArmorOrWeapon(currentFormID);
+            DiffCrosshairTargetCheck(crosshair, target);
+            return true;
+        }
         RE::GFxValue Menu_mc = CEMenu::GetMenu_mc();
         if (Menu_mc.IsNull())
             return false;

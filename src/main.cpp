@@ -51,6 +51,7 @@ namespace CompareEquipmentNG
         logger::debug("Creating Event Sinks");
         RE::UI::GetSingleton()->AddEventSink(CEGameEvents::UIEvent::GetSingleton());
         RE::BSInputDeviceManager::GetSingleton()->AddEventSink(CEGameEvents::DeviceInputEvent::GetSingleton());
+        RE::BSInputDeviceManager::GetSingleton()->AddEventSink(CEGameEvents::InputEvent::GetSingleton());
         logger::debug("Created Event Sinks");
         eventSinksRegistered = true;
         if (CEGlobals::HUD_ALLOWED)

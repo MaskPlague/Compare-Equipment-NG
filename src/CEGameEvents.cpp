@@ -66,8 +66,11 @@ namespace CEGameEvents
                 std::thread([]()
                             {
                     std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                    CEMenu::CreateMenu(CEMenu::openedMenuName); 
-                    CEMenu::ShowMenuDelayed(); })
+                    SKSE::GetTaskInterface()->AddUITask([]()
+                                                        {
+                        CEMenu::CreateMenu(CEMenu::openedMenuName); 
+                        CEMenu::ShowMenuDelayed(); });
+                    })
                     .detach(); });
         }
 
@@ -110,15 +113,23 @@ namespace CEGameEvents
         RE::InputEvent *const *a_event,
         RE::BSTEventSource<RE::InputEvent *> *) noexcept
     {
-        if (!a_event)
+        if (!a_event || (!CEGlobals::HUD_ALLOWED && CEMenu::openedMenuName == "HUDMenu") || (!CEGlobals::QLIE_ALLOWED && CEMenu::openedMenuName == "LootMenu"))
         {
             return RE::BSEventNotifyControl::kContinue;
+        }
+
+        if (CEMenu::openedMenuName == "HUDMenu")
+        {
+            auto pickData = RE::CrosshairPickData::GetSingleton();
+            auto target = pickData->target;
+            if (!pickData || !target || !target.get())
+                return RE::BSEventNotifyControl::kContinue;
         }
 
         if (auto e = *a_event; e)
         {
             auto eventType = e->GetEventType();
-            if (eventType == RE::INPUT_EVENT_TYPE::kThumbstick)
+            if (eventType == RE::INPUT_EVENT_TYPE::kThumbstick && CEMenu::openedMenuName != "HUDMenu")
             {
                 if (auto id = e->AsIDEvent(); id)
                 {
@@ -204,13 +215,15 @@ namespace CEGameEvents
                 logger::trace("{} opened", menuName);
                 CEMenu::CreateMenu(menuName);
                 openedMenuTime = std::chrono::steady_clock::now();
-                RE::BSInputDeviceManager::GetSingleton()->AddEventSink(CEGameEvents::InputEvent::GetSingleton());
             }
             else
             {
                 logger::trace("{} closed", menuName);
                 CEMenu::DestroyMenu();
-                RE::BSInputDeviceManager::GetSingleton()->RemoveEventSink(CEGameEvents::InputEvent::GetSingleton());
+                if (CEGlobals::HUD_ALLOWED)
+                    CEMenu::CreateMenu("HUDMenu");
+                else
+                    CEMenu::openedMenuName = "HUDMenu";
             }
         }
         return RE::BSEventNotifyControl::kContinue;
@@ -220,6 +233,15 @@ namespace CEGameEvents
     {
         static UIEvent singleton;
         return &singleton;
+    }
+
+    void MaybeShowHideHint()
+    {
+        if (NanoToLongMilli(std::chrono::steady_clock::now() - openedMenuTime) > 50)
+        {
+            openedMenuTime = std::chrono::steady_clock::now();
+            CEMenu::ShowOrHideQLIEHint();
+        }
     }
 
     void QuickLootSelectItemHandler(QuickLoot::Events::SelectItemEvent *event)
@@ -234,27 +256,17 @@ namespace CEGameEvents
         if (!form)
             return;
         CEGameMenuUtils::currentFormID = fid;
-        CEMenu::ResetMenu();
-        auto diff = NanoToLongMilli(std::chrono::steady_clock::now() - openedMenuTime);
-        if (diff > 200)
-        {
-            openedMenuTime = std::chrono::steady_clock::now();
-            CEMenu::ShowOrHideQLIEHint();
-        }
+        CEMenu::HideMenu();
+        MaybeShowHideHint();
     }
 
     void QuickLootCloseHandler(QuickLoot::Events::CloseLootMenuEvent *)
     {
         if (!CEGlobals::QLIE_ALLOWED)
             return;
-        CEMenu::ResetMenu();
+        CEMenu::HideMenu();
         CEGameMenuUtils::currentFormID = NULL;
-        auto diff = NanoToLongMilli(std::chrono::steady_clock::now() - openedMenuTime);
-        if (diff > 200)
-        {
-            openedMenuTime = std::chrono::steady_clock::now();
-            CEMenu::ShowOrHideQLIEHint(true);
-        }
+        MaybeShowHideHint();
     }
 
     void QuickLootOpenHandler(QuickLoot::Events::OpenLootMenuEvent *event)
@@ -285,11 +297,6 @@ namespace CEGameEvents
                   { return a.first < b.first; });
         auto firstObj = objects.at(0);
         CEGameMenuUtils::currentFormID = firstObj.second;
-        auto diff = NanoToLongMilli(std::chrono::steady_clock::now() - openedMenuTime);
-        if (diff > 200)
-        {
-            openedMenuTime = std::chrono::steady_clock::now();
-            CEMenu::ShowOrHideQLIEHint();
-        }
+        MaybeShowHideHint();
     }
 }

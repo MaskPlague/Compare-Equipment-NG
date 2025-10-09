@@ -22,7 +22,7 @@ namespace CEMenu
 
     void Invalidate(RE::GFxValue buttonBar)
     {
-        if (CEGameEvents::NanoToLongMilli(std::chrono::steady_clock::now() - lastInvalidation) > 150)
+        if (CEGameEvents::NanoToLongMilli(std::chrono::steady_clock::now() - lastInvalidation) > 100)
         {
             lastInvalidation = std::chrono::steady_clock::now();
             buttonBar.Invoke("invalidateData");
@@ -138,15 +138,32 @@ namespace CEMenu
         return false;
     }
 
+    void SetMenuOffsets(RE::GFxValue ceMenu)
+    {
+        RE::GFxValue xNumber;
+        double xOffset = openedMenuName == "LootMenu" ? CEGlobals::QLIE_X_ORIGIN : (openedMenuName == "HUDMenu" ? CEGlobals::HUD_X_ORIGIN : CEGlobals::MENU_X_ORIGIN);
+        xNumber.SetNumber(xOffset);
+        if (!ceMenu.SetMember("_x", xNumber))
+            return;
+
+        RE::GFxValue yNumber;
+        double yOffset = openedMenuName == "LootMenu" ? CEGlobals::QLIE_Y_ORIGIN : (openedMenuName == "HUDMenu" ? CEGlobals::HUD_Y_ORIGIN : CEGlobals::MENU_Y_ORIGIN);
+        yNumber.SetNumber(yOffset);
+        if (!ceMenu.SetMember("_y", yNumber))
+            return;
+    }
+
     void ShowMenuInstant()
     {
+        SKSE::GetTaskInterface()->AddUITask([]()
+                                            {
         if (IsMenuVisible())
             return;
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
         logger::trace("Showing menu.");
-        ceMenu.Invoke("showMenu");
+        ceMenu.Invoke("showMenu"); });
     }
 
     void ShowMenuDelayed()
@@ -158,6 +175,19 @@ namespace CEMenu
                                                             std::this_thread::sleep_for(std::chrono::milliseconds(50)); 
                                                             ShowMenuInstant(); })
                                                 .detach(); });
+    }
+
+    void HideMenu()
+    {
+        SKSE::GetTaskInterface()->AddUITask([]()
+                                            {
+        if (!IsMenuVisible())
+            return;
+        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
+        if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
+            return;
+        logger::trace("Hiding menu.");
+        ceMenu.Invoke("hideAndReset"); });
     }
 
     void CreateArmorComparisonItemCard(std::array<RE::GFxValue, CEGlobals::EQUIPPED_ARMOR_ITEM_ARRAY_SIZE> itemInfo, RE::GFxValue ceMenu)
@@ -183,6 +213,7 @@ namespace CEMenu
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
+        logger::trace("Resetting menu.");
         ceMenu.Invoke("reset");
     }
 
@@ -212,6 +243,8 @@ namespace CEMenu
 
     void DestroyMenu()
     {
+        SKSE::GetTaskInterface()->AddUITask([]()
+                                            {
         logger::debug("Destroying Menu");
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
@@ -219,11 +252,13 @@ namespace CEMenu
 
         if (!ceMenu.Invoke("removeMovieClip"))
             return;
-        logger::trace("Removed {}", MENU_NAME);
+        logger::trace("Removed {}", MENU_NAME); });
     }
 
     void CreateMenu(std::string_view menuName)
     {
+        SKSE::GetTaskInterface()->AddUITask([menuName]()
+                                            {
         openedMenuName = menuName;
         UpdateMenuName();
         logger::debug("Creating Menu");
@@ -233,7 +268,7 @@ namespace CEMenu
         logger::trace("Got Menu_mc for create menu");
         RE::GFxValue _ceMenu = GetCEMenu(Menu_mc);
         if (!_ceMenu.IsNull())
-            return;
+            _ceMenu.Invoke("removeMovieClip");
 
         logger::trace("_ceMenu doesn't exist, proceeding");
         RE::GFxValue args[2];
@@ -255,17 +290,8 @@ namespace CEMenu
         if (!ceMenu.Invoke("loadMovie", nullptr, args2, 1))
             return;
         logger::trace("Loaded {} via invoke", args2[0].GetString());
-
-        RE::GFxValue xNumber;
-        xNumber.SetNumber(CEGlobals::X_ORIGIN);
-        if (!ceMenu.SetMember("_x", xNumber))
-            return;
-
-        RE::GFxValue yNumber;
-        yNumber.SetNumber(CEGlobals::Y_ORIGIN);
-        if (!ceMenu.SetMember("_y", yNumber))
-            return;
-
+        logger::debug("Created Menu for {}", menuName);
         CEActorUtils::GetActiveFollowers();
+        CEMenu::ShowOrHideQLIEHint(); });
     }
 }

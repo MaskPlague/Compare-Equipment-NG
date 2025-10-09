@@ -6,10 +6,14 @@ namespace CEGlobals
     double MENU_Y_ORIGIN = 250.0f;
     double QLIE_X_ORIGIN = -1000.0f;
     double QLIE_Y_ORIGIN = 0.0f;
+    double HUD_X_ORIGIN = 450.0f;
+    double HUD_Y_ORIGIN = 250.0f;
     int MENU_SCALE = 100;
     int QLIE_SCALE = 150;
+    int HUD_SCALE = 100;
     int MENU_BACKGROUND_ALPHA = 95;
     int QLIE_BACKGROUND_ALPHA = 85;
+    int HUD_BACKGROUND_ALPHA = 85;
     int ROWS = 4;
     uint32_t COMPARE_KEY = 0;
     float HOLD_THRESHOLD = 500 * 0.001;
@@ -23,6 +27,7 @@ namespace CEGlobals
 
     bool QLIE_ALLOWED = true;
     bool ShowQLIEHint = true;
+    bool HUD_ALLOWED = true;
 
     RE::INPUT_DEVICE lastInputDevice = RE::INPUT_DEVICE::kNone;
 
@@ -52,6 +57,18 @@ namespace CEGlobals
         MENU_BACKGROUND_ALPHA = ini.GetLongValue("InMenu", "BackgroundAlpha", 95);
         if (MENU_BACKGROUND_ALPHA < 0 || MENU_BACKGROUND_ALPHA > 100)
             MENU_BACKGROUND_ALPHA = 100;
+
+        //------------------------------ Outside of Menus --------------------------------------------------------
+
+        HUD_ALLOWED = ini.GetBoolValue("OutOfMenu", "Enabled", true);
+        HUD_X_ORIGIN = ini.GetDoubleValue("OutOfMenu", "Xoffset", 450.0f);
+        HUD_Y_ORIGIN = ini.GetDoubleValue("OutOfMenu", "Yoffset", 250.0f);
+        HUD_SCALE = ini.GetLongValue("OutOfMenu", "Scale", 100);
+        if (HUD_SCALE <= 0)
+            HUD_SCALE = 100;
+        HUD_BACKGROUND_ALPHA = ini.GetLongValue("OutOfMenu", "BackgroundAlpha", 85);
+        if (HUD_BACKGROUND_ALPHA < 0 || HUD_BACKGROUND_ALPHA > 100)
+            HUD_BACKGROUND_ALPHA = 100;
 
         //------------------------------- QuickLootIE ------------------------------------------------------------
 
@@ -132,6 +149,11 @@ namespace CEGlobals
         logger::debug("Y Offset:                {:.2f}", MENU_Y_ORIGIN);
         logger::debug("Scale:                   {}", MENU_SCALE);
         logger::debug("Background Alpha         {}", MENU_BACKGROUND_ALPHA);
+        logger::debug("HUD Enabled:             {}", HUD_ALLOWED);
+        logger::debug("HUD X Offset:            {:.2f}", HUD_X_ORIGIN);
+        logger::debug("HUD Offset:              {:.2f}", HUD_Y_ORIGIN);
+        logger::debug("HUD Scale:               {}", HUD_SCALE);
+        logger::debug("HUD Background Alpha     {}", HUD_BACKGROUND_ALPHA);
         logger::debug("QuickLootIE Enabled:     {}", QLIE_ALLOWED);
         logger::debug("QuickLootIE X Offset:    {:.2f}", QLIE_X_ORIGIN);
         logger::debug("QuickLootIE Y Offset:    {:.2f}", QLIE_Y_ORIGIN);
@@ -154,6 +176,13 @@ namespace CEGlobals
         ini.SetDoubleValue("InMenu", "Yoffset", MENU_Y_ORIGIN, "#Selected Item's Item Card Y offset in menus\n#Default 250.0");
         ini.SetLongValue("InMenu", "Scale", MENU_SCALE, "#Scale of item cards in menus, default 100");
         ini.SetLongValue("InMenu", "BackgroundAlpha", MENU_BACKGROUND_ALPHA, "#All item card's background alpha value in menus\n#Default 95, max 100, min 0");
+
+        //------------------------------ Outside Of Menus ---------------------------------------------------------------
+        ini.SetBoolValue("OutOfMenu", "Enabled", HUD_ALLOWED, "#Toggle for Compare Equipment functionality outside of Menus, doesn't function with controller");
+        ini.SetDoubleValue("OutOfMenu", "Xoffset", HUD_X_ORIGIN, "#Selected Item's Item Card X offset outside of menus\n#Default 450.0");
+        ini.SetDoubleValue("OutOfMenu", "Yoffset", HUD_Y_ORIGIN, "#Selected Item's Item Card Y offset outside of menus\n#Default 250.0");
+        ini.SetLongValue("OutOfMenu", "Scale", HUD_SCALE, "#Scale of item cards outside of menus, default 100");
+        ini.SetLongValue("OutOfMenu", "BackgroundAlpha", HUD_BACKGROUND_ALPHA, "#All item card's background alpha value outside of menus\n#Default 85, max 100, min 0");
 
         //------------------------------ QuickLoot IE ---------------------------------------------------------------
         ini.SetBoolValue("QuickLootIE", "Enabled", QLIE_ALLOWED, "#Toggle for Compare  Equipment functionality for QuickLoot IE, doesn't function with controller.");
