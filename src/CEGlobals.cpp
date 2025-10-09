@@ -201,7 +201,7 @@ namespace CEGlobals
         //------------------------------ Controls------------------------------------------------------------------------
         const char *compareKeyComment = ("#Key that will display the comparison item cards, triple tap to cycle followers, hold to select player."
                                          "\n#Does not work for controller users, see ThumbstickAngle and ThumbstickThreshold"
-                                         "\n#Default 47(V key)Key Codes can be found here : https://ck.uesp.net/wiki/Input_Script");
+                                         "\n#Default 47 (V key), Key Codes can be found here : https://ck.uesp.net/wiki/Input_Script");
         ini.SetLongValue("Controls", "Compare Key", COMPARE_KEY, compareKeyComment);
         const char *holdPlayerComment = ("#Duration, in milliseconds, to hold the CompareKey to set the selected actor to the player"
                                          "\n#Default 500");
