@@ -74,7 +74,7 @@ namespace CEMenu
 
                 RE::GFxValue obj;
                 view->CreateObject(&obj);
-                obj.SetMember("label", "Compare");
+                obj.SetMember("label", CEGlobals::QLIE_HINT_TEXT.c_str());
                 obj.SetMember("index", CEGlobals::COMPARE_KEY);
                 obj.SetMember("stolen", false);
                 obj.SetMember("CENG", true);

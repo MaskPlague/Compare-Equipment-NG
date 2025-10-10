@@ -92,6 +92,7 @@ namespace CompareEquipmentNG
         SetupLog();
         CEGlobals::LoadConfig();
         SetLogLevel();
+        CEGlobals::LoadTranslation();
 
         logger::info("Compare Equipment NG Plugin Starting");
         auto *messaging = SKSE::GetMessagingInterface();

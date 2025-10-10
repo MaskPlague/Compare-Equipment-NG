@@ -232,4 +232,24 @@ namespace CEGlobals
 
         CEMenu::UpdateMenuName();
     }
+
+    std::string QLIE_HINT_TEXT = "Compare";
+
+    void LoadTranslation()
+    {
+        CSimpleIniA ini;
+        ini.SetUnicode();
+
+        SI_Error rc = ini.LoadFile("Data\\SKSE\\Plugins\\CompareEquipmentNG_translation.ini");
+        if (rc < 0)
+        {
+            logger::warn("Could not load CompareEquipmentNG_translation.ini, using defaults");
+        }
+        QLIE_HINT_TEXT = ini.GetValue("Translations", "QuickLoot IE Hint Text", "Compare");
+
+        ini.SetValue("Translations", "QuickLoot IE Hint Text", QLIE_HINT_TEXT.c_str(),
+                     "#Replace the text following the \"=\" in the below:\n"
+                     "\n#The hint text that is shown in the QuickLoot Menu.");
+        ini.SaveFile("Data\\SKSE\\Plugins\\CompareEquipmentNG_translation.ini");
+    }
 }

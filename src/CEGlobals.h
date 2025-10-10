@@ -39,4 +39,8 @@ namespace CEGlobals
     const std::string EXPECTED_SWF_VERSION = "1";
 
     void LoadConfig();
+
+    extern std::string QLIE_HINT_TEXT;
+
+    void LoadTranslation();
 }
