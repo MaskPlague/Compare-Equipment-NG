@@ -14,6 +14,8 @@ namespace CEMenu
 
     void SetMenuOffsets(RE::GFxValue ceMenu);
 
+    void SetTranslations();
+
     bool IsMenuVisible();
 
     void ShowOrHideQLIEHint(bool forceDelete = false);

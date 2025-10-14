@@ -176,6 +176,52 @@ namespace CEMenu
         ceMenu.Invoke("hideAndReset"); });
     }
 
+    void SetTranslations()
+    {
+        std::thread([]()
+                    {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            SKSE::GetTaskInterface()->AddUITask([]()
+                                                {
+        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
+        if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
+            return;
+        logger::trace("Setting translations.");
+        std::array<RE::GFxValue, 29> translationInfo;
+        translationInfo[0].SetString(CEGlobals::buttonCompareText);
+        translationInfo[1].SetString(CEGlobals::comparingTo);
+        translationInfo[2].SetString(CEGlobals::damageLabelText);
+        translationInfo[3].SetString(CEGlobals::critLabelText);
+        translationInfo[4].SetString(CEGlobals::noneText);
+        translationInfo[5].SetString(CEGlobals::armorTypeLabelText);
+        translationInfo[6].SetString(CEGlobals::armorRatingLabelText);
+        translationInfo[7].SetString(CEGlobals::goldLabelText);
+        translationInfo[8].SetString(CEGlobals::effectsLabelText);
+        translationInfo[9].SetString(CEGlobals::equippedTo);
+        translationInfo[10].SetString(CEGlobals::slotsLabelText);
+        translationInfo[11].SetString(CEGlobals::speedLabelText);
+        translationInfo[12].SetString(CEGlobals::reachLabelText);
+        translationInfo[13].SetString(CEGlobals::staggerLabelText);
+        translationInfo[14].SetString(CEGlobals::keyText);
+        translationInfo[15].SetString(CEGlobals::keyInfo);
+        translationInfo[16].SetString(CEGlobals::totalKey);
+        translationInfo[17].SetString(CEGlobals::averageKey);
+        translationInfo[18].SetString(CEGlobals::maxKey);
+        translationInfo[19].SetString(CEGlobals::notApplicable);
+        translationInfo[20].SetString(CEGlobals::betterWrapperStart);
+        translationInfo[21].SetString(CEGlobals::betterWrapperEnd);
+        translationInfo[22].SetString(CEGlobals::worseWrapperStart);
+        translationInfo[23].SetString(CEGlobals::worseWrapperEnd);
+        translationInfo[24].SetString(CEGlobals::normalWrapperStart);
+        translationInfo[25].SetString(CEGlobals::normalWrapperEnd);
+        translationInfo[26].SetNumber(CEGlobals::diffOffset);
+        translationInfo[27].SetNumber(CEGlobals::valueOffset);
+        translationInfo[28].SetNumber(CEGlobals::columnTwoOffset);
+        ceMenu.Invoke("setTranslations", nullptr, translationInfo);
+         }); })
+            .detach();
+    }
+
     void CreateArmorComparisonItemCard(std::array<RE::GFxValue, CEGlobals::EQUIPPED_ARMOR_ITEM_ARRAY_SIZE> itemInfo, RE::GFxValue ceMenu)
     {
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
@@ -270,6 +316,7 @@ namespace CEMenu
             return;
         logger::trace("Loaded {} via invoke", args2[0].GetString());
         CEActorUtils::GetActiveFollowers();
+        SetTranslations();
         CEMenu::ShowOrHideQLIEHint(); });
     }
 }
