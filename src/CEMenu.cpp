@@ -7,6 +7,7 @@ namespace CEMenu
     std::string_view SWF_PATH{"CompareEquipment.swf"};
     std::string_view openedMenuName = "HUDMenu";
     std::chrono::steady_clock::time_point lastInvalidation;
+    std::set<std::string> openedMenus;
 
     void UpdateMenuName()
     {
@@ -84,10 +85,11 @@ namespace CEMenu
         }
     }
 
-    RE::GFxValue GetMenu_mc()
+    RE::GFxValue GetMenu_mc(std::string_view nameOfMenuToGet)
     {
+        logger::trace("nameOfMenuToGet: {}", nameOfMenuToGet);
         auto UISingleton = RE::UI::GetSingleton();
-        auto menuToGet = openedMenuName != "HUDMenu" ? openedMenuName : RE::HUDMenu::MENU_NAME;
+        auto menuToGet = nameOfMenuToGet != "HUDMenu" ? nameOfMenuToGet : RE::HUDMenu::MENU_NAME;
         auto menu = UISingleton ? UISingleton->GetMenu(menuToGet) : nullptr;
         RE::GFxMovieView *view = menu ? menu->uiMovie.get() : nullptr;
         if (!view)
@@ -96,12 +98,11 @@ namespace CEMenu
         RE::GFxValue Menu_mc;
         bool menuObtained = view->GetVariable(
             &Menu_mc,
-            openedMenuName == "LootMenu"  ? "_root.lootMenu"
-            : openedMenuName == "HUDMenu" ? "_root"
-                                          : "_root.Menu_mc");
+            nameOfMenuToGet == "LootMenu"  ? "_root.lootMenu"
+            : nameOfMenuToGet == "HUDMenu" ? "_root"
+                                           : "_root.Menu_mc");
         if (!menuObtained)
             return nullptr;
-
         return Menu_mc;
     }
 
@@ -271,12 +272,12 @@ namespace CEMenu
         ceMenu.Invoke("populateSelectedWeaponItemCard", nullptr, itemInfo);
     }
 
-    void DestroyMenu()
+    void DestroyMenu(std::string menuToDestroy)
     {
-        SKSE::GetTaskInterface()->AddUITask([]()
+        SKSE::GetTaskInterface()->AddUITask([menuToDestroy]()
                                             {
-        logger::debug("Destroying Menu");
-        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
+        logger::debug("Destroying Menu {}", menuToDestroy);
+        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc(menuToDestroy));
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
 
@@ -305,6 +306,7 @@ namespace CEMenu
         args[1] = 3999;               // depth
         if (!Menu_mc.Invoke("createEmptyMovieClip", nullptr, args, 2))
             return;
+        logger::trace("Created menu {}", MENU_NAME);
 
         RE::GFxValue ceMenu = GetCEMenu(Menu_mc);
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
