@@ -9,11 +9,11 @@ namespace CEGameMenuUtils
         switch (type)
         {
         case RE::BGSBipedObjectForm::ArmorType::kClothing:
-            return "Cloth";
+            return CEGlobals::clothArmor.c_str();
         case RE::BGSBipedObjectForm::ArmorType::kHeavyArmor:
-            return "Heavy";
+            return CEGlobals::heavyArmor.c_str();
         case RE::BGSBipedObjectForm::ArmorType::kLightArmor:
-            return "Light";
+            return CEGlobals::lightArmor.c_str();
         default:
             return "Unknown";
         }
@@ -94,7 +94,7 @@ namespace CEGameMenuUtils
 
     std::string GetArmorSlotsString(RE::TESObjectARMO *armor)
     {
-        std::string slotsString = "None";
+        std::string slotsString = CEGlobals::noneText;
         auto biped = armor->bipedModelData.bipedObjectSlots.get();
         uint32_t bipedUint = static_cast<uint32_t>(biped);
         for (uint32_t slot = 30; slot <= 61; ++slot)
@@ -102,7 +102,7 @@ namespace CEGameMenuUtils
             uint32_t mask = 1u << (slot - 30);
             if ((bipedUint & mask) != 0)
             {
-                if (slotsString == "None")
+                if (slotsString == CEGlobals::noneText)
                     slotsString = std::to_string(slot);
                 else
                     slotsString += ", " + std::to_string(slot);
@@ -228,7 +228,7 @@ namespace CEGameMenuUtils
                 break;
         }
         if (effectInfo == "")
-            effectInfo = "None";
+            effectInfo = CEGlobals::noneText;
     }
 
     void GetSelectedAndEquippedArmorInfo(RE::FormID selectedFormId, RE::TESObjectARMO *selectedArmor)
@@ -310,7 +310,7 @@ namespace CEGameMenuUtils
         if (!GetRatingInfo(selectedFormId, inv, player, selectedRating, selectedRatingString))
         {
             selectedRating = static_cast<int>(selectedArmor->armorRating / 100);
-            selectedRatingString = std::to_string(selectedRating) + " (Unscaled)";
+            selectedRatingString = std::to_string(selectedRating) + " " + CEGlobals::unscaledText;
             gotSelectedRatingScaled = false;
         }
 
@@ -345,7 +345,7 @@ namespace CEGameMenuUtils
                         if (!gotSelectedRatingScaled || !GetRatingInfo(formId, inv, player, equippedRating, equippedRatingString))
                         {
                             equippedRating = static_cast<int>(equippedArmor->armorRating / 100);
-                            equippedRatingString = std::to_string(equippedRating) + " (Unscaled)";
+                            equippedRatingString = std::to_string(equippedRating) + " " + CEGlobals::unscaledText;
                         }
 
                         equippedAccumulatedRating += equippedRating;
@@ -411,7 +411,7 @@ namespace CEGameMenuUtils
         if (!CEActorUtils::currentActor->IsPlayerRef() || !GetDamageInfo(formId, inv, player, damage, damageString))
         {
             damage = weapon->GetAttackDamage();
-            damageString = std::format("{:.2f}", damage) + " (Unscaled)";
+            damageString = std::format("{:.2f}", damage) + " " + CEGlobals::unscaledText;
         }
         auto enchantment = weapon->formEnchanting;
         std::string effectInfo = "";
@@ -419,11 +419,11 @@ namespace CEGameMenuUtils
 
         std::string handLabel;
         if (flag)
-            handLabel = "Both Hands";
+            handLabel = CEGlobals::bothHands;
         else if (type == "left")
-            handLabel = "Left Hand";
+            handLabel = CEGlobals::leftHand;
         else if (type == "right")
-            handLabel = "Right Hand";
+            handLabel = CEGlobals::rightHand;
         if (type == "selected")
         {
             if (flag)
