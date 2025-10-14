@@ -231,9 +231,48 @@ namespace CEGlobals
         ini.SaveFile("Data\\SKSE\\Plugins\\CompareEquipmentNG.ini");
 
         CEMenu::UpdateMenuName();
+        LoadTranslation();
     }
 
     std::string QLIE_HINT_TEXT = "Compare";
+
+    std::string buttonCompareText = "Compare";
+    std::string comparingTo = "<font color=\"#D4D4D4\" size=\"12\">Comparing to</font>";
+    std::string damageLabelText = "<font color=\"#D4D4D4\" size=\"12\">Damage:</font>";
+    std::string critLabelText = "<font color=\"#D4D4D4\" size=\"12\">Crit:</font>";
+    std::string noneText = "None";
+    std::string armorTypeLabelText = "<font color=\"#D4D4D4\" size=\"12\">Armor Type:</font>";
+    std::string heavyArmor = "Heavy";
+    std::string lightArmor = "Light";
+    std::string clothArmor = "Cloth";
+    std::string armorRatingLabelText = "<font color=\"#D4D4D4\" size=\"12\">Armor Rating:</font>";
+    std::string unscaledText = "(Unscaled)";
+    std::string goldLabelText = "<font color=\"#D4D4D4\" size=\"12\">Gold Value:</font>";
+    std::string effectsLabelText = "E<font color=\"#D4D4D4\" size=\"12\">ffect(s):</font>";
+    std::string equippedTo = "<font color=\"#D4D4D4\" size=\"12\">Equipped to</font>";
+    std::string slotsLabelText = "<font color=\"#D4D4D4\" size=\"12\">Slot(s):</font>";
+    std::string leftHand = "Left Hand";
+    std::string rightHand = "Right Hand";
+    std::string bothHands = "Both Hands";
+    std::string speedLabelText = "<font color=\"#D4D4D4\" size=\"12\">Speed:</font>";
+    std::string reachLabelText = "<font color=\"#D4D4D4\" size=\"12\">Reach:</font>";
+    std::string staggerLabelText = "<font color=\"#D4D4D4\" size=\"12\">Stagger:</font>";
+    std::string keyText = "<font color=\"#D4D4D4\" size=\"12\">Key:</font>";
+    std::string keyInfo = "(Total : T, Average : A, Max : M)";
+    std::string totalKey = "T";
+    std::string averageKey = "A";
+    std::string maxKey = "M";
+    std::string notApplicable = "N/A";
+    std::string betterWrapperStart = "<font color=\"#00FF00\" size=\"12\">(+";
+    std::string betterWrapperEnd = ")</font>";
+    std::string worseWrapperStart = "<font color=\"#FF0000\" size=\"12\">(";
+    std::string worseWrapperEnd = ")</font>";
+    std::string normalWrapperStart = "<font color=\"#FFFFFF\" size=\"12\">";
+    std::string normalWrapperEnd = "</font>";
+
+    long diffOffset = 0;
+    long valueOffset = 2;
+    long columnTwoOffset = 155;
 
     void LoadTranslation()
     {
@@ -245,11 +284,164 @@ namespace CEGlobals
         {
             logger::warn("Could not load CompareEquipmentNG_translation.ini, using defaults");
         }
+
+        diffOffset = ini.GetLongValue("Customization", "diffOffset", 0);
+        valueOffset = ini.GetLongValue("Customization", "valueOffset", 2);
+        columnTwoOffset = ini.GetLongValue("Customization", "columnTwoOffset", 155);
+
         QLIE_HINT_TEXT = ini.GetValue("Translations", "QuickLoot IE Hint Text", "Compare");
+        buttonCompareText = ini.GetValue("Translations", "buttonCompareText", "Compare");
+        comparingTo = ini.GetValue("Translations", "comparingTo", "<font color=\"#D4D4D4\" size=\"12\">Comparing to</font>");
+        damageLabelText = ini.GetValue("Translations", "damageLabelText", "<font color=\"#D4D4D4\" size=\"12\">Damage:</font>");
+        critLabelText = ini.GetValue("Translations", "critLabelText", "<font color=\"#D4D4D4\" size=\"12\">Crit:</font>");
+        noneText = ini.GetValue("Translations", "noneText", "None");
+        armorTypeLabelText = ini.GetValue("Translations", "armorTypeLabelText", "<font color=\"#D4D4D4\" size=\"12\">Armor Type:</font>");
+        heavyArmor = ini.GetValue("Translations", "heavyArmor", "Heavy");
+        lightArmor = ini.GetValue("Translations", "lightArmor", "Light");
+        clothArmor = ini.GetValue("Translations", "clothArmor", "Cloth");
+        armorRatingLabelText = ini.GetValue("Translations", "armorRatingLabelText", "<font color=\"#D4D4D4\" size=\"12\">Armor Rating:</font>");
+        unscaledText = ini.GetValue("Translations", "unscaledText", "(Unscaled)");
+        goldLabelText = ini.GetValue("Translations", "goldLabelText", "<font color=\"#D4D4D4\" size=\"12\">Gold Value:</font>");
+        effectsLabelText = ini.GetValue("Translations", "effectsLabelText", "<font color=\"#D4D4D4\" size=\"12\">Effect(s):</font>");
+        equippedTo = ini.GetValue("Translations", "equippedTo", "<font color=\"#D4D4D4\" size=\"12\">Equipped to</font>");
+        slotsLabelText = ini.GetValue("Translations", "slotsLabelText", "<font color=\"#D4D4D4\" size=\"12\">Slot(s):</font>");
+        leftHand = ini.GetValue("Translations", "leftHand", "Left Hand");
+        rightHand = ini.GetValue("Translations", "rightHand", "Right Hand");
+        bothHands = ini.GetValue("Translations", "bothHands", "Both Hands");
+        speedLabelText = ini.GetValue("Translations", "speedLabelText", "<font color=\"#D4D4D4\" size=\"12\">Speed:</font>");
+        reachLabelText = ini.GetValue("Translations", "reachLabelText", "<font color=\"#D4D4D4\" size=\"12\">Reach:</font>");
+        staggerLabelText = ini.GetValue("Translations", "staggerLabelText", "<font color=\"#D4D4D4\" size=\"12\">Stagger:</font>");
+        keyText = ini.GetValue("Translations", "keyText", "<font color=\"#D4D4D4\" size=\"12\">Key:</font>");
+        keyInfo = ini.GetValue("Translations", "keyInfo", "(Total : T, Average : A, Max : M)");
+        totalKey = ini.GetValue("Translations", "totalKey", "T");
+        averageKey = ini.GetValue("Translations", "averageKey", "A");
+        maxKey = ini.GetValue("Translations", "maxKey", "M");
+        notApplicable = ini.GetValue("Translations", "notApplicable", "N/A");
+        betterWrapperStart = ini.GetValue("Translations", "betterWrapperStart", "<font color=\"#00FF00\">(+");
+        betterWrapperEnd = ini.GetValue("Translations", "betterWrapperEnd", ")</font>");
+        worseWrapperStart = ini.GetValue("Translations", "worseWrapperStart", "<font color=\"#FF0000\">(");
+        worseWrapperEnd = ini.GetValue("Translations", "worseWrapperEnd", ")</font>");
+        normalWrapperStart = ini.GetValue("Translations", "normalWrapperStart", "<font color=\"#FFFFFF\">");
+        normalWrapperEnd = ini.GetValue("Translations", "normalWrapperEnd", "</font>");
+
+        ini.SetLongValue("Customization", "diffOffset", diffOffset,
+                         "#Offset of difference values from regular values, default 0");
+
+        ini.SetLongValue("Customization", "valueOffset", valueOffset,
+                         "#Offset of values from labels, default 0");
+
+        ini.SetLongValue("Customization", "columnTwoOffset", columnTwoOffset,
+                         "#Offset of the second column of labels, default 155");
 
         ini.SetValue("Translations", "QuickLoot IE Hint Text", QLIE_HINT_TEXT.c_str(),
-                     "#Replace the text following the \"=\" in the below:\n"
-                     "\n#The hint text that is shown in the QuickLoot Menu.");
+                     "#This ini is also reloaded with the settings in game."
+                     "\n#All text should support the basic html that ActionScript 2.0 supports(granted the font in the SWF supports it)."
+                     "\n#Replace the text following the \"=\" in the below:\n"
+                     "\n#The hint text that is shown in the QuickLoot Menu."
+                     "\n#set one of these if using Oblivion Interaction Icons:"
+                     "\n# Use either EE or EhE since EE can look a bit sus: <font face='Daedric'>EE</font>"
+                     "\n# Use P or whatever you want from Oblivion Interaction Icons's Docs/OII_cheatsheet.png: <font face=' Iconographia'>P</font>"
+                     "\n# Font size 22 is what makes the hotkey symbol correctly sized for me, yours may be different: <font face = 'SkyrimBooks_Handwritten_Bold' size = '22'><b>[][]</ b></ font> ");
+
+        ini.SetValue("Translations", "buttonCompareText", buttonCompareText.c_str(),
+                     "# Text to display next to button hint");
+
+        ini.SetValue("Translations", "comparingTo", comparingTo.c_str(),
+                     "# The item is being compared to x's equipment");
+
+        ini.SetValue("Translations", "damageLabelText", damageLabelText.c_str(),
+                     "# Damage of weapon, example -> \"Damage:\" 10.00");
+
+        ini.SetValue("Translations", "critLabelText", critLabelText.c_str(),
+                     "# Critical damage of weapon, example -> \"Crit:\" 4.00");
+
+        ini.SetValue("Translations", "noneText", noneText.c_str(),
+                     "# Indicate no effects/no value");
+
+        ini.SetValue("Translations", "armorTypeLabelText", armorTypeLabelText.c_str(),
+                     "# The type of armor that an item is, example -> \"Armor Type:\" Cloth");
+
+        ini.SetValue("Translations", "heavyArmor", heavyArmor.c_str(),
+                     "# Armor type: Heavy");
+
+        ini.SetValue("Translations", "lightArmor", lightArmor.c_str(),
+                     "# Armor type: Light");
+
+        ini.SetValue("Translations", "clothArmor", clothArmor.c_str(),
+                     "# Armor type: Cloth");
+
+        ini.SetValue("Translations", "armorRatingLabelText", armorRatingLabelText.c_str(),
+                     "# The rating/defence of an armor, example -> \"Armor Rating:\" 20");
+
+        ini.SetValue("Translations", "unscaledText", unscaledText.c_str(),
+                     "# Indicates that the armor rating/weapon damage is not scaled with the actor's perks/levels.");
+
+        ini.SetValue("Translations", "goldLabelText", goldLabelText.c_str(),
+                     "# How much the item is worth in gold, example -> \"Gold Value:\" 1000");
+
+        ini.SetValue("Translations", "effectsLabelText", effectsLabelText.c_str(),
+                     "# What enchantment/effect/item description the item has");
+
+        ini.SetValue("Translations", "equippedTo", equippedTo.c_str(),
+                     "# The item is \"Equipped to\" x actor");
+
+        ini.SetValue("Translations", "slotsLabelText", slotsLabelText.c_str(),
+                     "# The body slot or slots the item has");
+
+        ini.SetValue("Translations", "leftHand", leftHand.c_str(),
+                     "# The hand the weapon is equipped to: left");
+
+        ini.SetValue("Translations", "rightHand", rightHand.c_str(),
+                     "# The hand the weapon is equipped to: right");
+
+        ini.SetValue("Translations", "bothHands", bothHands.c_str(),
+                     "# The hand(s) the weapon is equipped to: both");
+
+        ini.SetValue("Translations", "speedLabelText", speedLabelText.c_str(),
+                     "# The speed at which a weapon attacks.");
+
+        ini.SetValue("Translations", "reachLabelText", reachLabelText.c_str(),
+                     "# The reach/range of a weapon when swung/attacking.");
+
+        ini.SetValue("Translations", "staggerLabelText", staggerLabelText.c_str(),
+                     "# The stagger damage a weapon does to an enemy to make them stagger when attacking.");
+
+        ini.SetValue("Translations", "keyText", keyText.c_str(),
+                     "# The legend or key that explains what the differences are relative to");
+
+        ini.SetValue("Translations", "keyInfo", keyInfo.c_str(),
+                     "# The actual key. Total difference, average difference, max difference.");
+
+        ini.SetValue("Translations", "totalKey", totalKey.c_str(),
+                     "# The indicator from the above key -> (T)otal: (T)");
+
+        ini.SetValue("Translations", "averageKey", averageKey.c_str(),
+                     "# The indicator from the above key -> (A)verage: (A)");
+
+        ini.SetValue("Translations", "maxKey", maxKey.c_str(),
+                     "# The indicator from the above key -> (M)ax: (M)");
+
+        ini.SetValue("Translations", "notApplicable", notApplicable.c_str(),
+                     "# Simple text that indicates something is not applicable / not available");
+
+        ini.SetValue("Translations", "betterWrapperStart", betterWrapperStart.c_str(),
+                     "# Better HTML wrapper start #RRGGBB so a green (+Diff)");
+
+        ini.SetValue("Translations", "betterWrapperEnd", betterWrapperEnd.c_str(),
+                     "# Better HTML wrapper end");
+
+        ini.SetValue("Translations", "worseWrapperStart", worseWrapperStart.c_str(),
+                     "# Worse HTML wrapper start #RRGGBB so a red (Diff)");
+
+        ini.SetValue("Translations", "worseWrapperEnd", worseWrapperEnd.c_str(),
+                     "# Worse HTML wrapper end");
+
+        ini.SetValue("Translations", "normalWrapperStart", normalWrapperStart.c_str(),
+                     "# Normal HTML Wrapper start so normal text like the \"32\" in Armor Rating: 32 is white");
+
+        ini.SetValue("Translations", "normalWrapperEnd", normalWrapperEnd.c_str(),
+                     "# Normal HTML wrapper end");
+
         ini.SaveFile("Data\\SKSE\\Plugins\\CompareEquipmentNG_translation.ini");
     }
 }

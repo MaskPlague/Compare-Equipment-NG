@@ -36,11 +36,49 @@ namespace CEGlobals
     const int SELECTED_ARMOR_ITEM_ARRAY_SIZE = 8;
     const int EQUIPPED_WEAPON_ITEM_ARRAY_SIZE = 9;
     const int SELECTED_WEAPON_ITEM_ARRAY_SIZE = 14;
-    const std::string EXPECTED_SWF_VERSION = "1";
+    const std::string EXPECTED_SWF_VERSION = "2";
 
     void LoadConfig();
 
     extern std::string QLIE_HINT_TEXT;
+
+    extern std::string buttonCompareText;
+    extern std::string comparingTo;
+    extern std::string damageLabelText;
+    extern std::string critLabelText;
+    extern std::string noneText;
+    extern std::string armorTypeLabelText;
+    extern std::string heavyArmor;
+    extern std::string lightArmor;
+    extern std::string clothArmor;
+    extern std::string armorRatingLabelText;
+    extern std::string unscaledText;
+    extern std::string goldLabelText;
+    extern std::string effectsLabelText;
+    extern std::string equippedTo;
+    extern std::string slotsLabelText;
+    extern std::string leftHand;
+    extern std::string rightHand;
+    extern std::string bothHands;
+    extern std::string speedLabelText;
+    extern std::string reachLabelText;
+    extern std::string staggerLabelText;
+    extern std::string keyText;
+    extern std::string keyInfo;
+    extern std::string totalKey;
+    extern std::string averageKey;
+    extern std::string maxKey;
+    extern std::string notApplicable;
+    extern std::string betterWrapperStart;
+    extern std::string betterWrapperEnd;
+    extern std::string worseWrapperStart;
+    extern std::string worseWrapperEnd;
+    extern std::string normalWrapperStart;
+    extern std::string normalWrapperEnd;
+
+    extern long diffOffset;
+    extern long valueOffset;
+    extern long columnTwoOffset;
 
     void LoadTranslation();
 }
