@@ -177,7 +177,7 @@ namespace CEGlobals
         const char *rowsComment = ("#Maximum number of compared item card rows, after this number of rows, a column will be created"
                                    "\n#Default 4, max 4, min 1");
         ini.SetLongValue("General", "Maximum Rows", ROWS, rowsComment);
-        ini.SetLongValue("General", "UseIcons", USE_ICONS, "#If item icons should be displayed when available.");
+        ini.SetBoolValue("General", "UseIcons", USE_ICONS, "#If item icons should be displayed when available.");
 
         //------------------------------ In Menus ---------------------------------------------------------------
         ini.SetDoubleValue("InMenu", "X Offset", MENU_X_ORIGIN, "#Selected Item's item card X offset in menus\n#Default 590.0");
