@@ -29,6 +29,7 @@ namespace CEGlobals
     extern bool QLIE_SHOWHINT;
     extern bool HUD_ALLOWED;
     extern bool HUD_TOGGLEMODE;
+    extern bool USE_ICONS;
 
     extern RE::INPUT_DEVICE lastInputDevice;
 

@@ -29,6 +29,7 @@ namespace CEGlobals
     bool QLIE_SHOWHINT = true;
     bool HUD_ALLOWED = true;
     bool HUD_TOGGLEMODE = true;
+    bool USE_ICONS = true;
 
     RE::INPUT_DEVICE lastInputDevice = RE::INPUT_DEVICE::kNone;
 
@@ -47,6 +48,8 @@ namespace CEGlobals
             ROWS = 4;
         if (ROWS < 1)
             ROWS = 1;
+
+        USE_ICONS = ini.GetBoolValue("General", "UseIcons", true);
 
         //------------------------------ In Menus ---------------------------------------------------------------
 
@@ -147,6 +150,7 @@ namespace CEGlobals
         logger::debug("Version                  {}", SKSE::PluginDeclaration::GetSingleton()->GetVersion());
         logger::debug("Expected SWF Version:    {}", EXPECTED_SWF_VERSION);
         logger::debug("Maximum Rows:            {}", ROWS);
+        logger::debug("Use Icons:               {}", USE_ICONS);
         logger::debug("X Offset:                {:.2f}", MENU_X_ORIGIN);
         logger::debug("Y Offset:                {:.2f}", MENU_Y_ORIGIN);
         logger::debug("Scale:                   {}", MENU_SCALE);
@@ -175,6 +179,7 @@ namespace CEGlobals
         const char *rowsComment = ("#Maximum number of compared item card rows, after this number of rows, a column will be created"
                                    "\n#Default 4, max 4, min 1");
         ini.SetLongValue("General", "Maximum Rows", ROWS, rowsComment);
+        ini.SetLongValue("General", "UseIcons", USE_ICONS, "#If item icons should be displayed when available.");
 
         //------------------------------ In Menus ---------------------------------------------------------------
         ini.SetDoubleValue("InMenu", "X Offset", MENU_X_ORIGIN, "#Selected Item's item card X offset in menus\n#Default 590.0");
