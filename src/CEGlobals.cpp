@@ -1,5 +1,3 @@
-namespace logger = SKSE::log;
-
 namespace CEGlobals
 {
     double MENU_X_ORIGIN = 590.0f;

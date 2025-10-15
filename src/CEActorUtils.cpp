@@ -1,5 +1,3 @@
-namespace logger = SKSE::log;
-
 namespace CEActorUtils
 {
     RE::Actor *currentActor;

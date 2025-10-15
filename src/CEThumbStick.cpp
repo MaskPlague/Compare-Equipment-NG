@@ -1,5 +1,3 @@
-namespace logger = SKSE::log;
-
 namespace CEThumbStick
 {
     VirtualButtonState UpdateVirtualButton(VirtualButton &vb, float valueX, float valueY)

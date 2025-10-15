@@ -1,5 +1,3 @@
-namespace logger = SKSE::log;
-
 namespace CEMenu
 {
     std::string temp = "CompareEquipmentMenu_" + CEGlobals::EXPECTED_SWF_VERSION + "_" + std::to_string(CEGlobals::COMPARE_KEY);

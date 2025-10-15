@@ -1,4 +1,3 @@
-namespace logger = SKSE::log;
 using namespace CEThumbStick;
 
 namespace CEGameEvents

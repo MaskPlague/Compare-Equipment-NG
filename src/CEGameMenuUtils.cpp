@@ -1,5 +1,3 @@
-namespace logger = SKSE::log;
-
 namespace CEGameMenuUtils
 {
     RE::FormID currentFormID;

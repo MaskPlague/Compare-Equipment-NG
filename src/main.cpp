@@ -1,5 +1,3 @@
-namespace logger = SKSE::log;
-
 namespace CompareEquipmentNG
 {
     void SetupLog()
