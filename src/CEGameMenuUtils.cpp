@@ -347,9 +347,11 @@ namespace CEGameMenuUtils
                         }
 
                         equippedAccumulatedRating += equippedRating;
+                        RE::GFxValue equippedEntry = CEIconUtils::GetEquippedEntryObject(formId);
                         std::array<RE::GFxValue, CEGlobals::EQUIPPED_ARMOR_ITEM_ARRAY_SIZE>
                             itemInfo = {equippedName, equippedSlots.c_str(), equippedType,
-                                        equippedRatingString.c_str(), equippedValue, equippedEffectInfo.c_str()};
+                                        equippedRatingString.c_str(), equippedValue, equippedEffectInfo.c_str(),
+                                        equippedEntry};
                         CEMenu::CreateArmorComparisonItemCard(itemInfo, ceMenu);
                     }
                 }
@@ -360,12 +362,12 @@ namespace CEGameMenuUtils
             equippedAccumulatedRating = selectedRating - equippedAccumulatedRating;
             equippedAccumulateValue = selectedValue - equippedAccumulateValue;
         }
+        RE::GFxValue selectedEntryObject = CEIconUtils::GetSelectedEntryObject();
         std::array<RE::GFxValue, CEGlobals::SELECTED_ARMOR_ITEM_ARRAY_SIZE>
             selectedItemInfo = {selectedName, selectedSlots.c_str(), selectedType,
                                 selectedRatingString.c_str(), equippedAccumulatedRating,
                                 selectedValue, equippedAccumulateValue,
-                                selectedEffectInfo.c_str()};
-
+                                selectedEffectInfo.c_str(), selectedEntryObject};
         CEMenu::CreateSelectedArmorItemCard(selectedItemInfo, ceMenu);
         int scale = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_SCALE : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_SCALE : CEGlobals::MENU_SCALE);
         int alpha = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_BACKGROUND_ALPHA : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_BACKGROUND_ALPHA : CEGlobals::MENU_BACKGROUND_ALPHA);
@@ -414,7 +416,6 @@ namespace CEGameMenuUtils
         auto enchantment = weapon->formEnchanting;
         std::string effectInfo = "";
         GetEffectsInfo(formId, effectInfo, enchantment, weapon, name);
-
         std::string handLabel;
         if (flag)
             handLabel = CEGlobals::bothHands;
@@ -433,10 +434,11 @@ namespace CEGameMenuUtils
                 staggerDiff = stagger - staggerDiff;
                 reachDiff = reach - reachDiff;
             }
+            RE::GFxValue itemEntryObject = CEIconUtils::GetSelectedEntryObject();
             std::array<RE::GFxValue, CEGlobals::SELECTED_WEAPON_ITEM_ARRAY_SIZE>
                 itemInfo = {
                     name, damageString.c_str(), damageDiff, crit, critDiff, value, valueDiff,
-                    speed, speedDiff, stagger, staggerDiff, reach, reachDiff, effectInfo.c_str()};
+                    speed, speedDiff, stagger, staggerDiff, reach, reachDiff, effectInfo.c_str(), itemEntryObject};
             CEMenu::CreateSelectedWeaponItemCard(itemInfo, ceMenu);
             return;
         }
@@ -446,10 +448,11 @@ namespace CEGameMenuUtils
         valueDiff += value;
         staggerDiff += stagger;
         reachDiff += reach;
+        RE::GFxValue itemEntryObject = CEIconUtils::GetEquippedEntryObject(formId);
         std::array<RE::GFxValue, CEGlobals::EQUIPPED_WEAPON_ITEM_ARRAY_SIZE>
             itemInfo = {
                 handLabel.c_str(), name, damageString.c_str(), crit, value,
-                speed, stagger, reach, effectInfo.c_str()};
+                speed, stagger, reach, effectInfo.c_str(), itemEntryObject};
         CEMenu::CreateWeaponComparisonItemCard(itemInfo, ceMenu);
     }
 
@@ -567,7 +570,7 @@ namespace CEGameMenuUtils
         int scale = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_SCALE : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_SCALE : CEGlobals::MENU_SCALE);
         int alpha = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_BACKGROUND_ALPHA : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_BACKGROUND_ALPHA : CEGlobals::MENU_BACKGROUND_ALPHA);
         std::array<RE::GFxValue, CEGlobals::EQUIPPED_WEAPON_ITEM_ARRAY_SIZE>
-            displayCommand = {"DISPLAY", alpha, scale, "", "", "", "", "", ""};
+            displayCommand = {"DISPLAY", alpha, scale, "", "", "", "", "", "", ""};
         CEMenu::CreateWeaponComparisonItemCard(displayCommand, ceMenu);
         CEMenu::SetMenuOffsets(ceMenu);
     }

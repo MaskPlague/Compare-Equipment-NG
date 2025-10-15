@@ -33,10 +33,10 @@ namespace CEGlobals
 
     extern RE::INPUT_DEVICE lastInputDevice;
 
-    const int EQUIPPED_ARMOR_ITEM_ARRAY_SIZE = 6;
-    const int SELECTED_ARMOR_ITEM_ARRAY_SIZE = 8;
-    const int EQUIPPED_WEAPON_ITEM_ARRAY_SIZE = 9;
-    const int SELECTED_WEAPON_ITEM_ARRAY_SIZE = 14;
+    const int EQUIPPED_ARMOR_ITEM_ARRAY_SIZE = 8;
+    const int SELECTED_ARMOR_ITEM_ARRAY_SIZE = 9;
+    const int EQUIPPED_WEAPON_ITEM_ARRAY_SIZE = 10;
+    const int SELECTED_WEAPON_ITEM_ARRAY_SIZE = 15;
     const std::string EXPECTED_SWF_VERSION = "2";
 
     void LoadConfig();
