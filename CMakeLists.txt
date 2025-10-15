@@ -40,6 +40,7 @@ add_commonlibsse_plugin(${PROJECT_NAME} SOURCES src/CEGlobals.cpp
                                                 src/main.cpp 
                                                 src/CEActorUtils.cpp 
                                                 src/CEMenu.cpp
+                                                src/CEIconUtils.cpp
                                                 src/CEGameMenuUtils.cpp
                                                 src/CEGameEvents.cpp
                                                 src/CEThumbStick.cpp)

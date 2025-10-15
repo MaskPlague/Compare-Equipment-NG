@@ -9,6 +9,7 @@
 #include "CEGlobals.h"
 #include "CEActorUtils.h"
 #include "CEMenu.h"
+#include "CEIconUtils.h"
 #include "CEGameMenuUtils.h"
 #include "CEGameEvents.h"
 #include "CEThumbStick.h"
