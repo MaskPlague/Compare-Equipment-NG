@@ -126,16 +126,41 @@ namespace CEMenu
 
     void SetMenuOffsets(RE::GFxValue ceMenu)
     {
-        RE::GFxValue xNumber;
-        double xOffset = openedMenuName == "LootMenu" ? CEGlobals::QLIE_X_ORIGIN : (openedMenuName == "HUDMenu" ? CEGlobals::HUD_X_ORIGIN : CEGlobals::MENU_X_ORIGIN);
-        xNumber.SetNumber(xOffset);
-        if (!ceMenu.SetMember("_x", xNumber))
+        double xOffset;
+        double yOffset;
+        if (openedMenuName == "LootMenu")
+        {
+            xOffset = CEGlobals::QLIE_X_ORIGIN;
+            yOffset = CEGlobals::QLIE_Y_ORIGIN;
+        }
+        else if (openedMenuName == "HUDMenu")
+        {
+            xOffset = CEGlobals::HUD_X_ORIGIN;
+            yOffset = CEGlobals::HUD_X_ORIGIN;
+        }
+        else if (openedMenuName == RE::InventoryMenu::MENU_NAME)
+        {
+            xOffset = CEGlobals::INV_MENU_X_ORIGIN;
+            yOffset = CEGlobals::INV_MENU_Y_ORIGIN;
+        }
+        else if (openedMenuName == RE::ContainerMenu::MENU_NAME)
+        {
+            xOffset = CEGlobals::CONT_MENU_X_ORIGIN;
+            yOffset = CEGlobals::CONT_MENU_Y_ORIGIN;
+        }
+        else if (openedMenuName == RE::BarterMenu::MENU_NAME)
+        {
+            xOffset = CEGlobals::BART_MENU_X_ORIGIN;
+            yOffset = CEGlobals::BART_MENU_Y_ORIGIN;
+        }
+        else if (openedMenuName == RE::GiftMenu::MENU_NAME)
+        {
+            xOffset = CEGlobals::GIFT_MENU_X_ORIGIN;
+            yOffset = CEGlobals::GIFT_MENU_Y_ORIGIN;
+        }
+        if (!ceMenu.SetMember("_x", xOffset))
             return;
-
-        RE::GFxValue yNumber;
-        double yOffset = openedMenuName == "LootMenu" ? CEGlobals::QLIE_Y_ORIGIN : (openedMenuName == "HUDMenu" ? CEGlobals::HUD_Y_ORIGIN : CEGlobals::MENU_Y_ORIGIN);
-        yNumber.SetNumber(yOffset);
-        if (!ceMenu.SetMember("_y", yNumber))
+        if (!ceMenu.SetMember("_y", yOffset))
             return;
     }
 

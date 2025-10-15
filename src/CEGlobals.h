@@ -2,8 +2,14 @@
 
 namespace CEGlobals
 {
-    extern double MENU_X_ORIGIN;
-    extern double MENU_Y_ORIGIN;
+    extern double INV_MENU_X_ORIGIN;
+    extern double INV_MENU_Y_ORIGIN;
+    extern double CONT_MENU_X_ORIGIN;
+    extern double CONT_MENU_Y_ORIGIN;
+    extern double BART_MENU_X_ORIGIN;
+    extern double BART_MENU_Y_ORIGIN;
+    extern double GIFT_MENU_X_ORIGIN;
+    extern double GIFT_MENU_Y_ORIGIN;
     extern double QLIE_X_ORIGIN;
     extern double QLIE_Y_ORIGIN;
     extern double HUD_X_ORIGIN;

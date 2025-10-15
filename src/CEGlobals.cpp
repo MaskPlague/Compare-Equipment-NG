@@ -1,7 +1,13 @@
 namespace CEGlobals
 {
-    double MENU_X_ORIGIN = 590.0f;
-    double MENU_Y_ORIGIN = 250.0f;
+    double INV_MENU_X_ORIGIN = 590.0f;
+    double INV_MENU_Y_ORIGIN = 250.0f;
+    double CONT_MENU_X_ORIGIN = 590.0f;
+    double CONT_MENU_Y_ORIGIN = 250.0f;
+    double BART_MENU_X_ORIGIN = 590.0f;
+    double BART_MENU_Y_ORIGIN = 250.0f;
+    double GIFT_MENU_X_ORIGIN = 590.0f;
+    double GIFT_MENU_Y_ORIGIN = 250.0f;
     double QLIE_X_ORIGIN = -1000.0f;
     double QLIE_Y_ORIGIN = 0.0f;
     double HUD_X_ORIGIN = 450.0f;
@@ -51,8 +57,14 @@ namespace CEGlobals
 
         //------------------------------ In Menus ---------------------------------------------------------------
 
-        MENU_X_ORIGIN = ini.GetDoubleValue("InMenu", "X Offset", 590.0f);
-        MENU_Y_ORIGIN = ini.GetDoubleValue("InMenu", "Y Offset", 250.0f);
+        INV_MENU_X_ORIGIN = ini.GetDoubleValue("InMenu", "Inventory X Offset", 590.0f);
+        INV_MENU_Y_ORIGIN = ini.GetDoubleValue("InMenu", "Inventory Y Offset", 250.0f);
+        CONT_MENU_X_ORIGIN = ini.GetDoubleValue("InMenu", "Container X Offset", 590.0f);
+        CONT_MENU_Y_ORIGIN = ini.GetDoubleValue("InMenu", "Container Y Offset", 250.0f);
+        BART_MENU_X_ORIGIN = ini.GetDoubleValue("InMenu", "Barter X Offset", 590.0f);
+        BART_MENU_Y_ORIGIN = ini.GetDoubleValue("InMenu", "Barter Y Offset", 250.0f);
+        GIFT_MENU_X_ORIGIN = ini.GetDoubleValue("InMenu", "Gift X Offset", 590.0f);
+        GIFT_MENU_Y_ORIGIN = ini.GetDoubleValue("InMenu", "Gift Y Offset", 250.0f);
         MENU_SCALE = ini.GetLongValue("InMenu", "Scale", 100);
         if (MENU_SCALE <= 0)
             MENU_SCALE = 100;
@@ -149,8 +161,14 @@ namespace CEGlobals
         logger::debug("Expected SWF Version:    {}", EXPECTED_SWF_VERSION);
         logger::debug("Maximum Rows:            {}", ROWS);
         logger::debug("Use Icons:               {}", USE_ICONS);
-        logger::debug("X Offset:                {:.2f}", MENU_X_ORIGIN);
-        logger::debug("Y Offset:                {:.2f}", MENU_Y_ORIGIN);
+        logger::debug("Inventory X Offset:      {:.2f}", INV_MENU_X_ORIGIN);
+        logger::debug("Inventory Y Offset:      {:.2f}", INV_MENU_Y_ORIGIN);
+        logger::debug("Container X Offset:      {:.2f}", CONT_MENU_X_ORIGIN);
+        logger::debug("Container Y Offset:      {:.2f}", CONT_MENU_Y_ORIGIN);
+        logger::debug("Barter X Offset:         {:.2f}", BART_MENU_X_ORIGIN);
+        logger::debug("Barter Y Offset:         {:.2f}", BART_MENU_Y_ORIGIN);
+        logger::debug("Gift X Offset:           {:.2f}", GIFT_MENU_X_ORIGIN);
+        logger::debug("Gift Y Offset:           {:.2f}", GIFT_MENU_Y_ORIGIN);
         logger::debug("Scale:                   {}", MENU_SCALE);
         logger::debug("Background Alpha         {}", MENU_BACKGROUND_ALPHA);
         logger::debug("HUD Enabled:             {}", HUD_ALLOWED);
@@ -180,8 +198,14 @@ namespace CEGlobals
         ini.SetBoolValue("General", "UseIcons", USE_ICONS, "#If item icons should be displayed when available.");
 
         //------------------------------ In Menus ---------------------------------------------------------------
-        ini.SetDoubleValue("InMenu", "X Offset", MENU_X_ORIGIN, "#Selected Item's item card X offset in menus\n#Default 590.0");
-        ini.SetDoubleValue("InMenu", "Y Offset", MENU_Y_ORIGIN, "#Selected Item's item card Y offset in menus\n#Default 250.0");
+        ini.SetDoubleValue("InMenu", "Inventory X Offset", INV_MENU_X_ORIGIN, "#Selected Item's item card X offset in the Inventory menu\n#Default 590.0");
+        ini.SetDoubleValue("InMenu", "Inventory Y Offset", INV_MENU_Y_ORIGIN, "#Selected Item's item card Y offset in the Inventory menu\n#Default 250.0");
+        ini.SetDoubleValue("InMenu", "Container X Offset", CONT_MENU_X_ORIGIN, "#Selected Item's item card X offset in the Container menu\n#Default 590.0");
+        ini.SetDoubleValue("InMenu", "Container Y Offset", CONT_MENU_Y_ORIGIN, "#Selected Item's item card Y offset in the Container menu\n#Default 250.0");
+        ini.SetDoubleValue("InMenu", "Barter X Offset", BART_MENU_X_ORIGIN, "#Selected Item's item card X offset in the Barter menu\n#Default 590.0");
+        ini.SetDoubleValue("InMenu", "Barter Y Offset", BART_MENU_Y_ORIGIN, "#Selected Item's item card Y offset in the Barter menu\n#Default 250.0");
+        ini.SetDoubleValue("InMenu", "Gift X Offset", GIFT_MENU_X_ORIGIN, "#Selected Item's item card X offset in the Gift menu\n#Default 590.0");
+        ini.SetDoubleValue("InMenu", "Gift Y Offset", GIFT_MENU_Y_ORIGIN, "#Selected Item's item card Y offset in the Gift menu\n#Default 250.0");
         ini.SetLongValue("InMenu", "Scale", MENU_SCALE, "#Scale of item cards in menus, default 100");
         ini.SetLongValue("InMenu", "Background Alpha", MENU_BACKGROUND_ALPHA, "#All item card's background alpha value in menus\n#Default 95, max 100, min 0");
 
@@ -416,13 +440,13 @@ namespace CEGlobals
                      "# The actual key. Total difference, average difference, max difference.");
 
         ini.SetValue("Translations", "totalKey", totalKey.c_str(),
-                     "# The indicator from the above key -> (T)otal: (T)");
+                     "# The indicator from the above key -> (T)otal: (T), to add a space put a semi-colon in front ';T'");
 
         ini.SetValue("Translations", "averageKey", averageKey.c_str(),
-                     "# The indicator from the above key -> (A)verage: (A)");
+                     "# The indicator from the above key -> (A)verage: (A), to add a space put a semi-colon in front ';A'");
 
         ini.SetValue("Translations", "maxKey", maxKey.c_str(),
-                     "# The indicator from the above key -> (M)ax: (M)");
+                     "# The indicator from the above key -> (M)ax: (M), to add a space put a semi-colon in front ';M'");
 
         ini.SetValue("Translations", "notApplicable", notApplicable.c_str(),
                      "# Simple text that indicates something is not applicable / not available");
