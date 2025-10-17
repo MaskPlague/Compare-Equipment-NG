@@ -34,6 +34,8 @@ namespace CEGlobals
     bool HUD_ALLOWED = true;
     bool HUD_TOGGLEMODE = true;
     bool USE_ICONS = true;
+    bool HIDE_3D = true;
+    bool HIDE_SKY_UI_ITEM_CARD = true;
 
     RE::INPUT_DEVICE lastInputDevice = RE::INPUT_DEVICE::kNone;
 
@@ -47,6 +49,8 @@ namespace CEGlobals
         {
             logger::warn("Could not load CompareEquipmentNG.ini, using defaults");
         }
+        HIDE_3D = ini.GetBoolValue("General", "Hide 3D Model", true);
+        HIDE_SKY_UI_ITEM_CARD = ini.GetBoolValue("General", "Hide SkyUI Item Card", HIDE_SKY_UI_ITEM_CARD);
         ROWS = ini.GetLongValue("General", "Maximum Rows", 4);
         if (ROWS > 4)
             ROWS = 4;
@@ -161,6 +165,8 @@ namespace CEGlobals
         logger::debug("Expected SWF Version:    {}", EXPECTED_SWF_VERSION);
         logger::debug("Maximum Rows:            {}", ROWS);
         logger::debug("Use Icons:               {}", USE_ICONS);
+        logger::debug("Hide 3D Models:          {}", HIDE_3D);
+        logger::debug("Hide SkyUI Item Cards:   {}", HIDE_SKY_UI_ITEM_CARD);
         logger::debug("Inventory X Offset:      {:.2f}", INV_MENU_X_ORIGIN);
         logger::debug("Inventory Y Offset:      {:.2f}", INV_MENU_Y_ORIGIN);
         logger::debug("Container X Offset:      {:.2f}", CONT_MENU_X_ORIGIN);
@@ -196,6 +202,8 @@ namespace CEGlobals
                                    "\n#Default 4, max 4, min 1");
         ini.SetLongValue("General", "Maximum Rows", ROWS, rowsComment);
         ini.SetBoolValue("General", "UseIcons", USE_ICONS, "#If item icons should be displayed when available.");
+        ini.SetBoolValue("General", "Hide 3D Model", HIDE_3D, "#If the 3d model in menus should be hidden.");
+        ini.SetBoolValue("General", "Hide SkyUI Item Card", HIDE_SKY_UI_ITEM_CARD, "#If the SkyUI item card should be hidden.");
 
         //------------------------------ In Menus ---------------------------------------------------------------
         ini.SetDoubleValue("InMenu", "Inventory X Offset", INV_MENU_X_ORIGIN, "#Selected Item's item card X offset in the Inventory menu\n#Default 590.0");

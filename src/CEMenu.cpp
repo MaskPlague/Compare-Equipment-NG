@@ -177,6 +177,18 @@ namespace CEMenu
         ceMenu.Invoke("showMenu"); });
     }
 
+    void HideSkyUiItemCard(RE::GFxValue menu_mc)
+    {
+        if (menu_mc.IsNull() || menu_mc.IsUndefined() || !menu_mc.IsObject())
+            return;
+        RE::GFxValue itemCard;
+        if (menu_mc.GetMember("itemCard", &itemCard) && itemCard.IsObject())
+        {
+            itemCard.SetMember("_visible", false);
+            itemCard.SetMember("ce_hidden", true);
+        }
+    }
+
     void ShowMenuDelayed()
     {
         SKSE::GetTaskInterface()->AddTask([]()
@@ -193,7 +205,8 @@ namespace CEMenu
                                             {
         if (!checked && !IsMenuVisible())
             return;
-        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
+        RE::GFxValue menu_mc = GetMenu_mc();
+        RE::GFxValue ceMenu = GetCEMenu(menu_mc);
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
         logger::trace("Hiding menu.");

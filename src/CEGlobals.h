@@ -36,6 +36,8 @@ namespace CEGlobals
     extern bool HUD_ALLOWED;
     extern bool HUD_TOGGLEMODE;
     extern bool USE_ICONS;
+    extern bool HIDE_3D;
+    extern bool HIDE_SKY_UI_ITEM_CARD;
 
     extern RE::INPUT_DEVICE lastInputDevice;
 
@@ -43,7 +45,7 @@ namespace CEGlobals
     const int SELECTED_ARMOR_ITEM_ARRAY_SIZE = 9;
     const int EQUIPPED_WEAPON_ITEM_ARRAY_SIZE = 10;
     const int SELECTED_WEAPON_ITEM_ARRAY_SIZE = 15;
-    const std::string EXPECTED_SWF_VERSION = "2";
+    const std::string EXPECTED_SWF_VERSION = "3";
 
     void LoadConfig();
 

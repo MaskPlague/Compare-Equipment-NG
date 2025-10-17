@@ -25,6 +25,8 @@ namespace CEMenu
 
     void ShowMenuDelayed();
 
+    void HideSkyUiItemCard(RE::GFxValue menu_mc);
+
     void HideMenu(bool checked = false);
 
     void CreateArmorComparisonItemCard(std::array<RE::GFxValue, CEGlobals::EQUIPPED_ARMOR_ITEM_ARRAY_SIZE> itemInfo, RE::GFxValue ceMenu);

@@ -242,14 +242,15 @@ namespace CEGameMenuUtils
         CEMenu::ResetMenu();
         CEMenu::SetActor(actor->GetName());
         auto manager = RE::Inventory3DManager::GetSingleton();
-        if (manager)
+        if (manager && CEGlobals::HIDE_3D)
         {
             auto zoom = manager->GetRuntimeData().zoomProgress;
             if (zoom == 0.0f)
                 manager->Clear3D();
         }
 
-        RE::GFxValue ceMenu = CEMenu::GetCEMenu(CEMenu::GetMenu_mc());
+        RE::GFxValue menu_mc = CEMenu::GetMenu_mc();
+        RE::GFxValue ceMenu = CEMenu::GetCEMenu(menu_mc);
 
         auto player = RE::PlayerCharacter::GetSingleton();
         if (!player)
@@ -375,6 +376,8 @@ namespace CEGameMenuUtils
             displayCommand = {"DISPLAY", alpha, scale, CEGlobals::ROWS, "", ""};
         CEMenu::CreateArmorComparisonItemCard(displayCommand, ceMenu);
         CEMenu::SetMenuOffsets(ceMenu);
+        if (CEGlobals::HIDE_SKY_UI_ITEM_CARD)
+            CEMenu::HideSkyUiItemCard(menu_mc);
     }
 
     bool GetDamageInfo(RE::FormID formId, const RE::TESObjectREFR::InventoryItemMap &inv, RE::PlayerCharacter *player, float &damage, std::string &damageString)
@@ -468,13 +471,14 @@ namespace CEGameMenuUtils
         CEMenu::ResetMenu();
         CEMenu::SetActor(actor->GetName());
         auto manager = RE::Inventory3DManager::GetSingleton();
-        if (manager)
+        if (manager && CEGlobals::HIDE_3D)
         {
             auto zoom = manager->GetRuntimeData().zoomProgress;
             if (zoom == 0.0f)
                 manager->Clear3D();
         }
-        RE::GFxValue ceMenu = CEMenu::GetCEMenu(CEMenu::GetMenu_mc());
+        RE::GFxValue menu_mc = CEMenu::GetMenu_mc();
+        RE::GFxValue ceMenu = CEMenu::GetCEMenu(menu_mc);
         auto player = RE::PlayerCharacter::GetSingleton();
         if (!player)
             return;
@@ -573,6 +577,8 @@ namespace CEGameMenuUtils
             displayCommand = {"DISPLAY", alpha, scale, "", "", "", "", "", "", ""};
         CEMenu::CreateWeaponComparisonItemCard(displayCommand, ceMenu);
         CEMenu::SetMenuOffsets(ceMenu);
+        if (CEGlobals::HIDE_SKY_UI_ITEM_CARD)
+            CEMenu::HideSkyUiItemCard(menu_mc);
     }
 
     void GetArmorOrWeapon(RE::FormID selectedFormId)
