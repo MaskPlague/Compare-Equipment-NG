@@ -126,8 +126,8 @@ namespace CEMenu
 
     void SetMenuOffsets(RE::GFxValue ceMenu)
     {
-        double xOffset;
-        double yOffset;
+        double xOffset = 0.0;
+        double yOffset = 0.0;
         if (openedMenuName == "LootMenu")
         {
             xOffset = CEGlobals::QLIE_X_ORIGIN;
@@ -136,7 +136,7 @@ namespace CEMenu
         else if (openedMenuName == "HUDMenu")
         {
             xOffset = CEGlobals::HUD_X_ORIGIN;
-            yOffset = CEGlobals::HUD_X_ORIGIN;
+            yOffset = CEGlobals::HUD_Y_ORIGIN;
         }
         else if (openedMenuName == RE::InventoryMenu::MENU_NAME)
         {
