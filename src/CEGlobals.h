@@ -21,6 +21,9 @@ namespace CEGlobals
     extern int QLIE_BACKGROUND_ALPHA;
     extern int HUD_BACKGROUND_ALPHA;
     extern int ROWS;
+    extern int SPACING_FROM_SELECTED;
+    extern int SPACING_BETWEEN_EQUIPPED_X;
+    extern int SPACING_BETWEEN_EQUIPPED_Y;
     extern uint32_t COMPARE_KEY;
     extern float HOLD_THRESHOLD;
     extern float TRIPLE_HIT_WINDOW;

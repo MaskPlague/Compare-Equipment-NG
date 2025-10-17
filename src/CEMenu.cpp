@@ -213,7 +213,7 @@ namespace CEMenu
         ceMenu.Invoke("hideAndReset"); });
     }
 
-    void SetTranslations()
+    void SetSwfVariables()
     {
         std::thread([]()
                     {
@@ -223,38 +223,41 @@ namespace CEMenu
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
-        logger::trace("Setting translations.");
-        std::array<RE::GFxValue, 29> translationInfo;
-        translationInfo[0].SetString(CEGlobals::buttonCompareText);
-        translationInfo[1].SetString(CEGlobals::comparingTo);
-        translationInfo[2].SetString(CEGlobals::damageLabelText);
-        translationInfo[3].SetString(CEGlobals::critLabelText);
-        translationInfo[4].SetString(CEGlobals::noneText);
-        translationInfo[5].SetString(CEGlobals::armorTypeLabelText);
-        translationInfo[6].SetString(CEGlobals::armorRatingLabelText);
-        translationInfo[7].SetString(CEGlobals::goldLabelText);
-        translationInfo[8].SetString(CEGlobals::effectsLabelText);
-        translationInfo[9].SetString(CEGlobals::equippedTo);
-        translationInfo[10].SetString(CEGlobals::slotsLabelText);
-        translationInfo[11].SetString(CEGlobals::speedLabelText);
-        translationInfo[12].SetString(CEGlobals::reachLabelText);
-        translationInfo[13].SetString(CEGlobals::staggerLabelText);
-        translationInfo[14].SetString(CEGlobals::keyText);
-        translationInfo[15].SetString(CEGlobals::keyInfo);
-        translationInfo[16].SetString(CEGlobals::totalKey);
-        translationInfo[17].SetString(CEGlobals::averageKey);
-        translationInfo[18].SetString(CEGlobals::maxKey);
-        translationInfo[19].SetString(CEGlobals::notApplicable);
-        translationInfo[20].SetString(CEGlobals::betterWrapperStart);
-        translationInfo[21].SetString(CEGlobals::betterWrapperEnd);
-        translationInfo[22].SetString(CEGlobals::worseWrapperStart);
-        translationInfo[23].SetString(CEGlobals::worseWrapperEnd);
-        translationInfo[24].SetString(CEGlobals::normalWrapperStart);
-        translationInfo[25].SetString(CEGlobals::normalWrapperEnd);
-        translationInfo[26].SetNumber(CEGlobals::diffOffset);
-        translationInfo[27].SetNumber(CEGlobals::valueOffset);
-        translationInfo[28].SetNumber(CEGlobals::columnTwoOffset);
-        ceMenu.Invoke("setTranslations", nullptr, translationInfo);
+        logger::trace("Setting SWF variables.");
+        std::array<RE::GFxValue, 32> variableInfo;
+        variableInfo[0].SetString(CEGlobals::buttonCompareText);
+        variableInfo[1].SetString(CEGlobals::comparingTo);
+        variableInfo[2].SetString(CEGlobals::damageLabelText);
+        variableInfo[3].SetString(CEGlobals::critLabelText);
+        variableInfo[4].SetString(CEGlobals::noneText);
+        variableInfo[5].SetString(CEGlobals::armorTypeLabelText);
+        variableInfo[6].SetString(CEGlobals::armorRatingLabelText);
+        variableInfo[7].SetString(CEGlobals::goldLabelText);
+        variableInfo[8].SetString(CEGlobals::effectsLabelText);
+        variableInfo[9].SetString(CEGlobals::equippedTo);
+        variableInfo[10].SetString(CEGlobals::slotsLabelText);
+        variableInfo[11].SetString(CEGlobals::speedLabelText);
+        variableInfo[12].SetString(CEGlobals::reachLabelText);
+        variableInfo[13].SetString(CEGlobals::staggerLabelText);
+        variableInfo[14].SetString(CEGlobals::keyText);
+        variableInfo[15].SetString(CEGlobals::keyInfo);
+        variableInfo[16].SetString(CEGlobals::totalKey);
+        variableInfo[17].SetString(CEGlobals::averageKey);
+        variableInfo[18].SetString(CEGlobals::maxKey);
+        variableInfo[19].SetString(CEGlobals::notApplicable);
+        variableInfo[20].SetString(CEGlobals::betterWrapperStart);
+        variableInfo[21].SetString(CEGlobals::betterWrapperEnd);
+        variableInfo[22].SetString(CEGlobals::worseWrapperStart);
+        variableInfo[23].SetString(CEGlobals::worseWrapperEnd);
+        variableInfo[24].SetString(CEGlobals::normalWrapperStart);
+        variableInfo[25].SetString(CEGlobals::normalWrapperEnd);
+        variableInfo[26].SetNumber(CEGlobals::diffOffset);
+        variableInfo[27].SetNumber(CEGlobals::valueOffset);
+        variableInfo[28].SetNumber(CEGlobals::columnTwoOffset);
+        variableInfo[29].SetNumber(CEGlobals::SPACING_FROM_SELECTED);
+        variableInfo[30].SetNumber(CEGlobals::SPACING_BETWEEN_EQUIPPED_X);
+        variableInfo[31].SetNumber(CEGlobals::SPACING_BETWEEN_EQUIPPED_Y);
+        ceMenu.Invoke("setVariables", nullptr, variableInfo);
          }); })
             .detach();
     }
@@ -354,7 +357,7 @@ namespace CEMenu
             return;
         logger::trace("Loaded {} via invoke", args2[0].GetString());
         CEActorUtils::GetActiveFollowers();
-        SetTranslations();
+        SetSwfVariables();
         CEMenu::ShowOrHideQLIEHint(); });
     }
 }

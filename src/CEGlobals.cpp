@@ -19,6 +19,9 @@ namespace CEGlobals
     int QLIE_BACKGROUND_ALPHA = 85;
     int HUD_BACKGROUND_ALPHA = 85;
     int ROWS = 4;
+    int SPACING_FROM_SELECTED = 5;
+    int SPACING_BETWEEN_EQUIPPED_X = 5;
+    int SPACING_BETWEEN_EQUIPPED_Y = 5;
     uint32_t COMPARE_KEY = 0;
     float HOLD_THRESHOLD = 500 * 0.001;
     float TRIPLE_HIT_WINDOW = 500 * 0.001;
@@ -49,6 +52,7 @@ namespace CEGlobals
         {
             logger::warn("Could not load CompareEquipmentNG.ini, using defaults");
         }
+        USE_ICONS = ini.GetBoolValue("General", "UseIcons", true);
         HIDE_3D = ini.GetBoolValue("General", "Hide 3D Model", true);
         HIDE_SKY_UI_ITEM_CARD = ini.GetBoolValue("General", "Hide SkyUI Item Card", HIDE_SKY_UI_ITEM_CARD);
         ROWS = ini.GetLongValue("General", "Maximum Rows", 4);
@@ -57,7 +61,9 @@ namespace CEGlobals
         if (ROWS < 1)
             ROWS = 1;
 
-        USE_ICONS = ini.GetBoolValue("General", "UseIcons", true);
+        SPACING_FROM_SELECTED = ini.GetLongValue("General", "Spacing From Selected", 5);
+        SPACING_BETWEEN_EQUIPPED_X = ini.GetLongValue("General", "Spacing Between Equipped X", 5);
+        SPACING_BETWEEN_EQUIPPED_Y = ini.GetLongValue("General", "Spacing Between Equipped Y", 5);
 
         //------------------------------ In Menus ---------------------------------------------------------------
 
@@ -163,10 +169,15 @@ namespace CEGlobals
 
         logger::debug("Version                  {}", SKSE::PluginDeclaration::GetSingleton()->GetVersion());
         logger::debug("Expected SWF Version:    {}", EXPECTED_SWF_VERSION);
-        logger::debug("Maximum Rows:            {}", ROWS);
+        logger::debug("-------------- General ------------------");
         logger::debug("Use Icons:               {}", USE_ICONS);
         logger::debug("Hide 3D Models:          {}", HIDE_3D);
         logger::debug("Hide SkyUI Item Cards:   {}", HIDE_SKY_UI_ITEM_CARD);
+        logger::debug("Maximum Rows:            {}", ROWS);
+        logger::debug("Spacing From Selected:   {}", SPACING_FROM_SELECTED);
+        logger::debug("Spacing Between X:       {}", SPACING_BETWEEN_EQUIPPED_X);
+        logger::debug("Spacing Between Y:       {}", SPACING_BETWEEN_EQUIPPED_Y);
+        logger::debug("------------- In Menus ------------------");
         logger::debug("Inventory X Offset:      {:.2f}", INV_MENU_X_ORIGIN);
         logger::debug("Inventory Y Offset:      {:.2f}", INV_MENU_Y_ORIGIN);
         logger::debug("Container X Offset:      {:.2f}", CONT_MENU_X_ORIGIN);
@@ -177,6 +188,7 @@ namespace CEGlobals
         logger::debug("Gift Y Offset:           {:.2f}", GIFT_MENU_Y_ORIGIN);
         logger::debug("Scale:                   {}", MENU_SCALE);
         logger::debug("Background Alpha         {}", MENU_BACKGROUND_ALPHA);
+        logger::debug("------------ Out Of Menus ---------------");
         logger::debug("HUD Enabled:             {}", HUD_ALLOWED);
         logger::debug("HUD Toggle Mode:         {}", HUD_TOGGLEMODE);
         logger::debug("HUD X Offset:            {:.2f}", HUD_X_ORIGIN);
@@ -189,21 +201,28 @@ namespace CEGlobals
         logger::debug("QuickLootIE Y Offset:    {:.2f}", QLIE_Y_ORIGIN);
         logger::debug("QuickLootIE Scale:       {}", QLIE_SCALE);
         logger::debug("QLIE Background Alpha    {}", QLIE_BACKGROUND_ALPHA);
+        logger::debug("-------------- Controls ------------------");
         logger::debug("Compare Key:             {}", COMPARE_KEY);
         logger::debug("Hold Duration:           {} milliseconds", HOLD_THRESHOLD * 1000);
         logger::debug("Triple Hit Window:       {} milliseconds", TRIPLE_HIT_WINDOW * 1000);
         logger::debug("Setting Hold Duration:   {} milliseconds", SETTING_HOLD_THRESHOLD * 1000);
         logger::debug("Thumbstick Angle:        {}", angle);
         logger::debug("Thumbstick Threshold:    {}", thumbstickThreshold);
+        logger::debug("-------------- Internal ------------------");
         logger::debug("Effects Check Order:     {}", effectCheckOrderNum);
+        logger::debug("--------------- Debug --------------------");
         logger::debug("Logging Level:           {}", LOG_LEVEL);
 
+        //----------------------------- General -----------------------------------------------------------------
         const char *rowsComment = ("#Maximum number of compared item card rows, after this number of rows, a column will be created"
                                    "\n#Default 4, max 4, min 1");
-        ini.SetLongValue("General", "Maximum Rows", ROWS, rowsComment);
         ini.SetBoolValue("General", "UseIcons", USE_ICONS, "#If item icons should be displayed when available.");
         ini.SetBoolValue("General", "Hide 3D Model", HIDE_3D, "#If the 3d model in menus should be hidden.");
         ini.SetBoolValue("General", "Hide SkyUI Item Card", HIDE_SKY_UI_ITEM_CARD, "#If the SkyUI item card should be hidden.");
+        ini.SetLongValue("General", "Maximum Rows", ROWS, rowsComment);
+        ini.SetLongValue("General", "Spacing From Selected", SPACING_FROM_SELECTED, "#Spacing of equipped item cards from selected item cards, default 5");
+        ini.SetLongValue("General", "Spacing Between Equipped X", SPACING_BETWEEN_EQUIPPED_X, "#Spacing between equipped item cards on the x-axis, default 5");
+        ini.SetLongValue("General", "Spacing Between Equipped Y", SPACING_BETWEEN_EQUIPPED_Y, "#Spacing between equipped item cards on the y-axis, default 5");
 
         //------------------------------ In Menus ---------------------------------------------------------------
         ini.SetDoubleValue("InMenu", "Inventory X Offset", INV_MENU_X_ORIGIN, "#Selected Item's item card X offset in the Inventory menu\n#Default 590.0");

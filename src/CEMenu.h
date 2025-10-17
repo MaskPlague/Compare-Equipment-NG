@@ -15,7 +15,7 @@ namespace CEMenu
 
     void SetMenuOffsets(RE::GFxValue ceMenu);
 
-    void SetTranslations();
+    void SetSwfVariables();
 
     bool IsMenuVisible();
 
