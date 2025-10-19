@@ -30,7 +30,7 @@ namespace CEMenu
 
     void ShowOrHideQLIEHint(bool forceDelete)
     {
-        if (!CEGlobals::QLIE_SHOWHINT)
+        if (!CEGlobals::QLIE_SHOWHINT || !CEGlobals::QLIE_ALLOWED)
             return;
         auto UISingleton = RE::UI::GetSingleton();
         auto menu = UISingleton ? UISingleton->GetMenu("LootMenu") : nullptr;
@@ -364,6 +364,7 @@ namespace CEMenu
         logger::trace("Loaded {} via invoke", args2[0].GetString());
         CEActorUtils::GetActiveFollowers();
         SetSwfVariables();
-        CEMenu::ShowOrHideQLIEHint(); });
+        if (menuName == "LootMenu")
+            CEMenu::ShowOrHideQLIEHint(); });
     }
 }
