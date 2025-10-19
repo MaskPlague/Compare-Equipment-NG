@@ -347,6 +347,8 @@ namespace CEMenu
             return;
         logger::trace("Created menu {}", MENU_NAME);
 
+        Menu_mc.SetMember("ce_buttonCompareText", CEGlobals::buttonCompareText.c_str());
+
         RE::GFxValue ceMenu = GetCEMenu(Menu_mc);
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
