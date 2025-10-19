@@ -20,6 +20,9 @@ namespace CEGlobals
     extern int MENU_BACKGROUND_ALPHA;
     extern int QLIE_BACKGROUND_ALPHA;
     extern int HUD_BACKGROUND_ALPHA;
+    extern int MENU_LAYOUT;
+    extern int QLIE_LAYOUT;
+    extern int HUD_LAYOUT;
     extern int ROWS;
     extern int SPACING_FROM_SELECTED;
     extern int SPACING_BETWEEN_EQUIPPED_X;

@@ -224,7 +224,7 @@ namespace CEMenu
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
         logger::trace("Setting SWF variables.");
-        std::array<RE::GFxValue, 32> variableInfo;
+        std::array<RE::GFxValue, 33> variableInfo;
         variableInfo[0].SetString(CEGlobals::buttonCompareText);
         variableInfo[1].SetString(CEGlobals::comparingTo);
         variableInfo[2].SetString(CEGlobals::damageLabelText);
@@ -257,6 +257,10 @@ namespace CEMenu
         variableInfo[29].SetNumber(CEGlobals::SPACING_FROM_SELECTED);
         variableInfo[30].SetNumber(CEGlobals::SPACING_BETWEEN_EQUIPPED_X);
         variableInfo[31].SetNumber(CEGlobals::SPACING_BETWEEN_EQUIPPED_Y);
+        int layout = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_LAYOUT
+                    : CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_LAYOUT
+                                                          : CEGlobals::MENU_LAYOUT;
+        variableInfo[32].SetNumber(layout);
         ceMenu.Invoke("setVariables", nullptr, variableInfo);
          }); })
             .detach();

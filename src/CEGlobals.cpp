@@ -18,6 +18,9 @@ namespace CEGlobals
     int MENU_BACKGROUND_ALPHA = 95;
     int QLIE_BACKGROUND_ALPHA = 85;
     int HUD_BACKGROUND_ALPHA = 85;
+    int MENU_LAYOUT = 0;
+    int QLIE_LAYOUT = 0;
+    int HUD_LAYOUT = 0;
     int ROWS = 4;
     int SPACING_FROM_SELECTED = 5;
     int SPACING_BETWEEN_EQUIPPED_X = 5;
@@ -81,6 +84,9 @@ namespace CEGlobals
         MENU_BACKGROUND_ALPHA = ini.GetLongValue("InMenu", "Background Alpha", 95);
         if (MENU_BACKGROUND_ALPHA < 0 || MENU_BACKGROUND_ALPHA > 100)
             MENU_BACKGROUND_ALPHA = 100;
+        MENU_LAYOUT = ini.GetLongValue("InMenu", "Layout", 0);
+        if (MENU_LAYOUT < 0 || MENU_LAYOUT > 2)
+            MENU_LAYOUT = 0;
 
         //------------------------------ Outside of Menus --------------------------------------------------------
 
@@ -94,6 +100,9 @@ namespace CEGlobals
         HUD_BACKGROUND_ALPHA = ini.GetLongValue("OutOfMenu", "Background Alpha", 85);
         if (HUD_BACKGROUND_ALPHA < 0 || HUD_BACKGROUND_ALPHA > 100)
             HUD_BACKGROUND_ALPHA = 100;
+        HUD_LAYOUT = ini.GetLongValue("OutOfMenu", "Layout", 0);
+        if (HUD_LAYOUT < 0 || HUD_LAYOUT > 2)
+            HUD_LAYOUT = 0;
 
         //------------------------------- QuickLootIE ------------------------------------------------------------
 
@@ -107,6 +116,9 @@ namespace CEGlobals
         QLIE_BACKGROUND_ALPHA = ini.GetLongValue("QuickLootIE", "Background Alpha", 85);
         if (QLIE_BACKGROUND_ALPHA < 0 || QLIE_BACKGROUND_ALPHA > 100)
             QLIE_BACKGROUND_ALPHA = 100;
+        QLIE_LAYOUT = ini.GetLongValue("QuickLootIE", "Layout", 0);
+        if (QLIE_LAYOUT < 0 || QLIE_LAYOUT > 2)
+            QLIE_LAYOUT = 0;
 
         //-------------------------------- Controls ---------------------------------------------------------------
 
@@ -188,6 +200,7 @@ namespace CEGlobals
         logger::debug("Gift Y Offset:           {:.2f}", GIFT_MENU_Y_ORIGIN);
         logger::debug("Scale:                   {}", MENU_SCALE);
         logger::debug("Background Alpha         {}", MENU_BACKGROUND_ALPHA);
+        logger::debug("Layout:                  {}", MENU_LAYOUT);
         logger::debug("------------ Out Of Menus ---------------");
         logger::debug("HUD Enabled:             {}", HUD_ALLOWED);
         logger::debug("HUD Toggle Mode:         {}", HUD_TOGGLEMODE);
@@ -195,12 +208,15 @@ namespace CEGlobals
         logger::debug("HUD Offset:              {:.2f}", HUD_Y_ORIGIN);
         logger::debug("HUD Scale:               {}", HUD_SCALE);
         logger::debug("HUD Background Alpha     {}", HUD_BACKGROUND_ALPHA);
+        logger::debug("HUD Layout:              {}", HUD_LAYOUT);
+        logger::debug("----------- QuickLootIE -----------------");
         logger::debug("QuickLootIE Enabled:     {}", QLIE_ALLOWED);
         logger::debug("QuickLootIE Show Hint:   {}", QLIE_SHOWHINT);
         logger::debug("QuickLootIE X Offset:    {:.2f}", QLIE_X_ORIGIN);
         logger::debug("QuickLootIE Y Offset:    {:.2f}", QLIE_Y_ORIGIN);
         logger::debug("QuickLootIE Scale:       {}", QLIE_SCALE);
         logger::debug("QLIE Background Alpha    {}", QLIE_BACKGROUND_ALPHA);
+        logger::debug("QLIE Layout:             {}", QLIE_LAYOUT);
         logger::debug("-------------- Controls ------------------");
         logger::debug("Compare Key:             {}", COMPARE_KEY);
         logger::debug("Hold Duration:           {} milliseconds", HOLD_THRESHOLD * 1000);
@@ -235,6 +251,7 @@ namespace CEGlobals
         ini.SetDoubleValue("InMenu", "Gift Y Offset", GIFT_MENU_Y_ORIGIN, "#Selected Item's item card Y offset in the Gift menu\n#Default 250.0");
         ini.SetLongValue("InMenu", "Scale", MENU_SCALE, "#Scale of item cards in menus, default 100");
         ini.SetLongValue("InMenu", "Background Alpha", MENU_BACKGROUND_ALPHA, "#All item card's background alpha value in menus\n#Default 95, max 100, min 0");
+        ini.SetLongValue("InMenu", "Layout", MENU_LAYOUT, "#Layout of item cards in menus\n#0: Vertically Centered (Default), 1: Upward, 2: Downward");
 
         //------------------------------ Outside Of Menus ---------------------------------------------------------------
         ini.SetBoolValue("OutOfMenu", "Enabled", HUD_ALLOWED, "#Toggle for Compare Equipment functionality outside of Menus, doesn't function with controller.\n#Default true");
@@ -243,6 +260,7 @@ namespace CEGlobals
         ini.SetDoubleValue("OutOfMenu", "Y Offset", HUD_Y_ORIGIN, "#Selected Item's item card Y offset outside of menus\n#Default 250.0");
         ini.SetLongValue("OutOfMenu", "Scale", HUD_SCALE, "#Scale of item cards outside of menus, default 100");
         ini.SetLongValue("OutOfMenu", "Background Alpha", HUD_BACKGROUND_ALPHA, "#All item card's background alpha value outside of menus\n#Default 85, max 100, min 0");
+        ini.SetLongValue("OutOfMenu", "Layout", HUD_LAYOUT, "#Layout of item cards outside of menus\n#0: Vertically Centered (Default), 1: Upward, 2: Downward");
 
         //------------------------------ QuickLoot IE ---------------------------------------------------------------
         ini.SetBoolValue("QuickLootIE", "Enabled", QLIE_ALLOWED, "#Toggle for Compare  Equipment functionality for QuickLoot IE, doesn't function with controller.\n#Default true");
@@ -251,6 +269,7 @@ namespace CEGlobals
         ini.SetDoubleValue("QuickLootIE", "Y Offset", QLIE_Y_ORIGIN, "#Selected Item's item card Y offset for QuickLootIE\n#Default 0.0");
         ini.SetLongValue("QuickLootIE", "Scale", QLIE_SCALE, "#Scale of item cards for QuickLootIE, default 150");
         ini.SetLongValue("QuickLootIE", "Background Alpha", QLIE_BACKGROUND_ALPHA, "#All item card's background alpha value for QuickLootIE\n#Default 85, max 100, min 0");
+        ini.SetLongValue("QuickLootIE", "Layout", QLIE_LAYOUT, "#Layout of item cards for QuickLootIE\n#0: Vertically Centered (Default), 1: Upward, 2: Downward");
 
         //------------------------------ Controls------------------------------------------------------------------------
         const char *compareKeyComment = ("#Key that will display the comparison item cards, triple tap to cycle followers, hold to select player."
