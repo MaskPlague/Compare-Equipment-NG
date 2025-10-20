@@ -8,8 +8,8 @@ namespace CEGlobals
     double BART_MENU_Y_ORIGIN = 250.0f;
     double GIFT_MENU_X_ORIGIN = 590.0f;
     double GIFT_MENU_Y_ORIGIN = 250.0f;
-    double QLIE_X_ORIGIN = -1000.0f;
-    double QLIE_Y_ORIGIN = 0.0f;
+    double QLIE_X_ORIGIN = 100.0f;
+    double QLIE_Y_ORIGIN = 350.0f;
     double HUD_X_ORIGIN = 450.0f;
     double HUD_Y_ORIGIN = 250.0f;
     int MENU_SCALE = 100;
@@ -108,8 +108,8 @@ namespace CEGlobals
 
         QLIE_ALLOWED = ini.GetBoolValue("QuickLootIE", "Enabled", true);
         QLIE_SHOWHINT = ini.GetBoolValue("QuickLootIE", "Show Hint", true);
-        QLIE_X_ORIGIN = ini.GetDoubleValue("QuickLootIE", "X Offset", -1000.0f);
-        QLIE_Y_ORIGIN = ini.GetDoubleValue("QuickLootIE", "Y Offset", 0.0f);
+        QLIE_X_ORIGIN = ini.GetDoubleValue("QuickLootIE", "X Offset", 100.0f);
+        QLIE_Y_ORIGIN = ini.GetDoubleValue("QuickLootIE", "Y Offset", 350.0f);
         QLIE_SCALE = ini.GetLongValue("QuickLootIE", "Scale", 150);
         if (QLIE_SCALE <= 0)
             QLIE_SCALE = 150;
@@ -265,8 +265,8 @@ namespace CEGlobals
         //------------------------------ QuickLoot IE ---------------------------------------------------------------
         ini.SetBoolValue("QuickLootIE", "Enabled", QLIE_ALLOWED, "#Toggle for Compare  Equipment functionality for QuickLoot IE, doesn't function with controller.\n#Default true");
         ini.SetBoolValue("QuickLootIE", "Show Hint", QLIE_SHOWHINT, "#Toggle the hint display, it is janky so you may want to disable it.\n#Default true");
-        ini.SetDoubleValue("QuickLootIE", "X Offset", QLIE_X_ORIGIN, "#Selected Item's item card X offset for QuickLootIE\n#Default -1000.0");
-        ini.SetDoubleValue("QuickLootIE", "Y Offset", QLIE_Y_ORIGIN, "#Selected Item's item card Y offset for QuickLootIE\n#Default 0.0");
+        ini.SetDoubleValue("QuickLootIE", "X Offset", QLIE_X_ORIGIN, "#Selected Item's item card X offset for QuickLootIE\n#Default 100.0");
+        ini.SetDoubleValue("QuickLootIE", "Y Offset", QLIE_Y_ORIGIN, "#Selected Item's item card Y offset for QuickLootIE\n#Default 350.0");
         ini.SetLongValue("QuickLootIE", "Scale", QLIE_SCALE, "#Scale of item cards for QuickLootIE, default 150");
         ini.SetLongValue("QuickLootIE", "Background Alpha", QLIE_BACKGROUND_ALPHA, "#All item card's background alpha value for QuickLootIE\n#Default 85, max 100, min 0");
         ini.SetLongValue("QuickLootIE", "Layout", QLIE_LAYOUT, "#Layout of item cards for QuickLootIE\n#0: Vertically Centered (Default), 1: Upward, 2: Downward");
@@ -294,7 +294,7 @@ namespace CEGlobals
         const char *thumbstickThresholdComment = ("#Percent that is considered activated, 1.0 is all the way to the edge and 0.0 is centered"
                                                   "\n#Default 0.9 -> 90% ");
         ini.SetDoubleValue("Controls", "Thumbstick Threshold", thumbstickThreshold, thumbstickThresholdComment);
-        const char *effectCheckOrderComment = ("\n#Order in which to check for effects strings, once a valid string is found it does not check for the others."
+        const char *effectCheckOrderComment = ("#Order in which to check for effects strings, once a valid string is found it does not check for the others."
                                                "\n#1: Item Description, 2: ESP defined enchantment's MGEF description, 3: Player enchanted enchantment's MGEF description"
                                                "\n#Default is 123, must contain a 1, 2, and 3 in any order.");
         ini.SetLongValue("Internals", "Effects Check Order", effectCheckOrderNum, effectCheckOrderComment);
