@@ -2,7 +2,7 @@ namespace CEMenu
 {
     std::string temp = "CompareEquipmentMenu_" + CEGlobals::EXPECTED_SWF_VERSION + "_" + std::to_string(CEGlobals::COMPARE_KEY);
     const char *MENU_NAME = temp.c_str();
-    std::string_view SWF_PATH{"CompareEquipment.swf"};
+    std::string_view SWF_PATH{"CompareEquipment_script.swf"};
     std::string_view openedMenuName = "HUDMenu";
     std::chrono::steady_clock::time_point lastInvalidation;
     std::set<std::string> openedMenus;
@@ -158,10 +158,10 @@ namespace CEMenu
             xOffset = CEGlobals::GIFT_MENU_X_ORIGIN;
             yOffset = CEGlobals::GIFT_MENU_Y_ORIGIN;
         }
-        if (!ceMenu.SetMember("_x", xOffset))
-            return;
-        if (!ceMenu.SetMember("_y", yOffset))
-            return;
+        RE::GFxValue args[2];
+        args[0].SetNumber(xOffset);
+        args[1].SetNumber(yOffset);
+        ceMenu.Invoke("SetXYOffsets", nullptr, args, 2);
     }
 
     void ShowMenuInstant()
