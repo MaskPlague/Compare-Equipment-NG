@@ -1,6 +1,7 @@
 namespace CEGameMenuUtils
 {
     RE::FormID currentFormID;
+    RE::TESObjectREFR::InventoryItemMap containerInventoryQLIE;
 
     const char *GetArmorTypeString(RE::BGSBipedObjectForm::ArmorType type)
     {
@@ -55,6 +56,7 @@ namespace CEGameMenuUtils
             ++s;
         return s;
     }
+
     template <class T>
     std::string GetEnchantmentString(T *item, std::string description, float magnitude)
     {

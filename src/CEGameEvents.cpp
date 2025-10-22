@@ -226,7 +226,7 @@ namespace CEGameEvents
 
     void MaybeShowHideHint()
     {
-        if (NanoToLongMilli(std::chrono::steady_clock::now() - openedMenuTime) > 50)
+        if (NanoToLongMilli(std::chrono::steady_clock::now() - openedMenuTime) >= 15)
         {
             openedMenuTime = std::chrono::steady_clock::now();
             CEMenu::ShowOrHideQLIEHint();
@@ -253,6 +253,7 @@ namespace CEGameEvents
     {
         if (!CEGlobals::QLIE_ALLOWED)
             return;
+        logger::debug("QuickLoot Close Event triggered");
         CEMenu::HideMenu();
         CEGameMenuUtils::currentFormID = NULL;
         MaybeShowHideHint();
@@ -263,22 +264,21 @@ namespace CEGameEvents
         if (!CEGlobals::QLIE_ALLOWED)
             return;
         logger::debug("QuickLoot Open Event triggered");
-        auto cont = event->container->GetBaseObject()->As<RE::TESObjectCONT>();
-        int count = cont ? cont->numContainerObjects : 0;
-        if (count <= 0)
-            return;
+        CEGameMenuUtils::containerInventoryQLIE = event->container->GetInventory();
         std::vector<std::pair<std::string, RE::FormID>> objects;
-        for (int i = 0; i < count; i++)
+        for (auto &[item, data] : CEGameMenuUtils::containerInventoryQLIE)
         {
-            std::optional<RE::ContainerObject *> oCObj = cont->GetContainerObjectAt(i);
-            RE::ContainerObject *cobj = oCObj ? oCObj.value() : nullptr;
-            RE::TESBoundObject *obj = cobj ? cobj->obj : nullptr;
-            if (!oCObj || !cobj || !obj)
-                continue;
-            std::string name = obj->GetName();
-            RE::FormID fid = obj->GetFormID();
-            if (!name.empty() && fid)
-                objects.push_back(std::make_pair(name, fid));
+            if (item)
+            {
+                RE::InventoryEntryData *entryData = data.second.get();
+                if (entryData)
+                {
+                    std::string name = entryData->GetDisplayName();
+                    RE::FormID fid = item->GetFormID();
+                    if (!name.empty() && std::strcmp(name.c_str(), "<Missing Name>") != 0 && fid)
+                        objects.push_back(std::make_pair(name, fid));
+                }
+            }
         }
         if (objects.size() <= 0)
             return;
