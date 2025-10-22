@@ -36,12 +36,17 @@ namespace CEGlobals
     int LOG_LEVEL = 2;
 
     bool QLIE_ALLOWED = true;
-    bool QLIE_SHOWHINT = true;
     bool HUD_ALLOWED = true;
     bool HUD_TOGGLEMODE = true;
     bool USE_ICONS = true;
     bool HIDE_3D = true;
     bool HIDE_SKY_UI_ITEM_CARD = true;
+    bool QLIE_PERSISTENT_DISPLAY = false;
+    bool MENU_PERSISTENT_DISPLAY = false;
+    bool QLIE_PERSISTENT_TOGGLE = false;
+    bool MENU_PERSISTENT_TOGGLE = false;
+    bool QLIE_PERSISTENT_DEFAULT_DISPLAY = true;
+    bool MENU_PERSISTENT_DEFAULT_DISPLAY = true;
 
     RE::INPUT_DEVICE lastInputDevice = RE::INPUT_DEVICE::kNone;
 
@@ -87,7 +92,9 @@ namespace CEGlobals
         MENU_LAYOUT = ini.GetLongValue("InMenu", "Layout", 0);
         if (MENU_LAYOUT < 0 || MENU_LAYOUT > 2)
             MENU_LAYOUT = 0;
-
+        MENU_PERSISTENT_DISPLAY = ini.GetBoolValue("InMenu", "Persistent Display", false);
+        MENU_PERSISTENT_TOGGLE = ini.GetBoolValue("InMenu", "Persistent Toggle", false);
+        MENU_PERSISTENT_DEFAULT_DISPLAY = ini.GetBoolValue("InMenu", "Persistent Default Display", true);
         //------------------------------ Outside of Menus --------------------------------------------------------
 
         HUD_ALLOWED = ini.GetBoolValue("OutOfMenu", "Enabled", true);
@@ -107,7 +114,6 @@ namespace CEGlobals
         //------------------------------- QuickLootIE ------------------------------------------------------------
 
         QLIE_ALLOWED = ini.GetBoolValue("QuickLootIE", "Enabled", true);
-        QLIE_SHOWHINT = ini.GetBoolValue("QuickLootIE", "Show Hint", true);
         QLIE_X_ORIGIN = ini.GetDoubleValue("QuickLootIE", "X Offset", 100.0f);
         QLIE_Y_ORIGIN = ini.GetDoubleValue("QuickLootIE", "Y Offset", 350.0f);
         QLIE_SCALE = ini.GetLongValue("QuickLootIE", "Scale", 150);
@@ -119,7 +125,9 @@ namespace CEGlobals
         QLIE_LAYOUT = ini.GetLongValue("QuickLootIE", "Layout", 0);
         if (QLIE_LAYOUT < 0 || QLIE_LAYOUT > 2)
             QLIE_LAYOUT = 0;
-
+        QLIE_PERSISTENT_DISPLAY = ini.GetBoolValue("QuickLootIE", "Persistent Display", false);
+        QLIE_PERSISTENT_TOGGLE = ini.GetBoolValue("QuickLootIE", "Persistent Toggle", false);
+        QLIE_PERSISTENT_DEFAULT_DISPLAY = ini.GetBoolValue("QuickLootIE", "Persistent Default Display", true);
         //-------------------------------- Controls ---------------------------------------------------------------
 
         COMPARE_KEY = ini.GetLongValue("Controls", "Compare Key", 47);
@@ -201,6 +209,9 @@ namespace CEGlobals
         logger::debug("Scale:                   {}", MENU_SCALE);
         logger::debug("Background Alpha         {}", MENU_BACKGROUND_ALPHA);
         logger::debug("Layout:                  {}", MENU_LAYOUT);
+        logger::debug("Persistent Display:      {}", MENU_PERSISTENT_DISPLAY);
+        logger::debug("Persistent Toggle:       {}", MENU_PERSISTENT_TOGGLE);
+        logger::debug("Persistent Default:      {}", MENU_PERSISTENT_DEFAULT_DISPLAY);
         logger::debug("------------ Out Of Menus ---------------");
         logger::debug("HUD Enabled:             {}", HUD_ALLOWED);
         logger::debug("HUD Toggle Mode:         {}", HUD_TOGGLEMODE);
@@ -211,12 +222,14 @@ namespace CEGlobals
         logger::debug("HUD Layout:              {}", HUD_LAYOUT);
         logger::debug("----------- QuickLootIE -----------------");
         logger::debug("QuickLootIE Enabled:     {}", QLIE_ALLOWED);
-        logger::debug("QuickLootIE Show Hint:   {}", QLIE_SHOWHINT);
         logger::debug("QuickLootIE X Offset:    {:.2f}", QLIE_X_ORIGIN);
         logger::debug("QuickLootIE Y Offset:    {:.2f}", QLIE_Y_ORIGIN);
         logger::debug("QuickLootIE Scale:       {}", QLIE_SCALE);
         logger::debug("QLIE Background Alpha    {}", QLIE_BACKGROUND_ALPHA);
         logger::debug("QLIE Layout:             {}", QLIE_LAYOUT);
+        logger::debug("QLIE Persistent Display: {}", QLIE_PERSISTENT_DISPLAY);
+        logger::debug("QLIE Persistent Toggle:  {}", QLIE_PERSISTENT_TOGGLE);
+        logger::debug("QLIE Persistent Default: {}", QLIE_PERSISTENT_DEFAULT_DISPLAY);
         logger::debug("-------------- Controls ------------------");
         logger::debug("Compare Key:             {}", COMPARE_KEY);
         logger::debug("Hold Duration:           {} milliseconds", HOLD_THRESHOLD * 1000);
@@ -252,6 +265,11 @@ namespace CEGlobals
         ini.SetLongValue("InMenu", "Scale", MENU_SCALE, "#Scale of item cards in menus, default 100");
         ini.SetLongValue("InMenu", "Background Alpha", MENU_BACKGROUND_ALPHA, "#All item card's background alpha value in menus\n#Default 95, max 100, min 0");
         ini.SetLongValue("InMenu", "Layout", MENU_LAYOUT, "#Layout of item cards in menus\n#0: Vertically Centered (Default), 1: Upward, 2: Downward");
+        ini.SetBoolValue("InMenu", "Persistent Display", MENU_PERSISTENT_DISPLAY, "#If item cards should persistantly display without hotkey in menus.\n#Default false");
+        ini.SetBoolValue("InMenu", "Persistent Toggle", MENU_PERSISTENT_TOGGLE, "#If pressing the hotkey will toggle persistent display in menus.\n#Default false");
+        ini.SetBoolValue("InMenu", "Persistent Default Display", MENU_PERSISTENT_DEFAULT_DISPLAY, "#If item cards should display by default before first toggled."
+                                                                                                  "\n#Requires Persistent Display to be true to have an effect."
+                                                                                                  "\n#Default true");
 
         //------------------------------ Outside Of Menus ---------------------------------------------------------------
         ini.SetBoolValue("OutOfMenu", "Enabled", HUD_ALLOWED, "#Toggle for Compare Equipment functionality outside of Menus, doesn't function with controller.\n#Default true");
@@ -264,12 +282,18 @@ namespace CEGlobals
 
         //------------------------------ QuickLoot IE ---------------------------------------------------------------
         ini.SetBoolValue("QuickLootIE", "Enabled", QLIE_ALLOWED, "#Toggle for Compare  Equipment functionality for QuickLoot IE, doesn't function with controller.\n#Default true");
-        ini.SetBoolValue("QuickLootIE", "Show Hint", QLIE_SHOWHINT, "#Toggle the hint display, it is janky so you may want to disable it.\n#Default true");
         ini.SetDoubleValue("QuickLootIE", "X Offset", QLIE_X_ORIGIN, "#Selected Item's item card X offset for QuickLootIE\n#Default 100.0");
         ini.SetDoubleValue("QuickLootIE", "Y Offset", QLIE_Y_ORIGIN, "#Selected Item's item card Y offset for QuickLootIE\n#Default 350.0");
         ini.SetLongValue("QuickLootIE", "Scale", QLIE_SCALE, "#Scale of item cards for QuickLootIE, default 150");
         ini.SetLongValue("QuickLootIE", "Background Alpha", QLIE_BACKGROUND_ALPHA, "#All item card's background alpha value for QuickLootIE\n#Default 85, max 100, min 0");
         ini.SetLongValue("QuickLootIE", "Layout", QLIE_LAYOUT, "#Layout of item cards for QuickLootIE\n#0: Vertically Centered (Default), 1: Upward, 2: Downward");
+        const char *qliePersistentComment = ("#If item cards should persistantly display without hotkey for QuickLootIE."
+                                             "\n#Default false");
+        ini.SetBoolValue("QuickLootIE", "Persistent Display", QLIE_PERSISTENT_DISPLAY, qliePersistentComment);
+        ini.SetBoolValue("QuickLootIE", "Persistent Toggle", QLIE_PERSISTENT_TOGGLE, "#If pressing the hotkey will toggle persistent display for QuickLootIE.\n#Default false");
+        ini.SetBoolValue("QuickLootIE", "Persistent Default Display", QLIE_PERSISTENT_DEFAULT_DISPLAY, "#If item cards should display by default before first toggled for QuickLootIE."
+                                                                                                       "\n#Requires Persistent Display to be true to have an effect."
+                                                                                                       "\n#Default true");
 
         //------------------------------ Controls------------------------------------------------------------------------
         const char *compareKeyComment = ("#Key that will display the comparison item cards, triple tap to cycle followers, hold to select player."

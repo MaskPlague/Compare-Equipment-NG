@@ -38,12 +38,17 @@ namespace CEGlobals
     extern int LOG_LEVEL;
 
     extern bool QLIE_ALLOWED;
-    extern bool QLIE_SHOWHINT;
     extern bool HUD_ALLOWED;
     extern bool HUD_TOGGLEMODE;
     extern bool USE_ICONS;
     extern bool HIDE_3D;
     extern bool HIDE_SKY_UI_ITEM_CARD;
+    extern bool QLIE_PERSISTENT_DISPLAY;
+    extern bool MENU_PERSISTENT_DISPLAY;
+    extern bool QLIE_PERSISTENT_TOGGLE;
+    extern bool MENU_PERSISTENT_TOGGLE;
+    extern bool QLIE_PERSISTENT_DEFAULT_DISPLAY;
+    extern bool MENU_PERSISTENT_DEFAULT_DISPLAY;
 
     extern RE::INPUT_DEVICE lastInputDevice;
 
