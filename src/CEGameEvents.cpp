@@ -15,20 +15,6 @@ namespace CEGameEvents
         return std::chrono::duration_cast<std::chrono::milliseconds>(time_point).count();
     }
 
-    bool Is3dZoomedIn()
-    {
-        auto manager = RE::Inventory3DManager::GetSingleton();
-        if (manager)
-        {
-            auto zoom = manager->GetRuntimeData().zoomProgress;
-            if (zoom != 0.0f)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
     void ButtonProcessor(bool btnUp, float heldDuration)
     {
         auto currentTime = std::chrono::steady_clock::now();
@@ -40,7 +26,7 @@ namespace CEGameEvents
 
         if (heldDuration >= CEGlobals::HOLD_THRESHOLD && !heldTriggered)
         {
-            if (Is3dZoomedIn())
+            if (CEMenu::Is3dZoomedIn())
                 return;
             heldTriggered = true;
             SKSE::GetTaskInterface()->AddTask([]()
@@ -55,7 +41,7 @@ namespace CEGameEvents
 
         if (heldDuration >= CEGlobals::SETTING_HOLD_THRESHOLD && !heldForSettingsTriggered)
         {
-            if (Is3dZoomedIn())
+            if (CEMenu::Is3dZoomedIn())
                 return;
             heldForSettingsTriggered = true;
             SKSE::GetTaskInterface()->AddTask([]()
@@ -81,7 +67,7 @@ namespace CEGameEvents
             {
                 if (pressTwo)
                 {
-                    if (Is3dZoomedIn())
+                    if (CEMenu::Is3dZoomedIn())
                         return;
                     SKSE::GetTaskInterface()->AddTask([]()
                                                       { 
@@ -99,7 +85,7 @@ namespace CEGameEvents
             }
             else
             {
-                if (Is3dZoomedIn())
+                if (CEMenu::Is3dZoomedIn())
                     return;
                 SKSE::GetTaskInterface()->AddTask([]()
                                                   { CEGameMenuUtils::GetItem(); });

@@ -26,13 +26,18 @@ namespace CEMenu
         MENU_NAME = temp.c_str();
     }
 
-    void Invalidate(RE::GFxValue buttonBar)
+    bool Is3dZoomedIn()
     {
-        if (CEGameEvents::NanoToLongMilli(std::chrono::steady_clock::now() - lastInvalidation) > 100)
+        auto manager = RE::Inventory3DManager::GetSingleton();
+        if (manager)
         {
-            lastInvalidation = std::chrono::steady_clock::now();
-            buttonBar.Invoke("invalidateData");
+            auto zoom = manager->GetRuntimeData().zoomProgress;
+            if (zoom != 0.0f)
+            {
+                return true;
+            }
         }
+        return false;
     }
 
     void PersistentDisplayRun(bool QLIE)
