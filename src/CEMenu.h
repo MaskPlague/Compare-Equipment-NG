@@ -15,11 +15,11 @@ namespace CEMenu
 
     void SetMenuOffsets(RE::GFxValue ceMenu);
 
-    void SetSwfVariables();
+    bool Is3dZoomedIn();
 
     bool IsMenuVisible();
 
-    void ShowOrHideQLIEHint(bool forceDelete = false);
+    void ShowOrHideQLIEHint();
 
     void ShowMenuInstant();
 

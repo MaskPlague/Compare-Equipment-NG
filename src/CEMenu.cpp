@@ -257,59 +257,6 @@ namespace CEMenu
         ceMenu.Invoke("hideAndReset"); });
     }
 
-    void SetSwfVariables()
-    {
-        std::thread([]()
-                    {
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            SKSE::GetTaskInterface()->AddUITask([]()
-                                                {
-        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
-        if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
-            return;
-        logger::trace("Setting SWF variables.");
-        std::array<RE::GFxValue, 33> variableInfo;
-        variableInfo[0].SetString(CEGlobals::buttonCompareText);
-        variableInfo[1].SetString(CEGlobals::comparingTo);
-        variableInfo[2].SetString(CEGlobals::damageLabelText);
-        variableInfo[3].SetString(CEGlobals::critLabelText);
-        variableInfo[4].SetString(CEGlobals::noneText);
-        variableInfo[5].SetString(CEGlobals::armorTypeLabelText);
-        variableInfo[6].SetString(CEGlobals::armorRatingLabelText);
-        variableInfo[7].SetString(CEGlobals::goldLabelText);
-        variableInfo[8].SetString(CEGlobals::effectsLabelText);
-        variableInfo[9].SetString(CEGlobals::equippedTo);
-        variableInfo[10].SetString(CEGlobals::slotsLabelText);
-        variableInfo[11].SetString(CEGlobals::speedLabelText);
-        variableInfo[12].SetString(CEGlobals::reachLabelText);
-        variableInfo[13].SetString(CEGlobals::staggerLabelText);
-        variableInfo[14].SetString(CEGlobals::keyText);
-        variableInfo[15].SetString(CEGlobals::keyInfo);
-        variableInfo[16].SetString(CEGlobals::totalKey);
-        variableInfo[17].SetString(CEGlobals::averageKey);
-        variableInfo[18].SetString(CEGlobals::maxKey);
-        variableInfo[19].SetString(CEGlobals::notApplicable);
-        variableInfo[20].SetString(CEGlobals::betterWrapperStart);
-        variableInfo[21].SetString(CEGlobals::betterWrapperEnd);
-        variableInfo[22].SetString(CEGlobals::worseWrapperStart);
-        variableInfo[23].SetString(CEGlobals::worseWrapperEnd);
-        variableInfo[24].SetString(CEGlobals::normalWrapperStart);
-        variableInfo[25].SetString(CEGlobals::normalWrapperEnd);
-        variableInfo[26].SetNumber(CEGlobals::diffOffset);
-        variableInfo[27].SetNumber(CEGlobals::valueOffset);
-        variableInfo[28].SetNumber(CEGlobals::columnTwoOffset);
-        variableInfo[29].SetNumber(CEGlobals::SPACING_FROM_SELECTED);
-        variableInfo[30].SetNumber(CEGlobals::SPACING_BETWEEN_EQUIPPED_X);
-        variableInfo[31].SetNumber(CEGlobals::SPACING_BETWEEN_EQUIPPED_Y);
-        int layout = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_LAYOUT
-                    : CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_LAYOUT
-                                                          : CEGlobals::MENU_LAYOUT;
-        variableInfo[32].SetNumber(layout);
-        ceMenu.Invoke("setVariables", nullptr, variableInfo);
-         }); })
-            .detach();
-    }
-
     void CreateArmorComparisonItemCard(std::array<RE::GFxValue, CEGlobals::EQUIPPED_ARMOR_ITEM_ARRAY_SIZE> itemInfo, RE::GFxValue ceMenu)
     {
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
@@ -396,6 +343,43 @@ namespace CEMenu
         logger::trace("Created menu {}", MENU_NAME);
 
         Menu_mc.SetMember("ce_buttonCompareText", CEGlobals::buttonCompareText.c_str());
+        Menu_mc.SetMember("ce_qlieHintText", CEGlobals::QLIE_HINT_TEXT.c_str());
+        Menu_mc.SetMember("ce_comparingTo", CEGlobals::comparingTo.c_str());
+        Menu_mc.SetMember("ce_damageLabelText", CEGlobals::damageLabelText.c_str());
+        Menu_mc.SetMember("ce_critLabelText", CEGlobals::critLabelText.c_str());
+        Menu_mc.SetMember("ce_noneText", CEGlobals::noneText.c_str());
+        Menu_mc.SetMember("ce_armorTypeLabelText", CEGlobals::armorTypeLabelText.c_str());
+        Menu_mc.SetMember("ce_armorRatingLabelText", CEGlobals::armorRatingLabelText.c_str());
+        Menu_mc.SetMember("ce_goldLabelText", CEGlobals::goldLabelText.c_str());
+        Menu_mc.SetMember("ce_effectsLabelText", CEGlobals::effectsLabelText.c_str());
+        Menu_mc.SetMember("ce_equippedTo", CEGlobals::equippedTo.c_str());
+        Menu_mc.SetMember("ce_slotsLabelText", CEGlobals::slotsLabelText.c_str());
+        Menu_mc.SetMember("ce_speedLabelText", CEGlobals::speedLabelText.c_str());
+        Menu_mc.SetMember("ce_reachLabelText", CEGlobals::reachLabelText.c_str());
+        Menu_mc.SetMember("ce_staggerLabelText", CEGlobals::staggerLabelText.c_str());
+        Menu_mc.SetMember("ce_keyText", CEGlobals::keyText.c_str());
+        Menu_mc.SetMember("ce_keyInfo", CEGlobals::keyInfo.c_str());
+        Menu_mc.SetMember("ce_totalKey", CEGlobals::totalKey.c_str());
+        Menu_mc.SetMember("ce_averageKey", CEGlobals::averageKey.c_str());
+        Menu_mc.SetMember("ce_maxKey", CEGlobals::maxKey.c_str());
+        Menu_mc.SetMember("ce_notApplicable", CEGlobals::notApplicable.c_str());
+        Menu_mc.SetMember("ce_betterWrapperStart", CEGlobals::betterWrapperStart.c_str());
+        Menu_mc.SetMember("ce_betterWrapperEnd", CEGlobals::betterWrapperEnd.c_str());
+        Menu_mc.SetMember("ce_worseWrapperStart", CEGlobals::worseWrapperStart.c_str());
+        Menu_mc.SetMember("ce_worseWrapperEnd", CEGlobals::worseWrapperEnd.c_str());
+        Menu_mc.SetMember("ce_normalWrapperStart", CEGlobals::normalWrapperStart.c_str());
+        Menu_mc.SetMember("ce_normalWrapperEnd", CEGlobals::normalWrapperEnd.c_str());
+        Menu_mc.SetMember("ce_diffOffset", CEGlobals::diffOffset);
+        Menu_mc.SetMember("ce_valueOffset", CEGlobals::valueOffset);
+        Menu_mc.SetMember("ce_columnTwoOffset", CEGlobals::columnTwoOffset);
+        Menu_mc.SetMember("ce_SPACING_FROM_SELECTED", CEGlobals::SPACING_FROM_SELECTED);
+        Menu_mc.SetMember("ce_SPACING_BETWEEN_EQUIPPED_X", CEGlobals::SPACING_BETWEEN_EQUIPPED_X);
+        Menu_mc.SetMember("ce_SPACING_BETWEEN_EQUIPPED_Y", CEGlobals::SPACING_BETWEEN_EQUIPPED_Y);
+
+        int layout = CEMenu::openedMenuName == "LootMenu"  ? CEGlobals::QLIE_LAYOUT
+                     : CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_LAYOUT
+                                                           : CEGlobals::MENU_LAYOUT;
+        Menu_mc.SetMember("ce_layout", layout);
 
         RE::GFxValue ceMenu = GetCEMenu(Menu_mc);
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
