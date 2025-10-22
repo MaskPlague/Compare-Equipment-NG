@@ -225,6 +225,12 @@ namespace CEMenu
             itemCard.SetMember("_visible", false);
             itemCard.SetMember("ce_hidden", true);
         }
+        RE::GFxValue shazdeh2WeaponStats;
+        if (!menu_mc.GetMember("WeaponStats", &shazdeh2WeaponStats) || !shazdeh2WeaponStats.IsObject())
+            return;
+        RE::GFxValue WeaponStats_MC;
+        if (shazdeh2WeaponStats.GetMember("WeaponStats_MC", &WeaponStats_MC) && WeaponStats_MC.IsObject())
+            WeaponStats_MC.Invoke("hideTheStats");
     }
 
     void ShowMenuDelayed()
