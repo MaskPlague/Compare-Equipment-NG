@@ -6,7 +6,8 @@ namespace CEMenu
     extern std::string_view SWF_PATH;
     extern std::string_view openedMenuName;
     extern std::set<std::string> openedMenus;
-
+    extern bool qliePersistentToggledOn;
+    extern bool menuPersistentToggledOn;
     RE::GFxValue GetMenu_mc(std::string_view nameOfMenuToGet = openedMenuName);
 
     RE::GFxValue GetCEMenu(RE::GFxValue Menu_mc);

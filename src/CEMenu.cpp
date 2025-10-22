@@ -391,8 +391,20 @@ namespace CEMenu
             return;
         logger::trace("Loaded {} via invoke", args2[0].GetString());
         CEActorUtils::GetActiveFollowers();
-        SetSwfVariables();
-        if (menuName == "LootMenu")
-            CEMenu::ShowOrHideQLIEHint(); });
+        if (menuName == "LootMenu"){
+            if (!qliePersistentToggledOnce){
+                qliePersistentToggledOn = CEGlobals::QLIE_PERSISTENT_DEFAULT_DISPLAY;
+                qliePersistentToggledOnce = true;
+            }
+            ShowOrHideQLIEHint();
+            if (CEGlobals::QLIE_PERSISTENT_DISPLAY && CEGameMenuUtils::isWeaponOrArmor(CEGameMenuUtils::currentFormID))
+                PersistentDisplayRun(true);
+        }
+        else if (menuName != "HUDMenu"){
+            if (!menuPersistentToggledOnce){
+                menuPersistentToggledOn = CEGlobals::MENU_PERSISTENT_DEFAULT_DISPLAY;
+                menuPersistentToggledOnce = true;
+            }
+        } });
     }
 }

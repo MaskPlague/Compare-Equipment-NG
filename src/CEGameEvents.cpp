@@ -88,7 +88,12 @@ namespace CEGameEvents
                 if (CEMenu::Is3dZoomedIn())
                     return;
                 SKSE::GetTaskInterface()->AddTask([]()
-                                                  { CEGameMenuUtils::GetItem(); });
+                                                  { 
+                                                    if (CEGlobals::MENU_PERSISTENT_DISPLAY && CEMenu::openedMenuName != "LootMenu" && CEMenu::openedMenuName != "HUDMenu")
+                                                        CEMenu::menuPersistentToggledOn = true;
+                                                    else if(CEGlobals::QLIE_PERSISTENT_DISPLAY && CEMenu::openedMenuName == "LootMenu")
+                                                        CEMenu::qliePersistentToggledOn = true;
+                                                    CEGameMenuUtils::GetItem(); });
                 pressTwo = false;
             }
             cycleButtonLastHit = currentTime;
@@ -245,7 +250,10 @@ namespace CEGameEvents
         if (!form)
             return;
         CEGameMenuUtils::currentFormID = fid;
-        CEMenu::HideMenu();
+        if (CEGlobals::QLIE_PERSISTENT_DISPLAY && CEGameMenuUtils::isWeaponOrArmor(fid))
+            CEMenu::PersistentDisplayRun(true);
+        else
+            CEMenu::HideMenu();
         MaybeShowHideHint();
     }
 
@@ -287,5 +295,7 @@ namespace CEGameEvents
         auto firstObj = objects.at(0);
         CEGameMenuUtils::currentFormID = firstObj.second;
         MaybeShowHideHint();
+        if (CEGlobals::QLIE_PERSISTENT_DISPLAY && CEGameMenuUtils::isWeaponOrArmor(CEGameMenuUtils::currentFormID))
+            CEMenu::PersistentDisplayRun(true);
     }
 }

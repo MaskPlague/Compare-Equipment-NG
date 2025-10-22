@@ -8,4 +8,8 @@ namespace CEGameMenuUtils
     bool GetItem();
 
     void ActorChangedUpdateMenu();
+
+    bool isWeaponOrArmor(RE::FormID formId);
+
+    bool GetArmorOrWeapon(RE::FormID formId);
 }

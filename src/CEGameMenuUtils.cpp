@@ -671,17 +671,28 @@ namespace CEGameMenuUtils
 
     bool GetItem()
     {
+        logger::debug("GetItem called");
         if (CEMenu::openedMenuName == "LootMenu")
         {
+            if (!CEGlobals::QLIE_ALLOWED)
+                return false;
+            if (CEGlobals::QLIE_PERSISTENT_DISPLAY && CEGlobals::QLIE_PERSISTENT_TOGGLE && CEMenu::IsMenuVisible())
+            {
+                CEMenu::qliePersistentToggledOn = false;
+                CEMenu::HideMenu(true);
+                return false;
+            }
             GetArmorOrWeapon(currentFormID);
             return true;
         }
         else if (CEMenu::openedMenuName == "HUDMenu")
         {
+            if (!CEGlobals::HUD_ALLOWED)
+                return false;
             if (CEGlobals::HUD_TOGGLEMODE && CEMenu::IsMenuVisible())
             {
                 CEMenu::HideMenu(true);
-                return true;
+                return false;
             }
             auto crosshair = RE::CrosshairPickData::GetSingleton();
             auto target = crosshair->target;
@@ -691,6 +702,13 @@ namespace CEGameMenuUtils
             currentFormID = fid;
             GetArmorOrWeapon(currentFormID);
             DiffCrosshairTargetCheck(crosshair, target);
+            return true;
+        }
+
+        if (CEGlobals::MENU_PERSISTENT_DISPLAY && CEGlobals::MENU_PERSISTENT_TOGGLE && CEMenu::IsMenuVisible())
+        {
+            CEMenu::menuPersistentToggledOn = false;
+            CEMenu::HideMenu(true);
             return true;
         }
         RE::GFxValue Menu_mc = CEMenu::GetMenu_mc();
@@ -719,5 +737,17 @@ namespace CEGameMenuUtils
             return;
         }
         GetArmorOrWeapon(currentFormID);
+    }
+
+    bool isWeaponOrArmor(RE::FormID formId)
+    {
+        if (auto form = RE::TESForm::LookupByID(formId))
+        {
+            if (auto armor = form->As<RE::TESObjectARMO>())
+                return true;
+            else if (auto weapon = form->As<RE::TESObjectWEAP>())
+                return true;
+        }
+        return false;
     }
 }
