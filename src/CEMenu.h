@@ -44,4 +44,8 @@ namespace CEMenu
     void DestroyMenu(std::string menuToDestroy);
 
     void CreateMenu(std::string_view menuName);
+
+    void PersistentDisplayRun(bool QLIE = false);
+
+    bool RegisterFuncs(RE::GFxMovieView *a_view, RE::GFxValue *a_root);
 }

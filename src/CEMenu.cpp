@@ -1,3 +1,10 @@
+
+#define REGISTER_FN(fn)                                \
+    static auto handler_##fn = new fn();               \
+    RE::GFxValue value_##fn;                           \
+    a_view->CreateFunction(&value_##fn, handler_##fn); \
+    a_root->SetMember(#fn, value_##fn)
+
 namespace CEMenu
 {
     std::string temp = "CompareEquipmentMenu_" + CEGlobals::EXPECTED_SWF_VERSION + "_" + std::to_string(CEGlobals::COMPARE_KEY);
@@ -28,59 +35,67 @@ namespace CEMenu
         }
     }
 
-    void ShowOrHideQLIEHint(bool forceDelete)
+    void PersistentDisplayRun(bool QLIE)
     {
-        if (!CEGlobals::QLIE_SHOWHINT || !CEGlobals::QLIE_ALLOWED)
+        logger::debug("PersistentDisplayRun called");
+        if (Is3dZoomedIn())
             return;
-        auto UISingleton = RE::UI::GetSingleton();
-        auto menu = UISingleton ? UISingleton->GetMenu("LootMenu") : nullptr;
-        RE::GFxMovieView *view = menu ? menu->uiMovie.get() : nullptr;
-
-        if (!UISingleton || !menu || !view)
+        if (openedMenuName == "LootMenu" && !qliePersistentToggledOn)
             return;
-        bool showButton = false;
-        if (auto form = RE::TESForm::LookupByID(CEGameMenuUtils::currentFormID))
+        if (openedMenuName != "LootMenu" && openedMenuName != "HUDMenu" && !menuPersistentToggledOn)
+            return;
+        if (openedMenuName == "LootMenu" && !CEGlobals::QLIE_PERSISTENT_DISPLAY)
+            return;
+        if (openedMenuName != "LootMenu" && openedMenuName != "HUDMenu" && !CEGlobals::MENU_PERSISTENT_DISPLAY)
+            return;
+        if (!QLIE && openedMenuName != "HUDMenu")
         {
-
-            if (auto armor = form->As<RE::TESObjectARMO>())
-                showButton = true;
-            else if (auto weapon = form->As<RE::TESObjectWEAP>())
-                showButton = true;
-        }
-        RE::GFxValue buttonBar;
-        RE::GFxValue dataProvider;
-        if (view->GetVariable(&buttonBar, "_root.lootMenu.buttonBar"))
-        {
-            if (buttonBar.GetMember("dataProvider", &dataProvider))
+            logger::debug("Persitent display triggered for menu: {}", openedMenuName);
+            if (CEGameMenuUtils::GetItem() && CEGlobals::HIDE_3D)
             {
-                RE::GFxValue lastObj;
-                dataProvider.GetElement(dataProvider.GetArraySize() - 1, &lastObj);
-                if (lastObj.IsObject())
-                {
-                    RE::GFxValue lastObjCENG;
-                    lastObj.GetMember("CENG", &lastObjCENG);
-                    if (lastObjCENG.IsBool() && (!showButton || forceDelete))
-                    {
-                        Invalidate(buttonBar);
-                        dataProvider.RemoveElement(dataProvider.GetArraySize() - 1);
-                        lastObj.SetNull();
-                    }
-                    if (lastObjCENG.IsBool() && showButton)
-                        return;
-                }
-                if (!showButton)
-                    return;
-
-                RE::GFxValue obj;
-                view->CreateObject(&obj);
-                obj.SetMember("label", CEGlobals::QLIE_HINT_TEXT.c_str());
-                obj.SetMember("index", CEGlobals::COMPARE_KEY);
-                obj.SetMember("stolen", false);
-                obj.SetMember("CENG", true);
-                Invalidate(buttonBar);
-                dataProvider.PushBack(obj);
+                auto manager = RE::Inventory3DManager::GetSingleton();
+                manager->Clear3D();
             }
         }
+        else if (openedMenuName == "LootMenu")
+        {
+            std::thread([]()
+                        {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                SKSE::GetTaskInterface()->AddUITask([]()
+                                                    {   logger::debug("Persistent display triggered for LootMenu");
+                                                        CEGameMenuUtils::GetArmorOrWeapon(CEGameMenuUtils::currentFormID); }); })
+                .detach();
+        }
+    }
+
+    class PersistentDisplay : public RE::GFxFunctionHandler
+    {
+    public:
+        void Call(Params &) override
+        {
+            logger::debug("calling persistent display from AS");
+            PersistentDisplayRun();
+        }
+    };
+
+    class ASIsWeaponOrArmor : public RE::GFxFunctionHandler
+    {
+    public:
+        void Call(Params &a_params) override
+        {
+            a_params.retVal->SetBoolean(CEGameMenuUtils::isWeaponOrArmor(CEGameMenuUtils::currentFormID));
+        }
+    };
+
+    // REGISTER_FN taken from Inventory Injector
+    bool RegisterFuncs(RE::GFxMovieView *a_view, RE::GFxValue *a_root)
+    {
+        REGISTER_FN(PersistentDisplay);
+        REGISTER_FN(ASIsWeaponOrArmor);
+        return true;
+    }
+
     }
 
     RE::GFxValue GetMenu_mc(std::string_view nameOfMenuToGet)

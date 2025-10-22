@@ -90,7 +90,7 @@ namespace CompareEquipmentNG
         SetupLog();
         CEGlobals::LoadConfig();
         SetLogLevel();
-
+        logger::info("Registered scaleform functions: {}", SKSE::GetScaleformInterface()->Register(&CEMenu::RegisterFuncs, "CompareEquipment"));
         logger::info("Compare Equipment NG Plugin Starting");
         auto *messaging = SKSE::GetMessagingInterface();
         messaging->RegisterListener("SKSE", MessageHandler);
