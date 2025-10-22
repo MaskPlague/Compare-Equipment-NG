@@ -14,6 +14,11 @@ namespace CEMenu
     std::chrono::steady_clock::time_point lastInvalidation;
     std::set<std::string> openedMenus;
 
+    bool qliePersistentToggledOn = false;
+    bool menuPersistentToggledOn = false;
+    bool qliePersistentToggledOnce = false;
+    bool menuPersistentToggledOnce = false;
+
     void UpdateMenuName()
     {
         std::string stringMenuName{openedMenuName};
@@ -101,6 +106,19 @@ namespace CEMenu
         return true;
     }
 
+    void ShowOrHideQLIEHint()
+    {
+        logger::debug("ShowOrHideQLIEHint called");
+        std::thread([]()
+                    {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
+        SKSE::GetTaskInterface()->AddUITask([]()
+                                            {
+        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc("LootMenu"));
+        if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
+            return;
+        ceMenu.Invoke("showOrHideQLIEHint"); }); })
+            .detach();
     }
 
     RE::GFxValue GetMenu_mc(std::string_view nameOfMenuToGet)
@@ -214,7 +232,7 @@ namespace CEMenu
         SKSE::GetTaskInterface()->AddTask([]()
                                           { std::thread([]()
                                                         {   
-                                                            std::this_thread::sleep_for(std::chrono::milliseconds(50)); 
+                                                            std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
                                                             ShowMenuInstant(); })
                                                 .detach(); });
     }
