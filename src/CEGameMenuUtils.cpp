@@ -285,8 +285,7 @@ namespace CEGameMenuUtils
                 manager->Clear3D();
         }
 
-        RE::GFxValue menu_mc = CEMenu::GetMenu_mc();
-        RE::GFxValue ceMenu = CEMenu::GetCEMenu(menu_mc);
+        RE::GFxValue ceMenu = CEMenu::GetCEMenu(CEMenu::GetMenu_mc());
 
         auto player = RE::PlayerCharacter::GetSingleton();
         if (!player || ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
@@ -417,7 +416,7 @@ namespace CEGameMenuUtils
         CEMenu::CreateArmorComparisonItemCard(displayCommand, ceMenu);
         CEMenu::SetMenuOffsets(ceMenu);
         if (CEGlobals::HIDE_SKY_UI_ITEM_CARD)
-            CEMenu::HideSkyUiItemCard(menu_mc);
+            CEMenu::HideSkyUiItemCard(ceMenu);
     }
 
     bool GetDamageAndNameInfoFromActorInventory(RE::FormID formId, const RE::TESObjectREFR::InventoryItemMap &inv, RE::PlayerCharacter *player,
@@ -519,8 +518,7 @@ namespace CEGameMenuUtils
             if (zoom == 0.0f)
                 manager->Clear3D();
         }
-        RE::GFxValue menu_mc = CEMenu::GetMenu_mc();
-        RE::GFxValue ceMenu = CEMenu::GetCEMenu(menu_mc);
+        RE::GFxValue ceMenu = CEMenu::GetCEMenu(CEMenu::GetMenu_mc());
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
 
@@ -540,6 +538,13 @@ namespace CEGameMenuUtils
         const char *rightName = "";
         RE::TESObjectWEAP *leftWeapon = nullptr;
         RE::TESObjectWEAP *rightWeapon = nullptr;
+        bool leftWeaponIsOneHanded = false;
+        bool rightWeaponIsOneHanded = false;
+        std::set<RE::WEAPON_TYPE> oneHandedTypes = {RE::WEAPON_TYPE::kOneHandAxe,
+                                                    RE::WEAPON_TYPE::kOneHandDagger,
+                                                    RE::WEAPON_TYPE::kOneHandMace,
+                                                    RE::WEAPON_TYPE::kOneHandSword,
+                                                    RE::WEAPON_TYPE::kStaff};
         int32_t vdummy;
         float sdummy;
         std::string svdummy;
@@ -552,6 +557,8 @@ namespace CEGameMenuUtils
             leftIsWeapon = true;
             leftFormId = left->GetFormID();
             leftWeapon = left->As<RE::TESObjectWEAP>();
+            auto leftWeaponType = leftWeapon->GetWeaponType();
+            leftWeaponIsOneHanded = oneHandedTypes.contains(leftWeaponType);
             GetInfo(leftFormId, leftName, vdummy, sdummy, svdummy, false, false, eisdummy, leftWeapon);
         }
         RE::FormID rightFormId = 0;
@@ -560,9 +567,14 @@ namespace CEGameMenuUtils
             rightIsWeapon = true;
             rightFormId = right->GetFormID();
             rightWeapon = right->As<RE::TESObjectWEAP>();
+            auto rightWeaponType = rightWeapon->GetWeaponType();
+            rightWeaponIsOneHanded = oneHandedTypes.contains(rightWeaponType);
             GetInfo(rightFormId, rightName, vdummy, sdummy, svdummy, false, false, eisdummy, rightWeapon);
         }
-        if (leftIsWeapon && rightIsWeapon && leftFormId == rightFormId && std::strcmp(leftName, rightName) == 0)
+        if (leftIsWeapon && rightIsWeapon &&
+            leftFormId == rightFormId &&
+            std::strcmp(leftName, rightName) == 0 &&
+            !leftWeaponIsOneHanded && !rightWeaponIsOneHanded)
             both = true;
 
         bool selectedIsLeft = false;
@@ -572,14 +584,8 @@ namespace CEGameMenuUtils
         if (rightIsWeapon && rightFormId == selectedFormId && std::strcmp(rightName, selectedName) == 0)
             selectedIsRight = true;
         auto selectedWeaponType = selectedWeapon->GetWeaponType();
-        std::set<RE::WEAPON_TYPE> oneHandedTypes = {RE::WEAPON_TYPE::kOneHandAxe,
-                                                    RE::WEAPON_TYPE::kOneHandDagger,
-                                                    RE::WEAPON_TYPE::kOneHandMace,
-                                                    RE::WEAPON_TYPE::kOneHandSword,
-                                                    RE::WEAPON_TYPE::kStaff};
-
         bool aWeaponIsEquipped = false;
-        bool oneHanded = oneHandedTypes.contains(selectedWeaponType);
+        bool selectedWeaponIsOneHanded = oneHandedTypes.contains(selectedWeaponType);
         int weaponCount = 0;
         if (leftIsWeapon && !selectedIsLeft && !selectedIsRight)
         {
@@ -587,7 +593,7 @@ namespace CEGameMenuUtils
             weaponCount++;
             GetFullWeaponInformation(leftFormId, leftWeapon, ceMenu, "left", both,
                                      valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff, getScaledInfo);
-            if (oneHanded)
+            if (selectedWeaponIsOneHanded)
                 GetFullWeaponInformation(selectedFormId, selectedWeapon, ceMenu, "selected", aWeaponIsEquipped,
                                          valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff, getScaledInfo);
         }
@@ -596,7 +602,7 @@ namespace CEGameMenuUtils
         {
             aWeaponIsEquipped = true;
             weaponCount++;
-            if (oneHanded)
+            if (selectedWeaponIsOneHanded)
             {
                 valueDiff = 0;
                 speedDiff = 0.0f;
@@ -612,11 +618,11 @@ namespace CEGameMenuUtils
             }
             GetFullWeaponInformation(right->GetFormID(), right->As<RE::TESObjectWEAP>(), ceMenu, "right", both,
                                      valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff, getScaledInfo);
-            if (oneHanded && !both)
+            if (selectedWeaponIsOneHanded && !both)
                 GetFullWeaponInformation(selectedFormId, selectedWeapon, ceMenu, "selected", aWeaponIsEquipped,
                                          valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff, getScaledInfo);
         }
-        if (!aWeaponIsEquipped || !oneHanded)
+        if (!aWeaponIsEquipped || !selectedWeaponIsOneHanded)
         {
             if (weaponCount > 0)
             {
@@ -635,7 +641,7 @@ namespace CEGameMenuUtils
         CEMenu::CreateWeaponComparisonItemCard(displayCommand, ceMenu);
         CEMenu::SetMenuOffsets(ceMenu);
         if (CEGlobals::HIDE_SKY_UI_ITEM_CARD)
-            CEMenu::HideSkyUiItemCard(menu_mc);
+            CEMenu::HideSkyUiItemCard(ceMenu);
     }
 
     bool GetArmorOrWeapon(RE::FormID selectedFormId)
