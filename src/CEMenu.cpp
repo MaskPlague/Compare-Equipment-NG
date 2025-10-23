@@ -79,7 +79,7 @@ namespace CEMenu
         }
     }
 
-    class PersistentDisplay : public RE::GFxFunctionHandler
+    class persistentDisplayAS : public RE::GFxFunctionHandler
     {
     public:
         void Call(Params &) override
@@ -89,7 +89,7 @@ namespace CEMenu
         }
     };
 
-    class ASIsWeaponOrArmor : public RE::GFxFunctionHandler
+    class isWeaponOrArmorAS : public RE::GFxFunctionHandler
     {
     public:
         void Call(Params &a_params) override
@@ -98,11 +98,21 @@ namespace CEMenu
         }
     };
 
+    class loggerAS : public RE::GFxFunctionHandler
+    {
+    public:
+        void Call(Params &a_params) override
+        {
+            logger::info("AS: {}", a_params.args[0].GetString());
+        }
+    };
+
     // REGISTER_FN taken from Inventory Injector
     bool RegisterFuncs(RE::GFxMovieView *a_view, RE::GFxValue *a_root)
     {
-        REGISTER_FN(PersistentDisplay);
-        REGISTER_FN(ASIsWeaponOrArmor);
+        REGISTER_FN(persistentDisplayAS);
+        REGISTER_FN(isWeaponOrArmorAS);
+        REGISTER_FN(loggerAS);
         return true;
     }
 
@@ -215,11 +225,12 @@ namespace CEMenu
         ceMenu.Invoke("showMenu"); });
     }
 
-    void HideSkyUiItemCard(RE::GFxValue menu_mc)
+    void HideSkyUiItemCard(RE::GFxValue ceMenu)
     {
-        if (menu_mc.IsNull() || menu_mc.IsUndefined() || !menu_mc.IsObject())
+        if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
-        RE::GFxValue itemCard;
+        ceMenu.Invoke("hideSkyUiItemCardAndMore");
+        /*RE::GFxValue itemCard;
         if (menu_mc.GetMember("itemCard", &itemCard) && itemCard.IsObject())
         {
             itemCard.SetMember("_visible", false);
@@ -230,12 +241,22 @@ namespace CEMenu
         {
             RE::GFxValue WeaponStats_MC;
             if (shazdeh2WeaponStats.GetMember("WeaponStats_MC", &WeaponStats_MC) && WeaponStats_MC.IsObject())
-                WeaponStats_MC.Invoke("hideTheStats");
+            {
+                // WeaponStats_MC.Invoke("hideTheStats");
+                WeaponStats_MC.SetMember("_visible", false);
+                WeaponStats_MC.SetMember("ce_hidden", true);
+            }
         }
-            return;
-        RE::GFxValue WeaponStats_MC;
-        if (shazdeh2WeaponStats.GetMember("WeaponStats_MC", &WeaponStats_MC) && WeaponStats_MC.IsObject())
-            WeaponStats_MC.Invoke("hideTheStats");
+        RE::GFxValue parent;
+        if (menu_mc.GetMember("_parent", &parent) && parent.IsObject())
+        {
+            RE::GFxValue AHZItemCardContainer;
+            if (parent.GetMember("AHZItemCardContainer", &AHZItemCardContainer) && AHZItemCardContainer.IsObject())
+            {
+                AHZItemCardContainer.SetMember("_visible", false);
+                AHZItemCardContainer.SetMember("ce_hidden", true);
+            }
+        }*/
     }
 
     void ShowMenuDelayed()

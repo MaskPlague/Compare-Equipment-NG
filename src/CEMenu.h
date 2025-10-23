@@ -26,7 +26,7 @@ namespace CEMenu
 
     void ShowMenuDelayed();
 
-    void HideSkyUiItemCard(RE::GFxValue menu_mc);
+    void HideSkyUiItemCard(RE::GFxValue ceMenu);
 
     void HideMenu(bool checked = false);
 
