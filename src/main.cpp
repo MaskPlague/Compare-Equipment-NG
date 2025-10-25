@@ -39,24 +39,21 @@ namespace CompareEquipmentNG
         }
     }
 
-    void OnPostLoadGame()
+    void OnPostDataLoaded()
     {
         CEActorUtils::SetActorToPlayer();
 
         static bool eventSinksRegistered = false;
-        if (eventSinksRegistered)
-            return;
-        logger::debug("Creating Event Sinks");
-        RE::UI::GetSingleton()->AddEventSink(CEGameEvents::UIEvent::GetSingleton());
-        RE::BSInputDeviceManager::GetSingleton()->AddEventSink(CEGameEvents::DeviceInputEvent::GetSingleton());
-        RE::BSInputDeviceManager::GetSingleton()->AddEventSink(CEGameEvents::InputEvent::GetSingleton());
-        logger::debug("Created Event Sinks");
-        eventSinksRegistered = true;
-        if (CEGlobals::HUD_ALLOWED)
+        if (!eventSinksRegistered)
         {
-            logger::trace("HUD_ALLOWED, creating the HUDMenu CEMenu");
-            CEMenu::CreateMenu("HUDMenu");
+            logger::debug("Creating Event Sinks");
+            RE::UI::GetSingleton()->AddEventSink(CEGameEvents::UIEvent::GetSingleton());
+            RE::BSInputDeviceManager::GetSingleton()->AddEventSink(CEGameEvents::DeviceInputEvent::GetSingleton());
+            RE::BSInputDeviceManager::GetSingleton()->AddEventSink(CEGameEvents::InputEvent::GetSingleton());
+            logger::debug("Created Event Sinks");
+            eventSinksRegistered = true;
         }
+
         const auto dllHandle = GetModuleHandleA("QuickLootIE");
         if (dllHandle == NULL)
         {
@@ -64,24 +61,29 @@ namespace CompareEquipmentNG
             return;
         }
         static bool quickLootIEInitialized = false;
-        if (quickLootIEInitialized)
-            return;
-        logger::debug("Initializing QuickLoot IE API");
-        QuickLoot::QuickLootAPI::Init();
-        QuickLoot::QuickLootAPI::RegisterSelectItemHandler(CEGameEvents::QuickLootSelectItemHandler);
-        QuickLoot::QuickLootAPI::RegisterCloseLootMenuHandler(CEGameEvents::QuickLootCloseHandler);
-        QuickLoot::QuickLootAPI::RegisterOpenLootMenuHandler(CEGameEvents::QuickLootOpenHandler);
-        quickLootIEInitialized = true;
+        if (!quickLootIEInitialized)
+        {
+            logger::debug("Initializing QuickLoot IE API");
+            QuickLoot::QuickLootAPI::Init();
+            QuickLoot::QuickLootAPI::RegisterSelectItemHandler(CEGameEvents::QuickLootSelectItemHandler);
+            QuickLoot::QuickLootAPI::RegisterCloseLootMenuHandler(CEGameEvents::QuickLootCloseHandler);
+            QuickLoot::QuickLootAPI::RegisterOpenLootMenuHandler(CEGameEvents::QuickLootOpenHandler);
+            quickLootIEInitialized = true;
+        }
     }
 
     void MessageHandler(SKSE::MessagingInterface::Message *msg)
     {
-        if (msg->type != SKSE::MessagingInterface::kPostLoadGame)
-            return;
-        if (!bool(msg->data))
-            return;
-        logger::trace("Game has loaded.");
-        OnPostLoadGame();
+        if (msg->type == SKSE::MessagingInterface::kDataLoaded)
+        {
+            logger::debug("Data has loaded.");
+            OnPostDataLoaded();
+        }
+        if (msg->type == SKSE::MessagingInterface::kPostLoadGame && bool(msg->data) && CEGlobals::HUD_ALLOWED)
+        {
+            logger::debug("PostLoadGame: HUD_ALLOWED, creating the HUDMenu CEMenu");
+            CEMenu::CreateMenu("HUDMenu");
+        }
     }
 
     extern "C" DLLEXPORT bool SKSEPlugin_Load(const SKSE::LoadInterface *skse)
@@ -90,8 +92,8 @@ namespace CompareEquipmentNG
         SetupLog();
         CEGlobals::LoadConfig();
         SetLogLevel();
-        logger::info("Registered scaleform functions: {}", SKSE::GetScaleformInterface()->Register(&CEMenu::RegisterFuncs, "CompareEquipment"));
         logger::info("Compare Equipment NG Plugin Starting");
+        logger::info("Registered scaleform functions: {}", SKSE::GetScaleformInterface()->Register(&CEMenu::RegisterFuncs, "CompareEquipment"));
         auto *messaging = SKSE::GetMessagingInterface();
         messaging->RegisterListener("SKSE", MessageHandler);
         logger::info("Compare Equipment NG Plugin Loaded");
