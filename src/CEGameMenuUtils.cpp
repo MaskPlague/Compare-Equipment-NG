@@ -1,6 +1,7 @@
 namespace CEGameMenuUtils
 {
     RE::FormID currentFormID;
+    RE::TESObjectREFRPtr crosshairTargetObjectRef;
     RE::TESObjectREFR::InventoryItemMap containerInventoryQLIE;
 
     const char *GetArmorTypeString(RE::BGSBipedObjectForm::ArmorType type)
@@ -144,7 +145,7 @@ namespace CEGameMenuUtils
     }
 
     template <class T>
-    void GetEffectsInfo(std::string &effectInfo, RE::EnchantmentItem *enchantment, T *itemWA, RE::InventoryEntryData *entryData)
+    void GetEffectsInfoFromEntryData(std::string &effectInfo, RE::EnchantmentItem *enchantment, T *itemWA, RE::InventoryEntryData *entryData)
     {
         for (auto token : CEGlobals::effectCheckOrder)
         {
@@ -184,7 +185,32 @@ namespace CEGameMenuUtils
             statString = std::format("{:.2f}", damage);
         }
         RE::EnchantmentItem *enchantment = itemWA->formEnchanting;
-        GetEffectsInfo(effectInfo, enchantment, itemWA, entryData);
+        GetEffectsInfoFromEntryData(effectInfo, enchantment, itemWA, entryData);
+    }
+
+    bool GetInfoFromCrosshairRef(const char *&name, int32_t &value, float &stat, std::string &statString, bool armor, std::string &effectInfo)
+    {
+        if (!crosshairTargetObjectRef)
+            return false;
+        auto player = RE::PlayerCharacter::GetSingleton();
+        RE::TESBoundObject *baseObject = crosshairTargetObjectRef->GetBaseObject();
+        RE::ExtraDataList *extraList = &crosshairTargetObjectRef->extraList;
+        if (!baseObject || !player)
+            return false;
+        RE::InventoryEntryData entryData(baseObject, 0);
+        if (extraList)
+            entryData.AddExtraList(extraList);
+        if (armor)
+        {
+            auto item = baseObject->As<RE::TESObjectARMO>();
+            GetInfoFromEntryData(&entryData, name, value, stat, statString, armor, effectInfo, item);
+        }
+        else
+        {
+            auto item = baseObject->As<RE::TESObjectWEAP>();
+            GetInfoFromEntryData(&entryData, name, value, stat, statString, armor, effectInfo, item);
+        }
+        return true;
     }
 
     template <class T>
@@ -207,12 +233,15 @@ namespace CEGameMenuUtils
     bool GetInfo(RE::FormID formId, const char *&name, int32_t &value, float &stat, std::string &statString, bool armor,
                  bool selected, std::string &effectInfo, T *item)
     {
-        if (!selected &&
-            (!CEActorUtils::currentActor->IsPlayerRef() ||
-             (CEActorUtils::currentActor->IsPlayerRef() && "LootMenu" == CEMenu::openedMenuName)))
+        if (!selected && (!CEActorUtils::currentActor->IsPlayerRef() ||
+                          (CEActorUtils::currentActor->IsPlayerRef() && ("LootMenu" == CEMenu::openedMenuName || "HUDMenu" == CEMenu::openedMenuName))))
         {
             auto inv = CEActorUtils::currentActor->GetInventory();
             return GetInfoFromInventory(formId, name, value, stat, statString, armor, effectInfo, item, inv);
+        }
+        else if (selected && CEMenu::openedMenuName == "HUDMenu")
+        {
+            return GetInfoFromCrosshairRef(name, value, stat, statString, armor, effectInfo);
         }
         RE::UI *uiSingleton = RE::UI::GetSingleton();
         RE::BSTArray<RE::ItemList::Item *> items;
@@ -337,18 +366,10 @@ namespace CEGameMenuUtils
         float selectedRatingFloat = 0.0;
         int selectedRating = 0;
         std::string selectedRatingString;
-        bool gotScaledInfo = true;
-        if (!GetInfo(selectedFormId, selectedName, selectedValue, selectedRatingFloat, selectedRatingString, true,
-                     true, selectedEffectInfo, selectedArmor))
-        {
-            selectedRating = static_cast<int>(selectedArmor->armorRating / 100);
-            selectedRatingString = std::to_string(selectedRating) + " " + CEGlobals::unscaledText;
-            selectedValue = selectedArmor->GetGoldValue();
-            gotScaledInfo = false;
-        }
-        else
-            selectedRating = static_cast<int>(selectedRatingFloat);
-
+        GetInfo(selectedFormId, selectedName, selectedValue, selectedRatingFloat, selectedRatingString,
+                true, true, selectedEffectInfo, selectedArmor);
+        selectedRating = static_cast<int>(selectedRatingFloat);
+        RE::TESObjectREFR::InventoryItemMap inv = actor->GetInventory();
         int equippedAccumulatedRating = 0;
         std::vector<RE::FormID> pushedFormIds;
         bool selectedIsEquipped = false;
@@ -375,17 +396,9 @@ namespace CEGameMenuUtils
                         float equippedRatingFloat = 0.0;
                         int equippedRating = 0;
                         std::string equippedRatingString;
-                        if (!GetInfo(formId, equippedName, equippedValue, equippedRatingFloat, equippedRatingString, true,
-                                     false, equippedEffectInfo, equippedArmor) ||
-                            !gotScaledInfo)
-                        {
-                            equippedRating = static_cast<int>(equippedArmor->armorRating / 100);
-                            equippedRatingString = std::to_string(equippedRating) + " " + CEGlobals::unscaledText;
-                            equippedValue = equippedArmor->GetGoldValue();
-                        }
-                        else
-                            equippedRating = static_cast<int>(equippedRatingFloat);
-
+                        GetInfo(formId, equippedName, equippedValue, equippedRatingFloat, equippedRatingString,
+                                true, false, equippedEffectInfo, equippedArmor);
+                        equippedRating = static_cast<int>(equippedRatingFloat);
                         equippedAccumulatedRating += equippedRating;
                         RE::GFxValue equippedEntry = CEIconUtils::GetEquippedEntryObject(formId);
                         std::array<RE::GFxValue, CEGlobals::EQUIPPED_ARMOR_ITEM_ARRAY_SIZE>
@@ -437,7 +450,7 @@ namespace CEGameMenuUtils
     }
 
     void GetFullWeaponInformation(RE::FormID formId, RE::TESObjectWEAP *weapon, RE::GFxValue ceMenu, std::string type, bool flag,
-                                  int &valueDiff, float &speedDiff, float &reachDiff, float &staggerDiff, float &critDiff, float &damageDiff, bool getScaledInfo)
+                                  int &valueDiff, float &speedDiff, float &reachDiff, float &staggerDiff, float &critDiff, float &damageDiff)
     {
         const char *name = weapon->GetName();
         int32_t value = 0;
@@ -454,12 +467,7 @@ namespace CEGameMenuUtils
         std::string damageString;
         auto inv = CEActorUtils::currentActor->GetInventory();
         bool isSelected = (type == "selected");
-        if (!GetInfo(formId, name, value, damage, damageString, false, isSelected, effectInfo, weapon) || !getScaledInfo)
-        {
-            damage = weapon->GetAttackDamage();
-            damageString = std::format("{:.2f}", damage) + " " + CEGlobals::unscaledText;
-            value = weapon->GetGoldValue();
-        }
+        GetInfo(formId, name, value, damage, damageString, false, isSelected, effectInfo, weapon);
         std::string handLabel;
         if (flag)
             handLabel = CEGlobals::bothHands;
@@ -550,7 +558,7 @@ namespace CEGameMenuUtils
         std::string svdummy;
         std::string eisdummy;
 
-        bool getScaledInfo = GetInfo(selectedFormId, selectedName, vdummy, sdummy, svdummy, false, true, eisdummy, selectedWeapon);
+        GetInfo(selectedFormId, selectedName, vdummy, sdummy, svdummy, false, true, eisdummy, selectedWeapon);
         RE::FormID leftFormId = 0;
         if (left && left->IsWeapon())
         {
@@ -592,10 +600,10 @@ namespace CEGameMenuUtils
             aWeaponIsEquipped = true;
             weaponCount++;
             GetFullWeaponInformation(leftFormId, leftWeapon, ceMenu, "left", both,
-                                     valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff, getScaledInfo);
+                                     valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff);
             if (selectedWeaponIsOneHanded)
                 GetFullWeaponInformation(selectedFormId, selectedWeapon, ceMenu, "selected", aWeaponIsEquipped,
-                                         valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff, getScaledInfo);
+                                         valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff);
         }
         float reachMax = 0.0f;
         if (rightIsWeapon && !selectedIsRight && !selectedIsLeft && !both)
@@ -617,10 +625,10 @@ namespace CEGameMenuUtils
                 reachDiff = 0.0f;
             }
             GetFullWeaponInformation(right->GetFormID(), right->As<RE::TESObjectWEAP>(), ceMenu, "right", both,
-                                     valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff, getScaledInfo);
+                                     valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff);
             if (selectedWeaponIsOneHanded && !both)
                 GetFullWeaponInformation(selectedFormId, selectedWeapon, ceMenu, "selected", aWeaponIsEquipped,
-                                         valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff, getScaledInfo);
+                                         valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff);
         }
         if (!aWeaponIsEquipped || !selectedWeaponIsOneHanded)
         {
@@ -632,7 +640,7 @@ namespace CEGameMenuUtils
                 damageDiff /= weaponCount;
             }
             GetFullWeaponInformation(selectedFormId, selectedWeapon, ceMenu, "selected", aWeaponIsEquipped,
-                                     valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff, getScaledInfo);
+                                     valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff);
         }
         int scale = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_SCALE : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_SCALE : CEGlobals::MENU_SCALE);
         int alpha = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_BACKGROUND_ALPHA : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_BACKGROUND_ALPHA : CEGlobals::MENU_BACKGROUND_ALPHA);
@@ -702,9 +710,10 @@ namespace CEGameMenuUtils
             }
             auto crosshair = RE::CrosshairPickData::GetSingleton();
             auto target = crosshair->target;
-            auto obj = target ? target.get() : nullptr;
-            auto bobj = obj ? obj->GetBaseObject() : nullptr;
-            auto fid = bobj ? bobj->GetFormID() : NULL;
+            RE::TESObjectREFRPtr objectRef = target ? target.get() : nullptr;
+            crosshairTargetObjectRef = objectRef;
+            auto baseObject = objectRef ? objectRef->GetBaseObject() : nullptr;
+            auto fid = baseObject ? baseObject->GetFormID() : NULL;
             currentFormID = fid;
             GetArmorOrWeapon(currentFormID);
             DiffCrosshairTargetCheck(crosshair, target);
