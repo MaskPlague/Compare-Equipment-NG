@@ -47,7 +47,6 @@ namespace CEMenu
 
     void PersistentDisplayRun(bool QLIE)
     {
-        logger::debug("PersistentDisplayRun called");
         if (Is3dZoomedIn())
             return;
         if (openedMenuName == "LootMenu" && !qliePersistentToggledOn)
@@ -60,7 +59,6 @@ namespace CEMenu
             return;
         if (!QLIE && openedMenuName != "HUDMenu")
         {
-            logger::debug("Persitent display triggered for menu: {}", openedMenuName);
             if (CEGameMenuUtils::GetItem() && CEGlobals::HIDE_3D)
             {
                 auto manager = RE::Inventory3DManager::GetSingleton();
@@ -73,8 +71,7 @@ namespace CEMenu
                         {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 SKSE::GetTaskInterface()->AddUITask([]()
-                                                    {   logger::debug("Persistent display triggered for LootMenu");
-                                                        CEGameMenuUtils::GetArmorOrWeapon(CEGameMenuUtils::currentFormID); }); })
+                                                    {CEGameMenuUtils::GetArmorOrWeapon(CEGameMenuUtils::currentFormID); }); })
                 .detach();
         }
     }
@@ -84,7 +81,6 @@ namespace CEMenu
     public:
         void Call(Params &) override
         {
-            logger::debug("calling persistent display from AS");
             PersistentDisplayRun();
         }
     };
@@ -230,33 +226,6 @@ namespace CEMenu
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
         ceMenu.Invoke("hideSkyUiItemCardAndMore");
-        /*RE::GFxValue itemCard;
-        if (menu_mc.GetMember("itemCard", &itemCard) && itemCard.IsObject())
-        {
-            itemCard.SetMember("_visible", false);
-            itemCard.SetMember("ce_hidden", true);
-        }
-        RE::GFxValue shazdeh2WeaponStats;
-        if (menu_mc.GetMember("WeaponStats", &shazdeh2WeaponStats) && shazdeh2WeaponStats.IsObject())
-        {
-            RE::GFxValue WeaponStats_MC;
-            if (shazdeh2WeaponStats.GetMember("WeaponStats_MC", &WeaponStats_MC) && WeaponStats_MC.IsObject())
-            {
-                // WeaponStats_MC.Invoke("hideTheStats");
-                WeaponStats_MC.SetMember("_visible", false);
-                WeaponStats_MC.SetMember("ce_hidden", true);
-            }
-        }
-        RE::GFxValue parent;
-        if (menu_mc.GetMember("_parent", &parent) && parent.IsObject())
-        {
-            RE::GFxValue AHZItemCardContainer;
-            if (parent.GetMember("AHZItemCardContainer", &AHZItemCardContainer) && AHZItemCardContainer.IsObject())
-            {
-                AHZItemCardContainer.SetMember("_visible", false);
-                AHZItemCardContainer.SetMember("ce_hidden", true);
-            }
-        }*/
     }
 
     void ShowMenuDelayed()
@@ -401,10 +370,11 @@ namespace CEMenu
         Menu_mc.SetMember("ce_SPACING_FROM_SELECTED", CEGlobals::SPACING_FROM_SELECTED);
         Menu_mc.SetMember("ce_SPACING_BETWEEN_EQUIPPED_X", CEGlobals::SPACING_BETWEEN_EQUIPPED_X);
         Menu_mc.SetMember("ce_SPACING_BETWEEN_EQUIPPED_Y", CEGlobals::SPACING_BETWEEN_EQUIPPED_Y);
-
+        Menu_mc.SetMember("ce_SCROLL_SPEED", CEGlobals::SCROLL_SPEED);
+        Menu_mc.SetMember("ce_SCROLL_DELAY", CEGlobals::SCROLL_DELAY);
         int layout = CEMenu::openedMenuName == "LootMenu"  ? CEGlobals::QLIE_LAYOUT
-                     : CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_LAYOUT
-                                                           : CEGlobals::MENU_LAYOUT;
+                                                            : CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_LAYOUT
+                                                                                                    : CEGlobals::MENU_LAYOUT;
         Menu_mc.SetMember("ce_layout", layout);
 
         RE::GFxValue ceMenu = GetCEMenu(Menu_mc);
