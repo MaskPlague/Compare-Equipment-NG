@@ -2,6 +2,9 @@
 
 namespace CEGlobals
 {
+    extern int ROWS;
+    extern int SCROLL_SPEED;
+    extern double SCROLL_DELAY;
     extern double INV_MENU_X_ORIGIN;
     extern double INV_MENU_Y_ORIGIN;
     extern double CONT_MENU_X_ORIGIN;
@@ -23,7 +26,6 @@ namespace CEGlobals
     extern int MENU_LAYOUT;
     extern int QLIE_LAYOUT;
     extern int HUD_LAYOUT;
-    extern int ROWS;
     extern int SPACING_FROM_SELECTED;
     extern int SPACING_BETWEEN_EQUIPPED_X;
     extern int SPACING_BETWEEN_EQUIPPED_Y;
@@ -72,7 +74,6 @@ namespace CEGlobals
     extern std::string lightArmor;
     extern std::string clothArmor;
     extern std::string armorRatingLabelText;
-    extern std::string unscaledText;
     extern std::string goldLabelText;
     extern std::string effectsLabelText;
     extern std::string equippedTo;

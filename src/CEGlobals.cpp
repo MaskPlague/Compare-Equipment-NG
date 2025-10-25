@@ -1,5 +1,8 @@
 namespace CEGlobals
 {
+    int ROWS = 4;
+    int SCROLL_SPEED = 100;
+    double SCROLL_DELAY = 2.5f;
     double INV_MENU_X_ORIGIN = 590.0f;
     double INV_MENU_Y_ORIGIN = 250.0f;
     double CONT_MENU_X_ORIGIN = 590.0f;
@@ -21,7 +24,6 @@ namespace CEGlobals
     int MENU_LAYOUT = 0;
     int QLIE_LAYOUT = 0;
     int HUD_LAYOUT = 0;
-    int ROWS = 4;
     int SPACING_FROM_SELECTED = 5;
     int SPACING_BETWEEN_EQUIPPED_X = 5;
     int SPACING_BETWEEN_EQUIPPED_Y = 5;
@@ -62,6 +64,8 @@ namespace CEGlobals
         }
         USE_ICONS = ini.GetBoolValue("General", "UseIcons", true);
         HIDE_3D = ini.GetBoolValue("General", "Hide 3D Model", true);
+        SCROLL_SPEED = ini.GetLongValue("General", "Effect(s) Scroll Speed", 100);
+        SCROLL_DELAY = ini.GetDoubleValue("General", "Effect(s) Scroll Delay", 2.5f);
         HIDE_SKY_UI_ITEM_CARD = ini.GetBoolValue("General", "Hide SkyUI Item Card", HIDE_SKY_UI_ITEM_CARD);
         ROWS = ini.GetLongValue("General", "Maximum Rows", 4);
         if (ROWS > 4)
@@ -194,6 +198,8 @@ namespace CEGlobals
         logger::debug("Hide 3D Models:          {}", HIDE_3D);
         logger::debug("Hide SkyUI Item Cards:   {}", HIDE_SKY_UI_ITEM_CARD);
         logger::debug("Maximum Rows:            {}", ROWS);
+        logger::debug("Effects(s) Scroll Speed: {}", SCROLL_SPEED);
+        logger::debug("Effects(s) Scroll Delay: {} seconds", SCROLL_DELAY);
         logger::debug("Spacing From Selected:   {}", SPACING_FROM_SELECTED);
         logger::debug("Spacing Between X:       {}", SPACING_BETWEEN_EQUIPPED_X);
         logger::debug("Spacing Between Y:       {}", SPACING_BETWEEN_EQUIPPED_Y);
@@ -249,6 +255,8 @@ namespace CEGlobals
         ini.SetBoolValue("General", "Hide 3D Model", HIDE_3D, "#If the 3d model in menus should be hidden.");
         ini.SetBoolValue("General", "Hide SkyUI Item Card", HIDE_SKY_UI_ITEM_CARD, "#If the SkyUI item card should be hidden.");
         ini.SetLongValue("General", "Maximum Rows", ROWS, rowsComment);
+        ini.SetLongValue("General", "Effect(s) Scroll Speed", SCROLL_SPEED, "#How fast the Effect(s) text box will scroll\n#Default 100");
+        ini.SetDoubleValue("General", "Effect(s) Scroll Delay", SCROLL_DELAY, "#Length of delay before/after scrolling effects, in seconds.\n#Default 2.5");
         ini.SetLongValue("General", "Spacing From Selected", SPACING_FROM_SELECTED, "#Spacing of equipped item cards from selected item cards, default 5");
         ini.SetLongValue("General", "Spacing Between Equipped X", SPACING_BETWEEN_EQUIPPED_X, "#Spacing between equipped item cards on the x-axis, default 5");
         ini.SetLongValue("General", "Spacing Between Equipped Y", SPACING_BETWEEN_EQUIPPED_Y, "#Spacing between equipped item cards on the y-axis, default 5");
@@ -343,7 +351,6 @@ namespace CEGlobals
     std::string lightArmor = "Light";
     std::string clothArmor = "Cloth";
     std::string armorRatingLabelText = "<font color=\"#D4D4D4\" size=\"12\">Armor Rating:</font>";
-    std::string unscaledText = "(Unscaled)";
     std::string goldLabelText = "<font color=\"#D4D4D4\" size=\"12\">Gold Value:</font>";
     std::string effectsLabelText = "E<font color=\"#D4D4D4\" size=\"12\">ffect(s):</font>";
     std::string equippedTo = "<font color=\"#D4D4D4\" size=\"12\">Equipped to</font>";
@@ -397,7 +404,6 @@ namespace CEGlobals
         lightArmor = ini.GetValue("Translations", "lightArmor", "Light");
         clothArmor = ini.GetValue("Translations", "clothArmor", "Cloth");
         armorRatingLabelText = ini.GetValue("Translations", "armorRatingLabelText", "<font color=\"#D4D4D4\" size=\"12\">Armor Rating:</font>");
-        unscaledText = ini.GetValue("Translations", "unscaledText", "(Unscaled)");
         goldLabelText = ini.GetValue("Translations", "goldLabelText", "<font color=\"#D4D4D4\" size=\"12\">Gold Value:</font>");
         effectsLabelText = ini.GetValue("Translations", "effectsLabelText", "<font color=\"#D4D4D4\" size=\"12\">Effect(s):</font>");
         equippedTo = ini.GetValue("Translations", "equippedTo", "<font color=\"#D4D4D4\" size=\"12\">Equipped to</font>");
@@ -469,9 +475,6 @@ namespace CEGlobals
 
         ini.SetValue("Translations", "armorRatingLabelText", armorRatingLabelText.c_str(),
                      "# The rating/defence of an armor, example -> \"Armor Rating:\" 20");
-
-        ini.SetValue("Translations", "unscaledText", unscaledText.c_str(),
-                     "# Indicates that the armor rating/weapon damage is not scaled with the actor's perks/levels.");
 
         ini.SetValue("Translations", "goldLabelText", goldLabelText.c_str(),
                      "# How much the item is worth in gold, example -> \"Gold Value:\" 1000");
