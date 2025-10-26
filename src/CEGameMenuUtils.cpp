@@ -362,7 +362,7 @@ namespace CEGameMenuUtils
         const char *selectedType = GetArmorTypeString(selectedArmor->GetArmorType());
         int32_t selectedValue = 0;
         std::string selectedEffectInfo = "";
-        int32_t equippedAccumulateValue = 0;
+        int32_t equippedAccumulatedValue = 0;
         float selectedRatingFloat = 0.0;
         int selectedRating = 0;
         std::string selectedRatingString;
@@ -392,13 +392,13 @@ namespace CEGameMenuUtils
                         const char *equippedType = GetArmorTypeString(equippedArmor->GetArmorType());
                         int32_t equippedValue = 0;
                         std::string equippedEffectInfo = "";
-                        equippedAccumulateValue += equippedValue;
                         float equippedRatingFloat = 0.0;
                         int equippedRating = 0;
                         std::string equippedRatingString;
                         GetInfo(formId, equippedName, equippedValue, equippedRatingFloat, equippedRatingString,
                                 true, false, equippedEffectInfo, equippedArmor);
                         equippedRating = static_cast<int>(equippedRatingFloat);
+                        equippedAccumulatedValue += equippedValue;
                         equippedAccumulatedRating += equippedRating;
                         RE::GFxValue equippedEntry = CEIconUtils::GetEquippedEntryObject(formId);
                         std::array<RE::GFxValue, CEGlobals::EQUIPPED_ARMOR_ITEM_ARRAY_SIZE>
@@ -413,13 +413,13 @@ namespace CEGameMenuUtils
         if (pushedFormIds.size() > 0 || (pushedFormIds.size() == 0 && !selectedIsEquipped))
         {
             equippedAccumulatedRating = selectedRating - equippedAccumulatedRating;
-            equippedAccumulateValue = selectedValue - equippedAccumulateValue;
+            equippedAccumulatedValue = selectedValue - equippedAccumulatedValue;
         }
         RE::GFxValue selectedEntryObject = CEIconUtils::GetSelectedEntryObject();
         std::array<RE::GFxValue, CEGlobals::SELECTED_ARMOR_ITEM_ARRAY_SIZE>
             selectedItemInfo = {selectedName, selectedSlots.c_str(), selectedType,
                                 selectedRatingString.c_str(), equippedAccumulatedRating,
-                                selectedValue, equippedAccumulateValue,
+                                selectedValue, equippedAccumulatedValue,
                                 selectedEffectInfo.c_str(), selectedEntryObject};
         CEMenu::CreateSelectedArmorItemCard(selectedItemInfo, ceMenu);
         int scale = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_SCALE : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_SCALE : CEGlobals::MENU_SCALE);
