@@ -25,17 +25,13 @@ namespace CEGameMenuUtils
         {
             auto pos1 = str.find('<', i);
             if (pos1 != std::string::npos)
-            {
                 str.erase(pos1, 1);
-            }
             else
                 break;
-            i = pos1 - 1;
+            i = pos1;
             auto pos2 = str.find('>', i);
             if (pos2 != std::string::npos)
-            {
                 str.erase(pos2, 1);
-            }
             else
                 break;
             i = pos2 - 1;
@@ -59,35 +55,12 @@ namespace CEGameMenuUtils
     }
 
     template <class T>
-    std::string GetEnchantmentString(T *item, std::string description, float magnitude)
-    {
-        ltrim(description);
-        auto index = description.find("<mag>");
-        if (index != std::string::npos)
-            return description.substr(0, index) + std::format("{:.1f}", magnitude) + description.substr(index + 5) + "\n";
-        else if (description == "")
-        {
-            RE::BSString str;
-            item->GetDescription(str, nullptr);
-            std::string string = static_cast<std::string>(str);
-            ltrim(string);
-            cleanPercentage(string);
-            if (string == "")
-                return "";
-            else
-                return cleanPercentage(string) + "\n";
-        }
-        else
-            return cleanPercentage(description) + "\n";
-    }
-
-    template <class T>
     std::string GetDescription(T *item)
     {
         std::string text = "";
         RE::BSString str;
         item->GetDescription(str, nullptr);
-        std::string description = static_cast<std::string>(str) + "\n";
+        std::string description = static_cast<std::string>(str);
         if (description.size() > 3)
             text = cleanPercentage(description);
         return text;
@@ -112,20 +85,52 @@ namespace CEGameMenuUtils
         return slotsString;
     }
 
-    template <class T>
-    void GetEnchantmentInfo(std::string &effectInfo, RE::EnchantmentItem *enchantment, T *itemWA)
+    void GetMagicItemDescription(void *, RE::TESForm *a1, RE::BSString *a2)
     {
-        auto effects = enchantment->effects;
-        for (auto effect : effects)
+        // Copied from https://github.com/ahzaab/moreHUDSE/blob/master/src/AHZTarget.cpp
+        using func_t = decltype(&GetMagicItemDescription);
+        REL::Relocation<func_t> func{RELOCATION_ID(51022, 51900)};
+        func(nullptr, a1, a2);
+    }
+
+    void AddNewlines(std::string &str)
+    {
+        for (size_t i = 0; i < str.length(); i++)
         {
-            float magnitude = effect->GetMagnitude();
-            std::string description = effect->baseEffect->magicItemDescription.c_str();
-            effectInfo += GetEnchantmentString(itemWA, description, magnitude);
+            auto pos1 = str.find(". ", i);
+            if (pos1 != std::string::npos)
+                str.replace(pos1, 2, ".\n");
+            else
+                break;
+            i = pos1;
         }
     }
 
-    template <class T>
-    void GetPlayerEnchantment(std::string &effectInfo, T *itemWA, RE::InventoryEntryData *entryData)
+    void RemoveHTML(std::string &str)
+    {
+        for (size_t i = 0; i < str.length(); i++)
+        {
+            auto pos1 = str.find('<', i);
+            auto pos2 = str.find('>', pos1);
+            if (pos1 != std::string::npos && pos2 != std::string::npos)
+                str.erase(pos1, pos2 - pos1 + 1);
+            else
+                break;
+            i = pos1;
+        }
+    }
+
+    void GetEnchantmentInfo(std::string &effectInfo, RE::EnchantmentItem *enchantment)
+    {
+        RE::BSString temp;
+        GetMagicItemDescription(nullptr, enchantment, &temp);
+        effectInfo.append(temp.c_str());
+        RemoveHTML(effectInfo);
+        if (CEGlobals::INSERT_NEWLINES)
+            AddNewlines(effectInfo);
+    }
+
+    void GetPlayerEnchantment(std::string &effectInfo, RE::InventoryEntryData *entryData)
     {
         RE::BSSimpleList<RE::ExtraDataList *> *lists = entryData->extraLists;
         if (!lists)
@@ -140,7 +145,7 @@ namespace CEGameMenuUtils
             auto ench = xEnch->enchantment;
             if (!ench)
                 continue;
-            GetEnchantmentInfo(effectInfo, ench, itemWA);
+            GetEnchantmentInfo(effectInfo, ench);
         }
     }
 
@@ -154,9 +159,9 @@ namespace CEGameMenuUtils
                 if (token == 'D')
                     effectInfo = GetDescription(itemWA);
                 if (token == 'E' && enchantment)
-                    GetEnchantmentInfo(effectInfo, enchantment, itemWA);
+                    GetEnchantmentInfo(effectInfo, enchantment);
                 if (token == 'P')
-                    GetPlayerEnchantment(effectInfo, itemWA, entryData);
+                    GetPlayerEnchantment(effectInfo, entryData);
             }
             else
                 break;
@@ -174,16 +179,8 @@ namespace CEGameMenuUtils
         auto damage = player->GetDamage(entryData);
         name = ltrim(entryData->GetDisplayName());
         value = entryData->GetValue();
-        if (armor)
-        {
-            stat = armorvalue;
-            statString = std::format("{:.0f}", armorvalue);
-        }
-        else
-        {
-            stat = damage;
-            statString = std::format("{:.2f}", damage);
-        }
+        stat = armor ? armorvalue : damage;
+        statString = armor ? std::format("{:.0f}", armorvalue) : std::format("{:.2f}", damage);
         RE::EnchantmentItem *enchantment = itemWA->formEnchanting;
         GetEffectsInfoFromEntryData(effectInfo, enchantment, itemWA, entryData);
     }
@@ -201,15 +198,9 @@ namespace CEGameMenuUtils
         if (extraList)
             entryData.AddExtraList(extraList);
         if (armor)
-        {
-            auto item = baseObject->As<RE::TESObjectARMO>();
-            GetInfoFromEntryData(&entryData, name, value, stat, statString, armor, effectInfo, item);
-        }
+            GetInfoFromEntryData(&entryData, name, value, stat, statString, armor, effectInfo, baseObject->As<RE::TESObjectARMO>());
         else
-        {
-            auto item = baseObject->As<RE::TESObjectWEAP>();
-            GetInfoFromEntryData(&entryData, name, value, stat, statString, armor, effectInfo, item);
-        }
+            GetInfoFromEntryData(&entryData, name, value, stat, statString, armor, effectInfo, baseObject->As<RE::TESObjectWEAP>());
         return true;
     }
 
@@ -221,8 +212,7 @@ namespace CEGameMenuUtils
         {
             if (item && item->GetFormID() == formId)
             {
-                RE::InventoryEntryData *entryData = data.second.get();
-                GetInfoFromEntryData(entryData, name, value, stat, statString, armor, effectInfo, itemWA);
+                GetInfoFromEntryData(data.second.get(), name, value, stat, statString, armor, effectInfo, itemWA);
                 return true;
             }
         }
@@ -236,62 +226,36 @@ namespace CEGameMenuUtils
         if (!selected && (!CEActorUtils::currentActor->IsPlayerRef() ||
                           (CEActorUtils::currentActor->IsPlayerRef() && ("LootMenu" == CEMenu::openedMenuName || "HUDMenu" == CEMenu::openedMenuName))))
         {
-            auto inv = CEActorUtils::currentActor->GetInventory();
+            RE::TESObjectREFR::InventoryItemMap inv = CEActorUtils::currentActor->GetInventory();
             return GetInfoFromInventory(formId, name, value, stat, statString, armor, effectInfo, item, inv);
         }
         else if (selected && CEMenu::openedMenuName == "HUDMenu")
-        {
             return GetInfoFromCrosshairRef(name, value, stat, statString, armor, effectInfo);
-        }
+
         RE::UI *uiSingleton = RE::UI::GetSingleton();
         RE::BSTArray<RE::ItemList::Item *> items;
         if (RE::InventoryMenu::MENU_NAME == CEMenu::openedMenuName)
-        {
-            RE::GPtr<RE::InventoryMenu> menu = uiSingleton->GetMenu<RE::InventoryMenu>();
-            if (!menu)
-                return false;
-            items = menu->GetRuntimeData().itemList->items;
-        }
+            items = uiSingleton->GetMenu<RE::InventoryMenu>()->GetRuntimeData().itemList->items;
         else if (RE::ContainerMenu::MENU_NAME == CEMenu::openedMenuName)
-        {
-            RE::GPtr<RE::ContainerMenu> menu = uiSingleton->GetMenu<RE::ContainerMenu>();
-            if (!menu)
-                return false;
-            items = menu->GetRuntimeData().itemList->items;
-        }
+            items = uiSingleton->GetMenu<RE::ContainerMenu>()->GetRuntimeData().itemList->items;
         else if (RE::BarterMenu::MENU_NAME == CEMenu::openedMenuName)
-        {
-            RE::GPtr<RE::BarterMenu> menu = uiSingleton->GetMenu<RE::BarterMenu>();
-            if (!menu)
-                return false;
-            items = menu->GetRuntimeData().itemList->items;
-        }
+            items = uiSingleton->GetMenu<RE::BarterMenu>()->GetRuntimeData().itemList->items;
         else if (RE::GiftMenu::MENU_NAME == CEMenu::openedMenuName)
-        {
-            RE::GPtr<RE::GiftMenu> menu = uiSingleton->GetMenu<RE::GiftMenu>();
-            if (!menu)
-                return false;
-            items = menu->GetRuntimeData().itemList->items;
-        }
+            items = uiSingleton->GetMenu<RE::GiftMenu>()->GetRuntimeData().itemList->items;
         else if ("LootMenu" == CEMenu::openedMenuName)
-        {
             return GetInfoFromInventory(formId, name, value, stat, statString, armor, effectInfo, item, containerInventoryQLIE);
-        }
         else
             return false;
-        RE::InventoryEntryData *entryData = nullptr;
+
         for (RE::ItemList::Item *itm : items)
         {
             if (itm && itm->data.objDesc->object->GetFormID() == formId)
             {
-                entryData = itm->data.objDesc;
-                break;
+                GetInfoFromEntryData(itm->data.objDesc, name, value, stat, statString, armor, effectInfo, item);
+                return true;
             }
         }
-        if (!entryData)
-            return false;
-        GetInfoFromEntryData(entryData, name, value, stat, statString, armor, effectInfo, item);
-        return true;
+        return false;
     }
 
     void GetSelectedAndEquippedArmorInfo(RE::FormID selectedFormId, RE::TESObjectARMO *selectedArmor)
@@ -758,9 +722,9 @@ namespace CEGameMenuUtils
     {
         if (auto form = RE::TESForm::LookupByID(formId))
         {
-            if (auto armor = form->As<RE::TESObjectARMO>())
+            if (form->IsArmor())
                 return true;
-            else if (auto weapon = form->As<RE::TESObjectWEAP>())
+            else if (form->IsWeapon())
                 return true;
         }
         return false;
