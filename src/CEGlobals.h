@@ -5,6 +5,7 @@ namespace CEGlobals
     extern int ROWS;
     extern int SCROLL_SPEED;
     extern double SCROLL_DELAY;
+    extern bool INSERT_NEWLINES;
     extern double INV_MENU_X_ORIGIN;
     extern double INV_MENU_Y_ORIGIN;
     extern double CONT_MENU_X_ORIGIN;

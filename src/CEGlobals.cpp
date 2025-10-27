@@ -3,6 +3,7 @@ namespace CEGlobals
     int ROWS = 4;
     int SCROLL_SPEED = 100;
     double SCROLL_DELAY = 2.5f;
+    bool INSERT_NEWLINES = false;
     double INV_MENU_X_ORIGIN = 590.0f;
     double INV_MENU_Y_ORIGIN = 250.0f;
     double CONT_MENU_X_ORIGIN = 590.0f;
@@ -66,6 +67,7 @@ namespace CEGlobals
         HIDE_3D = ini.GetBoolValue("General", "Hide 3D Model", true);
         SCROLL_SPEED = ini.GetLongValue("General", "Effect(s) Scroll Speed", 100);
         SCROLL_DELAY = ini.GetDoubleValue("General", "Effect(s) Scroll Delay", 2.5f);
+        INSERT_NEWLINES = ini.GetBoolValue("General", "Insert Newlines", false);
         HIDE_SKY_UI_ITEM_CARD = ini.GetBoolValue("General", "Hide SkyUI Item Card", HIDE_SKY_UI_ITEM_CARD);
         ROWS = ini.GetLongValue("General", "Maximum Rows", 4);
         if (ROWS > 4)
@@ -200,6 +202,7 @@ namespace CEGlobals
         logger::debug("Maximum Rows:            {}", ROWS);
         logger::debug("Effects(s) Scroll Speed: {}", SCROLL_SPEED);
         logger::debug("Effects(s) Scroll Delay: {} seconds", SCROLL_DELAY);
+        logger::debug("Insert Newlines:         {}", INSERT_NEWLINES);
         logger::debug("Spacing From Selected:   {}", SPACING_FROM_SELECTED);
         logger::debug("Spacing Between X:       {}", SPACING_BETWEEN_EQUIPPED_X);
         logger::debug("Spacing Between Y:       {}", SPACING_BETWEEN_EQUIPPED_Y);
@@ -257,6 +260,7 @@ namespace CEGlobals
         ini.SetLongValue("General", "Maximum Rows", ROWS, rowsComment);
         ini.SetLongValue("General", "Effect(s) Scroll Speed", SCROLL_SPEED, "#How fast the Effect(s) text box will scroll\n#Default 100");
         ini.SetDoubleValue("General", "Effect(s) Scroll Delay", SCROLL_DELAY, "#Length of delay before/after scrolling effects, in seconds.\n#Default 2.5");
+        ini.SetBoolValue("General", "Insert Newlines", INSERT_NEWLINES, "#Insert a newline between enchantment effects ('. ' -> '.\\n') in the Effect(s) section");
         ini.SetLongValue("General", "Spacing From Selected", SPACING_FROM_SELECTED, "#Spacing of equipped item cards from selected item cards, default 5");
         ini.SetLongValue("General", "Spacing Between Equipped X", SPACING_BETWEEN_EQUIPPED_X, "#Spacing between equipped item cards on the x-axis, default 5");
         ini.SetLongValue("General", "Spacing Between Equipped Y", SPACING_BETWEEN_EQUIPPED_Y, "#Spacing between equipped item cards on the y-axis, default 5");
