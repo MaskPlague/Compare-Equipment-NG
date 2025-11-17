@@ -25,7 +25,10 @@ namespace CEMenu
         std::string key = std::to_string(CEGlobals::COMPARE_KEY);
         if (CEGlobals::lastInputDevice == RE::INPUT_DEVICE::kGamepad)
         {
-            key = "273";
+            if (openedMenuName == "LootMenu")
+                key = std::to_string(CEGlobals::ConvertSKSEKeyToSkyrimKey(CEGlobals::CONTROLLER_KEY));
+            else
+                key = "273";
         }
         temp = "CompareEquipmentMenu_" + CEGlobals::EXPECTED_SWF_VERSION + "_" + key + "_" + stringMenuName;
         MENU_NAME = temp.c_str();

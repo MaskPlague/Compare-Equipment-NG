@@ -29,6 +29,7 @@ namespace CEGlobals
     int SPACING_BETWEEN_EQUIPPED_X = 5;
     int SPACING_BETWEEN_EQUIPPED_Y = 5;
     uint32_t COMPARE_KEY = 0;
+    uint32_t CONTROLLER_KEY = 0;
     float HOLD_THRESHOLD = 500 * 0.001;
     float TRIPLE_HIT_WINDOW = 500 * 0.001;
     float SETTING_HOLD_THRESHOLD = 3000 * 0.001;
@@ -52,6 +53,93 @@ namespace CEGlobals
     bool MENU_PERSISTENT_DEFAULT_DISPLAY = true;
 
     RE::INPUT_DEVICE lastInputDevice = RE::INPUT_DEVICE::kNone;
+
+    int ConvertSkyrimKeyToSKSEKey(int key)
+    {
+        int offset = key - 266;
+        switch (offset)
+        {
+        case 0:
+            return 1; // DPAD_UP
+        case 1:
+            return 2; // DPAD_DOWN
+        case 2:
+            return 4; // DPAD_LEFT
+        case 3:
+            return 8; // DPAD_RIGHT
+        case 4:
+            return 16; // START
+        case 5:
+            return 32; // BACK
+        case 6:
+            return 64; // LEFT_THUMB (L3)
+        case 7:
+            return 128; // RIGHT_THUMB (R3)
+        case 8:
+            return 256; // LEFT_SHOULDER (LB)
+        case 9:
+            return 512; // RIGHT_SHOULDER (RB)
+        case 10:
+            return 4096; // A
+        case 11:
+            return 8192; // B
+        case 12:
+            return 16384; // X
+        case 13:
+            return 32768; // Y
+        case 14:
+            return 9; // LT
+        case 15:
+            return 10; // RT
+
+        default:
+            return 4;
+        }
+    }
+
+    int ConvertSKSEKeyToSkyrimKey(int flag)
+    {
+        constexpr int GAMEPAD_BASE = 266;
+
+        switch (flag)
+        {
+        case 1:
+            return GAMEPAD_BASE + 0; // DPAD_UP
+        case 2:
+            return GAMEPAD_BASE + 1; // DPAD_DOWN
+        case 4:
+            return GAMEPAD_BASE + 2; // DPAD_LEFT
+        case 8:
+            return GAMEPAD_BASE + 3; // DPAD_RIGHT
+        case 16:
+            return GAMEPAD_BASE + 4; // START
+        case 32:
+            return GAMEPAD_BASE + 5; // BACK
+        case 64:
+            return GAMEPAD_BASE + 6; // LEFT_THUMB (L3)
+        case 128:
+            return GAMEPAD_BASE + 7; // RIGHT_THUMB (R3)
+        case 256:
+            return GAMEPAD_BASE + 8; // LEFT_SHOULDER (LB)
+        case 512:
+            return GAMEPAD_BASE + 9; // RIGHT_SHOULDER (RB)
+        case 4096:
+            return GAMEPAD_BASE + 10; // A
+        case 8192:
+            return GAMEPAD_BASE + 11; // B
+        case 16384:
+            return GAMEPAD_BASE + 12; // X
+        case 32768:
+            return GAMEPAD_BASE + 13; // Y
+        case 9:
+            return GAMEPAD_BASE + 14; // LT
+        case 10:
+            return GAMEPAD_BASE + 15; // RT
+
+        default:
+            return 268;
+        }
+    }
 
     void LoadConfig()
     {
@@ -139,6 +227,9 @@ namespace CEGlobals
         COMPARE_KEY = ini.GetLongValue("Controls", "Compare Key", 47);
         HOLD_THRESHOLD = static_cast<float>(ini.GetLongValue("Controls", "Hold Duration", 500) * 0.001);
         TRIPLE_HIT_WINDOW = static_cast<float>(ini.GetLongValue("Controls", "Triple Hit Window", 400) * 0.001);
+
+        CONTROLLER_KEY = ini.GetLongValue("Controls", "Controller Compare Key", 268);
+        CONTROLLER_KEY = ConvertSkyrimKeyToSKSEKey(CONTROLLER_KEY);
 
         SETTING_HOLD_THRESHOLD = static_cast<float>(ini.GetLongValue("Controls", "Setting Hold Duration", 3000) * 0.001);
         int angle = ini.GetLongValue("Controls", "Thumbstick Angle", 0);
@@ -244,6 +335,7 @@ namespace CEGlobals
         logger::debug("Hold Duration:           {} milliseconds", HOLD_THRESHOLD * 1000);
         logger::debug("Triple Hit Window:       {} milliseconds", TRIPLE_HIT_WINDOW * 1000);
         logger::debug("Setting Hold Duration:   {} milliseconds", SETTING_HOLD_THRESHOLD * 1000);
+        logger::debug("Controller Compare Key:  {}", ConvertSKSEKeyToSkyrimKey(CONTROLLER_KEY));
         logger::debug("Thumbstick Angle:        {}", angle);
         logger::debug("Thumbstick Threshold:    {}", thumbstickThreshold);
         logger::debug("-------------- Internal ------------------");
@@ -309,7 +401,7 @@ namespace CEGlobals
 
         //------------------------------ Controls------------------------------------------------------------------------
         const char *compareKeyComment = ("#Key that will display the comparison item cards, triple tap to cycle followers, hold to select player."
-                                         "\n#Does not work for controller users, see ThumbstickAngle and ThumbstickThreshold"
+                                         "\n#For controller see Controller Compare Key, ThumbstickAngle and ThumbstickThreshold"
                                          "\n#Default 47 (V key), Key Codes can be found here : https://ck.uesp.net/wiki/Input_Script");
         ini.SetLongValue("Controls", "Compare Key", COMPARE_KEY, compareKeyComment);
         const char *holdPlayerComment = ("#Duration, in milliseconds, to hold the CompareKey to set the selected actor to the player"
@@ -323,6 +415,10 @@ namespace CEGlobals
                                           "\n#Does not change active logging level."
                                           "\n#Default 3000(3 seconds)");
         ini.SetLongValue("Controls", "Setting Hold Duration", static_cast<long>(SETTING_HOLD_THRESHOLD * 1000), settingHoldComment);
+        const char *controllerCompareKeyComment = ("#Controller key that will display the comparison item cards. Only works while looking at a valid item in world or in QuickLoot."
+                                                   "\n#In menus the thumbstick angle and threshold are used instead. Does not block input from activating other actions."
+                                                   "\n#Default 268 (Left D-pad), Key Codes can be found here at the end: https://ck.uesp.net/wiki/Input_Script");
+        ini.SetLongValue("Controls", "Controller Compare Key", ConvertSKSEKeyToSkyrimKey(CONTROLLER_KEY), controllerCompareKeyComment);
         const char *angleComment = ("#Angle to flick right thumbstick to activate 0 = up, 90 = right, 180/-180 = down, -90 = left."
                                     "\n#You can set whatever angle between -180 to 180"
                                     "\n#Default 0 -> up ");

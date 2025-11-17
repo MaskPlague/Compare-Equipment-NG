@@ -120,7 +120,7 @@ namespace CEGameEvents
         if (auto e = *a_event; e)
         {
             auto eventType = e->GetEventType();
-            if (eventType == RE::INPUT_EVENT_TYPE::kThumbstick && CEMenu::openedMenuName != "HUDMenu")
+            if (eventType == RE::INPUT_EVENT_TYPE::kThumbstick && CEMenu::openedMenuName != "HUDMenu" && CEMenu::openedMenuName != "LootMenu")
             {
                 if (auto id = e->AsIDEvent(); id)
                 {
@@ -144,7 +144,17 @@ namespace CEGameEvents
             {
                 if (auto btn = e->AsButtonEvent(); btn)
                 {
-                    if (btn->GetIDCode() == CEGlobals::COMPARE_KEY)
+                    auto device = e->GetDevice();
+
+                    if (device != RE::INPUT_DEVICE::kGamepad && btn->GetIDCode() == CEGlobals::COMPARE_KEY)
+                    {
+                        ButtonProcessor(btn->IsUp(), btn->HeldDuration());
+                        return RE::BSEventNotifyControl::kContinue;
+                    }
+                    else if (device == RE::INPUT_DEVICE::kGamepad &&
+                             ((CEGlobals::HUD_ALLOWED && CEMenu::openedMenuName == "HUDMenu") ||
+                              (CEGlobals::QLIE_ALLOWED && CEMenu::openedMenuName == "LootMenu")) &&
+                             btn->GetIDCode() == CEGlobals::CONTROLLER_KEY)
                     {
                         ButtonProcessor(btn->IsUp(), btn->HeldDuration());
                         return RE::BSEventNotifyControl::kContinue;

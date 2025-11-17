@@ -31,6 +31,7 @@ namespace CEGlobals
     extern int SPACING_BETWEEN_EQUIPPED_X;
     extern int SPACING_BETWEEN_EQUIPPED_Y;
     extern uint32_t COMPARE_KEY;
+    extern uint32_t CONTROLLER_KEY;
     extern float HOLD_THRESHOLD;
     extern float TRIPLE_HIT_WINDOW;
     extern float SETTING_HOLD_THRESHOLD;
@@ -61,6 +62,7 @@ namespace CEGlobals
     const int SELECTED_WEAPON_ITEM_ARRAY_SIZE = 15;
     const std::string EXPECTED_SWF_VERSION = "5";
 
+    int ConvertSKSEKeyToSkyrimKey(int key);
     void LoadConfig();
 
     extern std::string QLIE_HINT_TEXT;
