@@ -165,7 +165,11 @@ namespace CEMenu
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return false;
         RE::GFxValue result;
-        ceMenu.Invoke("getVisible", &result);
+        // ceMenu.Invoke("getVisible", &result);
+        RE::GFxValue __this;
+        ceMenu.GetMember("__this", &__this);
+        if (__this.IsObject())
+            __this.GetMember("_visible", &result);
         if (result.IsBool())
             return result.GetBool();
         return false;

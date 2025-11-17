@@ -622,12 +622,17 @@ namespace CEGameMenuUtils
         {
             if (auto selectedArmor = selectedForm->As<RE::TESObjectARMO>())
             {
-                GetSelectedAndEquippedArmorInfo(selectedFormId, selectedArmor);
+                SKSE::GetTaskInterface()
+                    ->AddUITask([selectedFormId, selectedArmor]()
+                                { GetSelectedAndEquippedArmorInfo(selectedFormId, selectedArmor); });
                 return true;
             }
             else if (auto selectedWeapon = selectedForm->As<RE::TESObjectWEAP>())
             {
-                GetSelectedAndEquippedWeaponInfo(selectedFormId, selectedWeapon);
+                SKSE::GetTaskInterface()
+                    ->AddUITask([selectedFormId, selectedWeapon]()
+                                { GetSelectedAndEquippedWeaponInfo(selectedFormId, selectedWeapon); });
+
                 return true;
             }
         }
