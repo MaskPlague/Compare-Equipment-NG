@@ -386,10 +386,7 @@ namespace CEGameMenuUtils
                                 selectedValue, equippedAccumulatedValue,
                                 selectedEffectInfo.c_str(), selectedEntryObject};
         CEMenu::CreateSelectedArmorItemCard(selectedItemInfo, ceMenu);
-        int scale = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_SCALE : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_SCALE : CEGlobals::MENU_SCALE);
-        int alpha = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_BACKGROUND_ALPHA : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_BACKGROUND_ALPHA : CEGlobals::MENU_BACKGROUND_ALPHA);
-        std::array<RE::GFxValue, CEGlobals::EQUIPPED_ARMOR_ITEM_ARRAY_SIZE>
-            displayCommand = {"DISPLAY", alpha, scale, CEGlobals::ROWS, "", ""};
+        std::array<RE::GFxValue, CEGlobals::EQUIPPED_ARMOR_ITEM_ARRAY_SIZE> displayCommand = {"DISPLAY", "", "", "", "", "", "", ""};
         CEMenu::CreateArmorComparisonItemCard(displayCommand, ceMenu);
         CEMenu::SetMenuOffsets(ceMenu);
         if (CEGlobals::HIDE_SKY_UI_ITEM_CARD)
@@ -606,10 +603,7 @@ namespace CEGameMenuUtils
             GetFullWeaponInformation(selectedFormId, selectedWeapon, ceMenu, "selected", aWeaponIsEquipped,
                                      valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff);
         }
-        int scale = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_SCALE : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_SCALE : CEGlobals::MENU_SCALE);
-        int alpha = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_BACKGROUND_ALPHA : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_BACKGROUND_ALPHA : CEGlobals::MENU_BACKGROUND_ALPHA);
-        std::array<RE::GFxValue, CEGlobals::EQUIPPED_WEAPON_ITEM_ARRAY_SIZE>
-            displayCommand = {"DISPLAY", alpha, scale, "", "", "", "", "", "", ""};
+        std::array<RE::GFxValue, CEGlobals::EQUIPPED_WEAPON_ITEM_ARRAY_SIZE> displayCommand = {"DISPLAY", "", "", "", "", "", "", "", "", ""};
         CEMenu::CreateWeaponComparisonItemCard(displayCommand, ceMenu);
         CEMenu::SetMenuOffsets(ceMenu);
         if (CEGlobals::HIDE_SKY_UI_ITEM_CARD)

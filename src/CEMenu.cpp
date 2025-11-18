@@ -379,9 +379,12 @@ namespace CEMenu
         Menu_mc.SetMember("ce_SPACING_BETWEEN_EQUIPPED_Y", CEGlobals::SPACING_BETWEEN_EQUIPPED_Y);
         Menu_mc.SetMember("ce_SCROLL_SPEED", CEGlobals::SCROLL_SPEED);
         Menu_mc.SetMember("ce_SCROLL_DELAY", CEGlobals::SCROLL_DELAY);
-        int layout = CEMenu::openedMenuName == "LootMenu"  ? CEGlobals::QLIE_LAYOUT
-                                                            : CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_LAYOUT
-                                                                                                    : CEGlobals::MENU_LAYOUT;
+        Menu_mc.SetMember("ce_maxRows", CEGlobals::ROWS);
+        int scale = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_SCALE : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_SCALE : CEGlobals::MENU_SCALE);
+        Menu_mc.SetMember("ce_scale", scale);
+        int alpha = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_BACKGROUND_ALPHA : (CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_BACKGROUND_ALPHA : CEGlobals::MENU_BACKGROUND_ALPHA);
+        Menu_mc.SetMember("ce_alpha", alpha);
+        int layout = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_LAYOUT : CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_LAYOUT : CEGlobals::MENU_LAYOUT;
         Menu_mc.SetMember("ce_layout", layout);
 
         RE::GFxValue ceMenu = GetCEMenu(Menu_mc);
