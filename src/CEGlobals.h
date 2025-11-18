@@ -41,6 +41,8 @@ namespace CEGlobals
     extern std::string effectCheckOrder;
     extern int LOG_LEVEL;
 
+    extern bool CRASH_PREVENTION;
+
     extern bool QLIE_ALLOWED;
     extern bool HUD_ALLOWED;
     extern bool HUD_TOGGLEMODE;

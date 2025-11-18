@@ -39,6 +39,8 @@ namespace CEGlobals
     std::string effectCheckOrder = "DEP";
     int LOG_LEVEL = 2;
 
+    bool CRASH_PREVENTION = true;
+
     bool QLIE_ALLOWED = true;
     bool HUD_ALLOWED = true;
     bool HUD_TOGGLEMODE = true;
@@ -222,6 +224,7 @@ namespace CEGlobals
         QLIE_PERSISTENT_DISPLAY = ini.GetBoolValue("QuickLootIE", "Persistent Display", false);
         QLIE_PERSISTENT_TOGGLE = ini.GetBoolValue("QuickLootIE", "Persistent Toggle", false);
         QLIE_PERSISTENT_DEFAULT_DISPLAY = ini.GetBoolValue("QuickLootIE", "Persistent Default Display", true);
+
         //-------------------------------- Controls ---------------------------------------------------------------
 
         COMPARE_KEY = ini.GetLongValue("Controls", "Compare Key", 47);
@@ -282,6 +285,8 @@ namespace CEGlobals
             effectCheckOrder = "DEP";
         }
 
+        CRASH_PREVENTION = ini.GetBoolValue("Internal", "Crash Prevention", true);
+
         LOG_LEVEL = ini.GetLongValue("Debug", "Logging Level", 2);
 
         logger::debug("Version                  {}", SKSE::PluginDeclaration::GetSingleton()->GetVersion());
@@ -340,6 +345,7 @@ namespace CEGlobals
         logger::debug("Thumbstick Threshold:    {}", thumbstickThreshold);
         logger::debug("-------------- Internal ------------------");
         logger::debug("Effects Check Order:     {}", effectCheckOrderNum);
+        logger::debug("Crash Prevention:        {}", CRASH_PREVENTION);
         logger::debug("--------------- Debug --------------------");
         logger::debug("Logging Level:           {}", LOG_LEVEL);
 
@@ -429,7 +435,11 @@ namespace CEGlobals
         const char *effectCheckOrderComment = ("#Order in which to check for effects strings, once a valid string is found it does not check for the others."
                                                "\n#1: Item Description, 2: ESP defined enchantment's MGEF description, 3: Player enchanted enchantment's MGEF description"
                                                "\n#Default is 123, must contain a 1, 2, and 3 in any order.");
-        ini.SetLongValue("Internals", "Effects Check Order", effectCheckOrderNum, effectCheckOrderComment);
+        //------------------------------ Internal ------------------------------------------------------------------------
+        ini.SetLongValue("Internal", "Effects Check Order", effectCheckOrderNum, effectCheckOrderComment);
+        ini.SetBoolValue("Internal", "Crash Prevention", CRASH_PREVENTION, "#Adds extra crash prevention measures."
+                                                                           "\n#This can slightly slow down display speeds and is only noticible when persistent display is enabled."
+                                                                           "\n#Only disable this if you are using persistent display and you dislike the item cards flashing.");
 
         ini.SetLongValue("Debug", "Logging Level", LOG_LEVEL, "#0: Errors, 1: Warnings, 2: Info(default), 3: Debug, 4: Trace");
 

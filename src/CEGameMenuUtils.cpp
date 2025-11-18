@@ -616,17 +616,42 @@ namespace CEGameMenuUtils
         {
             if (auto selectedArmor = selectedForm->As<RE::TESObjectARMO>())
             {
-                SKSE::GetTaskInterface()
-                    ->AddUITask([selectedFormId, selectedArmor]()
-                                { GetSelectedAndEquippedArmorInfo(selectedFormId, selectedArmor); });
+                if (CEGlobals::CRASH_PREVENTION)
+                {
+                    SKSE::GetTaskInterface()
+                        ->AddUITask([selectedFormId, selectedArmor]()
+                                    { GetSelectedAndEquippedArmorInfo(selectedFormId, selectedArmor); });
+                    if (CEGlobals::HIDE_SKY_UI_ITEM_CARD &&
+                        ((CEMenu::openedMenuName == "LootMenu" && CEGlobals::QLIE_PERSISTENT_DISPLAY && CEMenu::qliePersistentToggledOn) ||
+                         (CEMenu::openedMenuName != "HUDMenu" && CEMenu::openedMenuName != "LootMenu" && CEGlobals::MENU_PERSISTENT_DISPLAY && CEMenu::menuPersistentToggledOn)))
+                    {
+                        RE::GFxValue ceMenu = CEMenu::GetCEMenu(CEMenu::GetMenu_mc());
+                        CEMenu::HideSkyUiItemCard(ceMenu);
+                    }
+                }
+                else
+                    GetSelectedAndEquippedArmorInfo(selectedFormId, selectedArmor);
                 return true;
             }
             else if (auto selectedWeapon = selectedForm->As<RE::TESObjectWEAP>())
             {
-                SKSE::GetTaskInterface()
-                    ->AddUITask([selectedFormId, selectedWeapon]()
-                                { GetSelectedAndEquippedWeaponInfo(selectedFormId, selectedWeapon); });
-
+                if (CEGlobals::CRASH_PREVENTION)
+                {
+                    SKSE::GetTaskInterface()
+                        ->AddUITask([selectedFormId, selectedWeapon]()
+                                    { GetSelectedAndEquippedWeaponInfo(selectedFormId, selectedWeapon); });
+                    if (CEGlobals::HIDE_SKY_UI_ITEM_CARD &&
+                        ((CEMenu::openedMenuName == "LootMenu" && CEGlobals::QLIE_PERSISTENT_DISPLAY &&
+                          CEMenu::qliePersistentToggledOn) ||
+                         (CEMenu::openedMenuName != "HUDMenu" && CEMenu::openedMenuName != "LootMenu" && CEGlobals::MENU_PERSISTENT_DISPLAY &&
+                          CEMenu::menuPersistentToggledOn)))
+                    {
+                        RE::GFxValue ceMenu = CEMenu::GetCEMenu(CEMenu::GetMenu_mc());
+                        CEMenu::HideSkyUiItemCard(ceMenu);
+                    }
+                }
+                else
+                    GetSelectedAndEquippedWeaponInfo(selectedFormId, selectedWeapon);
                 return true;
             }
         }
