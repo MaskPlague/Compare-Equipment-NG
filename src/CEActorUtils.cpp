@@ -1,7 +1,7 @@
 namespace CEActorUtils
 {
     RE::Actor *currentActor;
-    int index = 0;
+    size_t index = 0;
     std::vector<RE::Actor *> followers;
 
     void GetActiveFollowers(void)

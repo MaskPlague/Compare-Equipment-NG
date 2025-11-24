@@ -3,7 +3,7 @@
 namespace CEActorUtils
 {
     extern RE::Actor *currentActor;
-    extern int index;
+    extern size_t index;
     extern std::vector<RE::Actor *> followers;
 
     void GetActiveFollowers();

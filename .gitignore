@@ -1,20 +1,14 @@
-CMakeLists.txt.user
-CMakeCache.txt
-CMakeFiles
-CMakeScripts
-Testing
-Makefile
-cmake_install.cmake
-install_manifest.txt
+# dot folders
+.cache/
+.idea/
+.vs/
+.vscode/
+.xmake/
+
+# folders
+build/
+vs*/
+
+# files
+*.zip
 compile_commands.json
-CTestTestfile.cmake
-_deps
-build
-.vs
-.vscode
-src/main backup.cpp
-release/CompareEquipmentNG/CompareEquipmentNG.zip
-release/CompareEquipmentNG/SKSE/Plugins/CompareEquipmentNG.dll
-release/CompareEquipmentNG/SKSE/Plugins/CompareEquipmentNG.pdb
-release/CompareEquipmentNG/Source.zip
-release/CompareEquipmentNG/Fla.zip

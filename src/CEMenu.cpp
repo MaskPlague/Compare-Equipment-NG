@@ -65,7 +65,7 @@ namespace CEMenu
             if (CEGameMenuUtils::GetItem() && CEGlobals::HIDE_3D)
             {
                 auto manager = RE::Inventory3DManager::GetSingleton();
-                manager->Clear3D();
+                manager->UnloadInventoryItem();
             }
         }
         else if (openedMenuName == "LootMenu")

@@ -1,8 +1,0 @@
-{
-    "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-    "name": "compare-equipment-ng",
-    "version-string": "0.3.10",
-    "dependencies": [
-        "commonlibsse-ng"
-    ]
-}

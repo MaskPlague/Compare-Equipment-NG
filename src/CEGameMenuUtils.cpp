@@ -261,7 +261,7 @@ namespace CEGameMenuUtils
     void GetSelectedAndEquippedArmorInfo(RE::FormID selectedFormId, RE::TESObjectARMO *selectedArmor)
     {
         RE::BIPED_MODEL biped = selectedArmor->bipedModelData;
-        SKSE::stl::enumeration<RE::BIPED_MODEL::BipedObjectSlot, uint32_t> slots = biped.bipedObjectSlots;
+        REX::EnumSet<RE::BIPED_MODEL::BipedObjectSlot, uint32_t> slots = biped.bipedObjectSlots;
         auto actor = CEActorUtils::currentActor;
         if (!CEActorUtils::IsActorValid(actor))
         {
@@ -275,7 +275,7 @@ namespace CEGameMenuUtils
         {
             auto zoom = manager->GetRuntimeData().zoomProgress;
             if (zoom == 0.0f)
-                manager->Clear3D();
+                manager->UnloadInventoryItem();
         }
 
         RE::GFxValue ceMenu = CEMenu::GetCEMenu(CEMenu::GetMenu_mc());
@@ -469,7 +469,8 @@ namespace CEGameMenuUtils
         CEMenu::CreateWeaponComparisonItemCard(itemInfo, ceMenu);
     }
 
-    void GetSelectedAndEquippedWeaponInfo(RE::FormID selectedFormId, RE::TESObjectWEAP *selectedWeapon)
+    void GetSelectedAndEquippedWeaponInfo(RE::FormID selectedFormId,
+                                          RE::TESObjectWEAP *selectedWeapon)
     {
         auto actor = CEActorUtils::currentActor;
         if (!CEActorUtils::IsActorValid(actor))
@@ -485,7 +486,7 @@ namespace CEGameMenuUtils
         {
             auto zoom = manager->GetRuntimeData().zoomProgress;
             if (zoom == 0.0f)
-                manager->Clear3D();
+                manager->UnloadInventoryItem();
         }
         RE::GFxValue ceMenu = CEMenu::GetCEMenu(CEMenu::GetMenu_mc());
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
@@ -566,7 +567,6 @@ namespace CEGameMenuUtils
                 GetFullWeaponInformation(selectedFormId, selectedWeapon, ceMenu, "selected", aWeaponIsEquipped,
                                          valueDiff, speedDiff, reachDiff, staggerDiff, critDiff, damageDiff);
         }
-        float reachMax = 0.0f;
         if (rightIsWeapon && !selectedIsRight && !selectedIsLeft && !both)
         {
             aWeaponIsEquipped = true;
@@ -582,7 +582,6 @@ namespace CEGameMenuUtils
             }
             else
             {
-                reachMax = reachDiff;
                 reachDiff = 0.0f;
             }
             GetFullWeaponInformation(right->GetFormID(), right->As<RE::TESObjectWEAP>(), ceMenu, "right", both,
@@ -658,12 +657,16 @@ namespace CEGameMenuUtils
         return false;
     }
 
-    void DiffCrosshairTargetCheck(RE::CrosshairPickData *crosshair, RE::ObjectRefHandle target)
+    void DiffCrosshairTargetCheck(RE::CrosshairPickData *crosshair,
+                                  RE::ObjectRefHandle *target)
     {
-        SKSE::GetTaskInterface()->AddTask([crosshair, target]()
-                                          { std::thread([crosshair, target]()
+        RE::TESObjectREFRPtr targetPtr = target->get();
+        SKSE::GetTaskInterface()->AddTask([crosshair, targetPtr]()
+                                          { std::thread([crosshair, targetPtr]()
                                                         {
-                                                        while (crosshair && target && crosshair->target && (crosshair->target.get() == target.get()))
+                                                        while (crosshair && targetPtr &&
+                                                                crosshair->target->get() == targetPtr &&
+                                                                crosshair->target->get() != nullptr) 
                                                         {
                                                             std::this_thread::sleep_for(std::chrono::milliseconds(250));
                                                         }
@@ -696,12 +699,12 @@ namespace CEGameMenuUtils
                 CEMenu::HideMenu(true);
                 return false;
             }
-            auto crosshair = RE::CrosshairPickData::GetSingleton();
-            auto target = crosshair->target;
-            RE::TESObjectREFRPtr objectRef = target ? target.get() : nullptr;
+            RE::CrosshairPickData *crosshair = RE::CrosshairPickData::GetSingleton();
+            RE::ObjectRefHandle *target = crosshair->target;
+            RE::TESObjectREFRPtr objectRef = target ? target->get() : nullptr;
             crosshairTargetObjectRef = objectRef;
-            auto baseObject = objectRef ? objectRef->GetBaseObject() : nullptr;
-            auto fid = baseObject ? baseObject->GetFormID() : NULL;
+            RE::TESBoundObject *baseObject = objectRef ? objectRef->GetBaseObject() : nullptr;
+            unsigned int fid = baseObject ? baseObject->GetFormID() : NULL;
             currentFormID = fid;
             GetArmorOrWeapon(currentFormID);
             DiffCrosshairTargetCheck(crosshair, target);

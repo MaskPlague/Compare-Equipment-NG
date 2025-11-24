@@ -113,7 +113,7 @@ namespace CEGameEvents
         {
             auto pickData = RE::CrosshairPickData::GetSingleton();
             auto target = pickData->target;
-            if (!pickData || !target || !target.get())
+            if (!pickData || !target || !target->get())
                 return RE::BSEventNotifyControl::kContinue;
         }
 
@@ -205,7 +205,7 @@ namespace CEGameEvents
         }
 
         auto menuName = a_event->menuName;
-        logger::trace("Menu name: {}", menuName);
+        logger::trace("Menu name: {}", menuName.c_str());
         if ((menuName == RE::InventoryMenu::MENU_NAME ||
              menuName == RE::ContainerMenu::MENU_NAME ||
              menuName == RE::BarterMenu::MENU_NAME ||
@@ -214,14 +214,14 @@ namespace CEGameEvents
         {
             if (a_event->opening)
             {
-                logger::trace("{} opened", menuName);
+                logger::trace("{} opened", menuName.c_str());
                 CEMenu::openedMenus.insert(menuName.c_str());
                 CEMenu::CreateMenu(menuName);
                 openedMenuTime = std::chrono::steady_clock::now();
             }
             else
             {
-                logger::trace("{} closed", menuName);
+                logger::trace("{} closed", menuName.c_str());
                 CEMenu::openedMenus.erase(menuName.c_str());
                 CEMenu::DestroyMenu(menuName.c_str());
                 if (CEGlobals::HUD_ALLOWED && CEMenu::openedMenus.empty())
