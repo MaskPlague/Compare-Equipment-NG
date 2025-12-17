@@ -279,22 +279,47 @@ namespace CEGameEvents
 
     void QuickLootOpenHandler(QuickLoot::Events::OpenLootMenuEvent *event)
     {
-        if (!CEGlobals::QLIE_ALLOWED)
+        if (!CEGlobals::QLIE_ALLOWED || !event || !event->container)
             return;
         logger::debug("QuickLoot Open Event triggered");
-        CEGameMenuUtils::containerInventoryQLIE = event->container->GetInventory();
+        try
+        {
+            CEGameMenuUtils::containerInventoryQLIE = event->container->GetInventory();
+        }
+        catch (...)
+        {
+            logger::debug("QLIE OpenEventHandler: Failed to get container inventory.");
+            return;
+        }
         std::vector<std::pair<std::string, RE::FormID>> objects;
         for (auto &[item, data] : CEGameMenuUtils::containerInventoryQLIE)
         {
-            if (item)
+            if (item && data.second)
             {
-                RE::InventoryEntryData *entryData = data.second.get();
+                RE ::InventoryEntryData *entryData;
+                try
+                {
+                    entryData = data.second.get();
+                }
+                catch (...)
+                {
+                    logger::debug("QLIE OpenEventHandler: Failed to get data.second.get()");
+                    continue;
+                }
                 if (entryData)
                 {
-                    std::string name = entryData->GetDisplayName();
-                    RE::FormID fid = item->GetFormID();
-                    if (!name.empty() && std::strcmp(name.c_str(), "<Missing Name>") != 0 && fid)
-                        objects.push_back(std::make_pair(name, fid));
+                    try
+                    {
+                        std::string name = entryData->GetDisplayName();
+                        RE::FormID fid = item->GetFormID();
+                        if (!name.empty() && std::strcmp(name.c_str(), "<Missing Name>") != 0 && fid)
+                            objects.push_back(std::make_pair(name, fid));
+                    }
+                    catch (...)
+                    {
+                        logger::debug("QLIE OpenEventHandler: Failed to get DisplayName or FID");
+                        continue;
+                    }
                 }
             }
         }

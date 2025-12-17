@@ -86,9 +86,9 @@ namespace CompareEquipmentNG
         }
     }
 
-    extern "C" DLLEXPORT bool SKSEPlugin_Load(const SKSE::LoadInterface *skse)
+    extern "C" DLLEXPORT bool SKSEPlugin_Load(const SKSE::LoadInterface *a_skse)
     {
-        SKSE::Init(skse);
+        SKSE::Init(a_skse);
         SetupLog();
         CEGlobals::LoadConfig();
         SetLogLevel();

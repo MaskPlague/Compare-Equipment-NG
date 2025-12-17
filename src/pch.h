@@ -1,7 +1,7 @@
 #pragma once
 
 #include <RE/Skyrim.h>
-#include "SKSE/SKSE.h"
+#include <SKSE/SKSE.h>
 #include <windows.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include "../include/QuickLootAPI.h"

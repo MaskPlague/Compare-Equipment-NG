@@ -212,6 +212,16 @@ namespace CEGameMenuUtils
         {
             if (item && item->GetFormID() == formId)
             {
+                RE::InventoryEntryData *entryData;
+                try
+                {
+                    entryData = data.second.get();
+                }
+                catch (...)
+                {
+                    logger::debug("GIFI: Failed to get data.second.get()");
+                    continue;
+                }
                 GetInfoFromEntryData(data.second.get(), name, value, stat, statString, armor, effectInfo, itemWA);
                 return true;
             }
