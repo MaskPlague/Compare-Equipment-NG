@@ -1,3 +1,20 @@
+
+// Headers included to make VS Code Intellisense happy.
+#include <RE/Skyrim.h>
+#include <SKSE/SKSE.h>
+#include <windows.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include "../include/QuickLootAPI.h"
+#include "SimpleIni.h"
+#include "CEActorUtils.h"
+#include "CEGameEvents.h"
+#include "CEGameMenuUtils.h"
+#include "CEGlobals.h"
+#include "CEIconUtils.h"
+#include "CEMenu.h"
+#include "CEThumbStick.h"
+//-----------------------------------------------------
+
 namespace CompareEquipmentNG
 {
     void SetupLog()
