@@ -161,17 +161,22 @@ namespace CEMenu
 
     bool IsMenuVisible()
     {
-        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc());
-        if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
+        RE::GFxValue menu_mc = GetMenu_mc();
+        if (menu_mc.IsNull() || menu_mc.IsUndefined() || !menu_mc.IsObject())
             return false;
         RE::GFxValue result;
-        // ceMenu.Invoke("getVisible", &result);
-        RE::GFxValue __this;
-        ceMenu.GetMember("__this", &__this);
-        if (__this.IsObject())
-            __this.GetMember("_visible", &result);
+        RE::GFxValue _root;
+        RE::GFxValue ce_assets;
+        menu_mc.GetMember("_root", &_root);
+        if (_root.IsObject())
+            _root.GetMember("ce_assets", &ce_assets);
+
+        if (ce_assets.IsObject())
+            ce_assets.GetMember("_visible", &result);
+
         if (result.IsBool())
             return result.GetBool();
+
         return false;
     }
 
