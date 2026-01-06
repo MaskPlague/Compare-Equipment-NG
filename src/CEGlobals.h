@@ -2,6 +2,12 @@
 
 namespace CEGlobals
 {
+    const int EQUIPPED_ARMOR_ITEM_ARRAY_SIZE = 8;
+    const int SELECTED_ARMOR_ITEM_ARRAY_SIZE = 9;
+    const int EQUIPPED_WEAPON_ITEM_ARRAY_SIZE = 10;
+    const int SELECTED_WEAPON_ITEM_ARRAY_SIZE = 15;
+    const std::string EXPECTED_SWF_VERSION = "6";
+
     extern int ROWS;
     extern int SCROLL_SPEED;
     extern double SCROLL_DELAY;
@@ -57,12 +63,6 @@ namespace CEGlobals
     extern bool MENU_PERSISTENT_DEFAULT_DISPLAY;
 
     extern RE::INPUT_DEVICE lastInputDevice;
-
-    const int EQUIPPED_ARMOR_ITEM_ARRAY_SIZE = 8;
-    const int SELECTED_ARMOR_ITEM_ARRAY_SIZE = 9;
-    const int EQUIPPED_WEAPON_ITEM_ARRAY_SIZE = 10;
-    const int SELECTED_WEAPON_ITEM_ARRAY_SIZE = 15;
-    const std::string EXPECTED_SWF_VERSION = "5";
 
     int ConvertSKSEKeyToSkyrimKey(int key);
     void LoadConfig();
