@@ -313,7 +313,7 @@ namespace CEMenu
         ceMenu.Invoke("populateSelectedWeaponItemCard", nullptr, itemInfo);
     }
 
-    void DestroyMenu(std::string menuToDestroy)
+    void DestroyMenu(std::string_view menuToDestroy)
     {
         SKSE::GetTaskInterface()->AddUITask([menuToDestroy]()
                                             {

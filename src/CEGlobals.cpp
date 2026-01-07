@@ -450,7 +450,6 @@ namespace CEGlobals
     }
 
     std::string QLIE_HINT_TEXT = "Compare";
-
     std::string buttonCompareText = "Compare";
     std::string comparingTo = "<font color=\"#D4D4D4\" size=\"12\">Comparing to</font>";
     std::string damageLabelText = "<font color=\"#D4D4D4\" size=\"12\">Damage:</font>";
@@ -483,6 +482,7 @@ namespace CEGlobals
     std::string worseWrapperEnd = ")</font>";
     std::string normalWrapperStart = "<font color=\"#FFFFFF\" size=\"12\">";
     std::string normalWrapperEnd = "</font>";
+    std::string settingsReloaded = "CompareEquipmentNG: Settings Reloaded";
 
     long diffOffset = 0;
     long valueOffset = 2;
@@ -536,6 +536,7 @@ namespace CEGlobals
         worseWrapperEnd = ini.GetValue("Translations", "worseWrapperEnd", ")</font>");
         normalWrapperStart = ini.GetValue("Translations", "normalWrapperStart", "<font color=\"#FFFFFF\">");
         normalWrapperEnd = ini.GetValue("Translations", "normalWrapperEnd", "</font>");
+        settingsReloaded = ini.GetValue("Translations", "settingsReloaded", "CompareEquipmentNG: Settings Reloaded");
 
         ini.SetLongValue("Customization", "diffOffset", diffOffset,
                          "#Offset of difference values from regular values, default 0");
@@ -651,6 +652,9 @@ namespace CEGlobals
 
         ini.SetValue("Translations", "normalWrapperEnd", normalWrapperEnd.c_str(),
                      "# Normal HTML wrapper end");
+
+        ini.SetValue("Translations", "settingsReloaded", settingsReloaded.c_str(),
+                     "# Notification that appears when you reload the settings via hotkey");
 
         ini.SaveFile("Data\\SKSE\\Plugins\\CompareEquipmentNG_translation.ini");
     }

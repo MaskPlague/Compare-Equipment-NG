@@ -42,7 +42,7 @@ namespace CEMenu
 
     void CreateSelectedWeaponItemCard(std::array<RE::GFxValue, CEGlobals::SELECTED_WEAPON_ITEM_ARRAY_SIZE> itemInfo, RE::GFxValue ceMenu);
 
-    void DestroyMenu(std::string menuToDestroy);
+    void DestroyMenu(std::string_view menuToDestroy);
 
     void CreateMenu(std::string_view menuName);
 
