@@ -97,6 +97,15 @@ namespace CEMenu
         }
     };
 
+    class getArmorOrWeaponAS : public RE::GFxFunctionHandler
+    {
+    public:
+        void Call(Params &) override
+        {
+            CEGameMenuUtils::GetArmorOrWeapon(CEGameMenuUtils::currentFormID);
+        }
+    };
+
     class loggerAS : public RE::GFxFunctionHandler
     {
     public:
@@ -111,6 +120,7 @@ namespace CEMenu
     {
         REGISTER_FN(persistentDisplayAS);
         REGISTER_FN(isWeaponOrArmorAS);
+        REGISTER_FN(getArmorOrWeaponAS);
         REGISTER_FN(loggerAS);
         return true;
     }

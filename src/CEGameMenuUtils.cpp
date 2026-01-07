@@ -723,10 +723,6 @@ namespace CEGameMenuUtils
             RE::TESBoundObject *baseObject = objectRef ? objectRef->GetBaseObject() : nullptr;
             unsigned int fid = baseObject ? baseObject->GetFormID() : NULL;
             currentFormID = fid;
-            std::thread([fid]()
-                        { std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                            GetArmorOrWeapon(fid); })
-                .detach();
             DiffCrosshairTargetCheck(crosshair, target);
             return true;
         }
