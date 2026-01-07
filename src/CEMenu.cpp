@@ -7,8 +7,8 @@
 
 namespace CEMenu
 {
-    std::string temp = "CompareEquipmentMenu_" + CEGlobals::EXPECTED_SWF_VERSION + "_" + std::to_string(CEGlobals::COMPARE_KEY);
-    const char *MENU_NAME = temp.c_str();
+    std::string temp = "CompareEquipmentMenu";
+    const char *MENU_NAME = "CompareEquipmentMenu";
     std::string_view SWF_PATH{"CompareEquipment_script.swf"};
     std::string_view openedMenuName = "HUDMenu";
     std::chrono::steady_clock::time_point lastInvalidation;
@@ -22,15 +22,7 @@ namespace CEMenu
     void UpdateMenuName()
     {
         std::string stringMenuName{openedMenuName};
-        std::string key = std::to_string(CEGlobals::COMPARE_KEY);
-        if (CEGlobals::lastInputDevice == RE::INPUT_DEVICE::kGamepad)
-        {
-            if (openedMenuName == "LootMenu")
-                key = std::to_string(CEGlobals::ConvertSKSEKeyToSkyrimKey(CEGlobals::CONTROLLER_KEY));
-            else
-                key = "273";
-        }
-        temp = "CompareEquipmentMenu_" + CEGlobals::EXPECTED_SWF_VERSION + "_" + key + "_" + stringMenuName;
+        temp = "CompareEquipmentMenu_" + stringMenuName;
         MENU_NAME = temp.c_str();
     }
 
@@ -327,7 +319,7 @@ namespace CEMenu
     {
         SKSE::GetTaskInterface()->AddUITask([menuToDestroy]()
                                             {
-        logger::debug("Destroying Menu {}", menuToDestroy);
+        logger::debug("Destroying CE Menus for {}", menuToDestroy);
         RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc(menuToDestroy));
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
@@ -401,6 +393,17 @@ namespace CEMenu
         Menu_mc.SetMember("ce_alpha", alpha);
         int layout = CEMenu::openedMenuName == "LootMenu" ? CEGlobals::QLIE_LAYOUT : CEMenu::openedMenuName == "HUDMenu" ? CEGlobals::HUD_LAYOUT : CEGlobals::MENU_LAYOUT;
         Menu_mc.SetMember("ce_layout", layout);
+
+        std::string key = std::to_string(CEGlobals::COMPARE_KEY);
+        if (CEGlobals::lastInputDevice == RE::INPUT_DEVICE::kGamepad)
+        {
+            if (openedMenuName == "LootMenu")
+                key = std::to_string(CEGlobals::ConvertSKSEKeyToSkyrimKey(CEGlobals::CONTROLLER_KEY));
+            else
+                key = "273";
+        }
+        Menu_mc.SetMember("ce_hotKey", key.c_str());
+        Menu_mc.SetMember("ce_expectedVersion", CEGlobals::EXPECTED_SWF_VERSION);
 
         RE::GFxValue ceMenu = GetCEMenu(Menu_mc);
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())

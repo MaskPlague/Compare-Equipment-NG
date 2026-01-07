@@ -6,7 +6,7 @@ namespace CEGlobals
     const int SELECTED_ARMOR_ITEM_ARRAY_SIZE = 9;
     const int EQUIPPED_WEAPON_ITEM_ARRAY_SIZE = 10;
     const int SELECTED_WEAPON_ITEM_ARRAY_SIZE = 15;
-    const std::string EXPECTED_SWF_VERSION = "6";
+    const int EXPECTED_SWF_VERSION = 6;
 
     extern int ROWS;
     extern int SCROLL_SPEED;
