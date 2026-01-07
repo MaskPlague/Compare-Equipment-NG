@@ -382,7 +382,7 @@ namespace CEGlobals
                                                                                                   "\n#Default true");
 
         //------------------------------ Outside Of Menus ---------------------------------------------------------------
-        ini.SetBoolValue("OutOfMenu", "Enabled", HUD_ALLOWED, "#Toggle for Compare Equipment functionality outside of Menus, doesn't function with controller.\n#Default true");
+        ini.SetBoolValue("OutOfMenu", "Enabled", HUD_ALLOWED, "#Toggle for Compare Equipment functionality outside of Menus.\n#Default true");
         ini.SetBoolValue("OutOfMenu", "Toggle Mode", HUD_TOGGLEMODE, "#If pressing the hotkey a second time will hide the item cards.\n#Default true");
         ini.SetDoubleValue("OutOfMenu", "X Offset", HUD_X_ORIGIN, "#Selected Item's item card X offset outside of menus\n#Default 450.0");
         ini.SetDoubleValue("OutOfMenu", "Y Offset", HUD_Y_ORIGIN, "#Selected Item's item card Y offset outside of menus\n#Default 250.0");
@@ -391,7 +391,7 @@ namespace CEGlobals
         ini.SetLongValue("OutOfMenu", "Layout", HUD_LAYOUT, "#Layout of item cards outside of menus\n#0: Vertically Centered (Default), 1: Upward, 2: Downward");
 
         //------------------------------ QuickLoot IE ---------------------------------------------------------------
-        ini.SetBoolValue("QuickLootIE", "Enabled", QLIE_ALLOWED, "#Toggle for Compare  Equipment functionality for QuickLoot IE, doesn't function with controller.\n#Default true");
+        ini.SetBoolValue("QuickLootIE", "Enabled", QLIE_ALLOWED, "#Toggle for Compare Equipment functionality for QuickLoot IE.\n#Default true");
         ini.SetDoubleValue("QuickLootIE", "X Offset", QLIE_X_ORIGIN, "#Selected Item's item card X offset for QuickLootIE\n#Default 100.0");
         ini.SetDoubleValue("QuickLootIE", "Y Offset", QLIE_Y_ORIGIN, "#Selected Item's item card Y offset for QuickLootIE\n#Default 350.0");
         ini.SetLongValue("QuickLootIE", "Scale", QLIE_SCALE, "#Scale of item cards for QuickLootIE, default 150");
