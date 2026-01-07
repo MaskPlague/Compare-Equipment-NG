@@ -625,7 +625,7 @@ namespace CEGameMenuUtils
         {
             if (auto selectedArmor = selectedForm->As<RE::TESObjectARMO>())
             {
-                if (CEGlobals::CRASH_PREVENTION)
+                if (CEGlobals::CRASH_PREVENTION || CEMenu::openedMenuName == "HUDMenu")
                 {
                     SKSE::GetTaskInterface()
                         ->AddUITask([selectedFormId, selectedArmor]()
@@ -680,7 +680,8 @@ namespace CEGameMenuUtils
                                                         {
                                                             std::this_thread::sleep_for(std::chrono::milliseconds(250));
                                                         }
-                                                        CEMenu::HideMenu(); })
+                                                        CEMenu::HideMenu(); 
+                                                        CEMenu::DestroyMenu(CEMenu::openedMenuName); })
                                                 .detach(); });
     }
 
@@ -704,9 +705,15 @@ namespace CEGameMenuUtils
         {
             if (!CEGlobals::HUD_ALLOWED)
                 return false;
+            if (!CEMenu::IsMenuVisible())
+            {
+                SKSE::GetTaskInterface()->AddUITask([]()
+                                                    { CEMenu::CreateMenu(CEMenu::openedMenuName); });
+            }
             if (CEGlobals::HUD_TOGGLEMODE && CEMenu::IsMenuVisible())
             {
                 CEMenu::HideMenu(true);
+                CEMenu::DestroyMenu(CEMenu::openedMenuName);
                 return false;
             }
             RE::CrosshairPickData *crosshair = RE::CrosshairPickData::GetSingleton();
@@ -716,7 +723,10 @@ namespace CEGameMenuUtils
             RE::TESBoundObject *baseObject = objectRef ? objectRef->GetBaseObject() : nullptr;
             unsigned int fid = baseObject ? baseObject->GetFormID() : NULL;
             currentFormID = fid;
-            GetArmorOrWeapon(currentFormID);
+            std::thread([fid]()
+                        { std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                            GetArmorOrWeapon(fid); })
+                .detach();
             DiffCrosshairTargetCheck(crosshair, target);
             return true;
         }

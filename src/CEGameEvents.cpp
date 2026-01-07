@@ -46,8 +46,7 @@ namespace CEGameEvents
             heldForSettingsTriggered = true;
             SKSE::GetTaskInterface()->AddTask([]()
                                               { 
-                std::string menuToDestroy{CEMenu::openedMenuName};
-                CEMenu::DestroyMenu(menuToDestroy);
+                CEMenu::DestroyMenu(CEMenu::openedMenuName);
                 CEGlobals::LoadConfig();
                 std::thread([]()
                             {
@@ -224,9 +223,7 @@ namespace CEGameEvents
                 logger::trace("{} closed", menuName.c_str());
                 CEMenu::openedMenus.erase(menuName.c_str());
                 CEMenu::DestroyMenu(menuName.c_str());
-                if (CEGlobals::HUD_ALLOWED && CEMenu::openedMenus.empty())
-                    CEMenu::CreateMenu("HUDMenu");
-                else if (CEMenu::openedMenus.empty())
+                if (CEMenu::openedMenus.empty())
                     CEMenu::openedMenuName = "HUDMenu";
             }
         }

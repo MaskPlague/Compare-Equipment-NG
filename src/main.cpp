@@ -93,13 +93,8 @@ namespace CompareEquipmentNG
     {
         if (msg->type == SKSE::MessagingInterface::kDataLoaded)
         {
-            logger::debug("Data has loaded.");
+            logger::debug("kDataLoaded");
             OnPostDataLoaded();
-        }
-        if (msg->type == SKSE::MessagingInterface::kPostLoadGame && bool(msg->data) && CEGlobals::HUD_ALLOWED)
-        {
-            logger::debug("PostLoadGame: HUD_ALLOWED, creating the HUDMenu CEMenu");
-            CEMenu::CreateMenu("HUDMenu");
         }
     }
 
