@@ -48,7 +48,7 @@ namespace CEGameEvents
                                               { 
                 CEMenu::DestroyMenu(CEMenu::openedMenuName);
                 CEGlobals::LoadConfig();
-                RE::DebugNotification(CEGlobals::settingsReloaded.c_str());
+                RE::SendHUDMessage::ShowHUDMessage(CEGlobals::settingsReloaded.c_str());
                 std::thread([]()
                             {
                     std::this_thread::sleep_for(std::chrono::milliseconds(50));
