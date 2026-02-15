@@ -248,15 +248,23 @@ namespace CEGameEvents
 
     void QuickLootSelectItemHandler(QuickLoot::Events::SelectItemEvent *event)
     {
-        if (!CEGlobals::QLIE_ALLOWED)
+        if (!CEGlobals::QLIE_ALLOWED || !event || !event->elements || !event->elements->object || !event->elements->object->formID)
             return;
         logger::debug("QuickLoot Select Item Event triggered");
-        if (!event->elements->object || !event->elements->object->formID)
+        RE::FormID fid;
+        try
+        {
+            fid = event->elements->object->formID;
+            auto form = RE::TESForm::LookupByID(fid);
+            if (!form)
+                return;
+        }
+        catch (...)
+        {
+            logger::debug("QLIE SelectItemHandler: Failed to get object form id.");
             return;
-        auto fid = event->elements->object->formID;
-        auto form = RE::TESForm::LookupByID(fid);
-        if (!form)
-            return;
+        }
+
         CEGameMenuUtils::currentFormID = fid;
         if (CEGlobals::QLIE_PERSISTENT_DISPLAY && CEGameMenuUtils::isWeaponOrArmor(fid))
             CEMenu::PersistentDisplayRun(true);

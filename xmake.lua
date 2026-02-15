@@ -6,7 +6,7 @@ includes("lib/commonlibsse-ng")
 
 -- set project
 set_project("CompareEquipmentNG")
-set_version("0.3.12")
+set_version("0.3.13")
 set_license("MIT")
 
 -- set defaults
