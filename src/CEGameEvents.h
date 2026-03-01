@@ -30,6 +30,8 @@ namespace CEGameEvents
         static UIEvent *GetSingleton();
     };
 
+    void QuickLootTakeItemHandler(QuickLoot::Events::TakeItemEvent *event);
+
     void QuickLootSelectItemHandler(QuickLoot::Events::SelectItemEvent *event);
 
     void QuickLootCloseHandler(QuickLoot::Events::CloseLootMenuEvent *);

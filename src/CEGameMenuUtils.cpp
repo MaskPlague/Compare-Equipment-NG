@@ -747,6 +747,12 @@ namespace CEGameMenuUtils
             !selectedEntry.GetMember("formId", &formId) ||
             formId.IsNull())
             return false;
+        /*auto ui = RE::UI::GetSingleton();
+        auto menu = ui ? ui->GetMenu(CEMenu::openedMenuName) : nullptr;
+        auto selected = menu ? menu->GetRuntimeData().itemList->GetSelectedItem() : nullptr;
+        if (!selected)
+            return false;
+        RE::FormID fid = selected->data.objDesc->object->GetFormID();*/
         RE::FormID fid = static_cast<RE::FormID>(formId.GetUInt());
         currentFormID = fid;
         return GetArmorOrWeapon(fid);

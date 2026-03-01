@@ -246,6 +246,27 @@ namespace CEGameEvents
         }
     }
 
+    void QuickLootTakeItemHandler(QuickLoot::Events::TakeItemEvent *event)
+    {
+        if (!CEGlobals::QLIE_ALLOWED || !event || !event->actor)
+            return;
+        logger::debug("QuickLoot Take Item Event triggered");
+        bool isPlayer = false;
+        try
+        {
+            isPlayer = event->actor->IsPlayerRef();
+        }
+        catch (...)
+        {
+            isPlayer = true;
+        }
+        if (isPlayer)
+        {
+            CEGameMenuUtils::currentFormID = NULL;
+            CEMenu::HideMenu();
+        }
+    }
+
     void QuickLootSelectItemHandler(QuickLoot::Events::SelectItemEvent *event)
     {
         if (!CEGlobals::QLIE_ALLOWED || !event || !event->elements || !event->elements->object || !event->elements->object->formID)
@@ -278,8 +299,8 @@ namespace CEGameEvents
         if (!CEGlobals::QLIE_ALLOWED)
             return;
         logger::debug("QuickLoot Close Event triggered");
-        CEMenu::HideMenu();
         CEGameMenuUtils::currentFormID = NULL;
+        CEMenu::HideMenu();
         MaybeShowHideHint();
     }
 

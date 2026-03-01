@@ -82,6 +82,7 @@ namespace CompareEquipmentNG
         {
             logger::debug("Initializing QuickLoot IE API");
             QuickLoot::QuickLootAPI::Init();
+            QuickLoot::QuickLootAPI::RegisterTakeItemHandler(CEGameEvents::QuickLootTakeItemHandler);
             QuickLoot::QuickLootAPI::RegisterSelectItemHandler(CEGameEvents::QuickLootSelectItemHandler);
             QuickLoot::QuickLootAPI::RegisterCloseLootMenuHandler(CEGameEvents::QuickLootCloseHandler);
             QuickLoot::QuickLootAPI::RegisterOpenLootMenuHandler(CEGameEvents::QuickLootOpenHandler);
