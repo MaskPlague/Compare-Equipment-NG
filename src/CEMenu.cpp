@@ -153,10 +153,10 @@ namespace CEMenu
         return Menu_mc;
     }
 
-    RE::GFxValue GetCEMenu(RE::GFxValue Menu_mc)
+    RE::GFxValue GetCEMenu(RE::GFxValue Menu_mc, const char *menuName)
     {
         RE::GFxValue ceMenu;
-        if (Menu_mc.IsNull() || !Menu_mc.GetMember(MENU_NAME, &ceMenu))
+        if (Menu_mc.IsNull() || !Menu_mc.GetMember(menuName, &ceMenu))
             return nullptr;
         return ceMenu;
     }
@@ -252,17 +252,17 @@ namespace CEMenu
                                                 .detach(); });
     }
 
-    void HideMenu(bool checked)
+    void HideMenu(bool checked, std::string_view menuToHide, const char *menuName)
     {
-        SKSE::GetTaskInterface()->AddUITask([checked]()
+        SKSE::GetTaskInterface()->AddUITask([checked, menuToHide, menuName]()
                                             {
         if (!checked && !IsMenuVisible())
             return;
-        RE::GFxValue menu_mc = GetMenu_mc();
-        RE::GFxValue ceMenu = GetCEMenu(menu_mc);
+        RE::GFxValue menu_mc = GetMenu_mc(menuToHide);
+        RE::GFxValue ceMenu = GetCEMenu(menu_mc, menuName);
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
-        logger::trace("Hiding menu.");
+        logger::trace("Hiding menu, {}", menuToHide);
         ceMenu.Invoke("hideAndReset"); });
     }
 
@@ -315,12 +315,12 @@ namespace CEMenu
         ceMenu.Invoke("populateSelectedWeaponItemCard", nullptr, itemInfo);
     }
 
-    void DestroyMenu(std::string_view menuToDestroy)
+    void DestroyMenu(std::string_view menuToDestroy, const char *menuName)
     {
-        SKSE::GetTaskInterface()->AddUITask([menuToDestroy]()
+        SKSE::GetTaskInterface()->AddUITask([menuToDestroy, menuName]()
                                             {
         logger::debug("Destroying CE Menus for {}", menuToDestroy);
-        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc(menuToDestroy));
+        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc(menuToDestroy), menuName);
         if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
             return;
 

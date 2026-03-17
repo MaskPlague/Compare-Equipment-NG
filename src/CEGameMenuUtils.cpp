@@ -676,12 +676,13 @@ namespace CEGameMenuUtils
                                                         {
                                                         while (crosshair && targetPtr &&
                                                                 crosshair->target->get() == targetPtr &&
-                                                                crosshair->target->get() != nullptr) 
+                                                                crosshair->target->get() != nullptr && CEMenu::openedMenuName == "HUDMenu") 
                                                         {
                                                             std::this_thread::sleep_for(std::chrono::milliseconds(250));
                                                         }
-                                                        CEMenu::HideMenu(); 
-                                                        CEMenu::DestroyMenu(CEMenu::openedMenuName); })
+                                                        logger::info("current menu: {}, closing HUDMenu", CEMenu::openedMenuName);
+                                                        CEMenu::HideMenu(true, "HUDMenu", "CompareEquipmentMenu_HUDMenu");
+                                                        CEMenu::DestroyMenu("HUDMenu", "CompareEquipmentMenu_HUDMenu"); })
                                                 .detach(); });
     }
 

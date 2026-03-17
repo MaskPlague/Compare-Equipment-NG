@@ -10,7 +10,7 @@ namespace CEMenu
     extern bool menuPersistentToggledOn;
     RE::GFxValue GetMenu_mc(std::string_view nameOfMenuToGet = openedMenuName);
 
-    RE::GFxValue GetCEMenu(RE::GFxValue Menu_mc);
+    RE::GFxValue GetCEMenu(RE::GFxValue Menu_mc, const char *menuName = MENU_NAME);
 
     void UpdateMenuName();
 
@@ -28,7 +28,7 @@ namespace CEMenu
 
     void HideSkyUiItemCard(RE::GFxValue ceMenu);
 
-    void HideMenu(bool checked = false);
+    void HideMenu(bool checked = false, std::string_view menuToHide = openedMenuName, const char *menuName = MENU_NAME);
 
     void CreateArmorComparisonItemCard(std::array<RE::GFxValue, CEGlobals::EQUIPPED_ARMOR_ITEM_ARRAY_SIZE> itemInfo, RE::GFxValue ceMenu);
 
@@ -42,7 +42,7 @@ namespace CEMenu
 
     void CreateSelectedWeaponItemCard(std::array<RE::GFxValue, CEGlobals::SELECTED_WEAPON_ITEM_ARRAY_SIZE> itemInfo, RE::GFxValue ceMenu);
 
-    void DestroyMenu(std::string_view menuToDestroy);
+    void DestroyMenu(std::string_view menuToDestroy, const char *menuName = MENU_NAME);
 
     void CreateMenu(std::string_view menuName);
 
