@@ -680,7 +680,6 @@ namespace CEGameMenuUtils
                                                         {
                                                             std::this_thread::sleep_for(std::chrono::milliseconds(250));
                                                         }
-                                                        logger::info("current menu: {}, closing HUDMenu", CEMenu::openedMenuName);
                                                         CEMenu::HideMenu(true, "HUDMenu", "CompareEquipmentMenu_HUDMenu");
                                                         CEMenu::DestroyMenu("HUDMenu", "CompareEquipmentMenu_HUDMenu"); })
                                                 .detach(); });
