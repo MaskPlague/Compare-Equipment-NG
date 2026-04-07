@@ -20,8 +20,6 @@ namespace CEMenu
 
     bool IsMenuVisible();
 
-    void ShowOrHideQLIEHint();
-
     void ShowMenuInstant();
 
     void ShowMenuDelayed();

@@ -1,223 +1,281 @@
 #pragma once
 
-#include "PluginRequests/RequestClient.h"
-namespace logger = SKSE::log;
-
 /*
-	Header File for QuickLoot integration
+    Header File for QuickLoot IE integration
 */
 
-namespace QuickLoot
+namespace QuickLoot::API
 {
-	struct Element
-	{
-		RE::TESForm *object = nullptr;
-		std::int32_t count = 0;
-		RE::TESObjectREFR *container = nullptr;
+    struct ItemStack
+    {
+        // This is a pointer to the inventory entry
+        RE::InventoryEntryData *entry;
+        // This is set if the inventory entry is for an item the NPC dropped on the floor.
+        RE::ObjectRefHandle dropRef;
+    };
 
-		Element(RE::TESForm *object, std::int32_t count, RE::TESObjectREFR *container) : object(object), count(count), container(container) {}
+    namespace Events
+    {
+        enum class HandleResult : uint8_t
+        {
+            kContinue = 0,
+            kStop = 1
+        };
 
-		Element(RE::TESForm *object, std::ptrdiff_t count, RE::TESObjectREFR *container) : object(object), count(static_cast<std::int32_t>(count)), container(container) {}
+        struct TakingItemEvent
+        {
+            RE::Actor *actor;
+            RE::ObjectRefHandle container;
+            const ItemStack *stack;
+            // Set this to HandleResult::kStop to prevent the item from being taken.
+            HandleResult result = HandleResult::kContinue;
+        };
 
-		Element(RE::TESForm *object, std::ptrdiff_t count, RE::ObjectRefHandle container) : object(object), count(static_cast<std::int32_t>(count)), container(container.get().get()) {}
+        struct TakeItemEvent
+        {
+            RE::Actor *actor;
+            RE::ObjectRefHandle container;
+            const ItemStack *stack;
+        };
 
-		Element(RE::TESObjectREFRPtr object, std::ptrdiff_t count, RE::TESObjectREFR *container) : object(object.get()), count(static_cast<std::int32_t>(count)), container(container) {}
+        struct SelectItemEvent
+        {
+            RE::Actor *actor;
+            RE::ObjectRefHandle container;
+            const ItemStack *stack;
+        };
 
-		Element(RE::TESObjectREFRPtr object, std::ptrdiff_t count) : object(object.get()), count(static_cast<std::int32_t>(count)) {}
-	};
+        struct OpeningLootMenuEvent
+        {
+            RE::ObjectRefHandle container;
+            // Set this to HandleResult::kStop to prevent the loot menu from opening.
+            HandleResult result = HandleResult::kContinue;
+        };
 
-	namespace Events
-	{
-		enum class HandleResult : uint8_t
-		{
-			kContinue = 0,
-			kStop = 1
-		};
+        struct OpenLootMenuEvent
+        {
+            RE::ObjectRefHandle container;
+        };
 
-		struct TakingItemEvent
-		{
-			RE::Actor *actor;
-			RE::TESObjectREFR *container;
-			const Element *elements;
-			std::size_t elementsCount;
-			HandleResult result = HandleResult::kContinue;
-		};
+        struct CloseLootMenuEvent
+        {
+            RE::ObjectRefHandle container;
+        };
 
-		struct TakeItemEvent
-		{
-			RE::Actor *actor;
-			RE::TESObjectREFR *container;
-			const Element *elements;
-			std::size_t elementsCount;
-		};
+        struct InvalidateLootMenuEvent
+        {
+            RE::ObjectRefHandle container;
+            const RE::BSTArray<ItemStack> &inventory;
+        };
 
-		struct SelectItemEvent
-		{
-			RE::Actor *actor;
-			RE::TESObjectREFR *container;
-			const Element *elements;
-			std::size_t elementsCount;
-		};
+        struct ModifyInventoryEvent
+        {
+            RE::ObjectRefHandle container;
+            // Modify this array to change what is displayed in the item list.
+            // Each ItemStack owns its InventoryEntryData object.
+            // - If you remove entries, make sure to delete their InventoryEntryData objects to avoid leaking memory.
+            // - If you add entries, allocate the InventoryEntryData objects with the new operator. QuickLoot will delete them once they are no longer needed.
+            RE::BSTArray<ItemStack> &inventory;
+        };
 
-		struct OpeningLootMenuEvent
-		{
-			RE::TESObjectREFR *container;
-			HandleResult result = HandleResult::kContinue;
-		};
+        struct PopulateInfoBarEvent
+        {
+            RE::ObjectRefHandle container;
+            // The selected item stack. This is null if the container is empty.
+            const ItemStack *stack;
+            // Populate this array with text you want to display in the info bar. Some HTML is supported.
+            RE::BSTArray<RE::BSString> result;
+        };
 
-		struct OpenLootMenuEvent
-		{
-			RE::TESObjectREFR *container;
-		};
+        struct ButtonDefinition
+        {
+            RE::BSString label;
+            // For a list of valid values, see https://github.com/MissCorruption/QuickLootIE/blob/main/src/Input/ButtonArtIndex.h
+            uint16_t buttonArtIndex;
+        };
 
-		struct CloseLootMenuEvent
-		{
-			RE::TESObjectREFR *container;
-		};
+        struct PopulateButtonBarEvent
+        {
+            RE::ObjectRefHandle container;
+            // The selected item stack. This is null if the container is empty.
+            const ItemStack *stack;
+            // Populate this array with buttons you want to add.
+            RE::BSTArray<ButtonDefinition> result;
+        };
 
-		struct InvalidateLootMenuEvent
-		{
-			RE::TESObjectREFR *container;
-			const Element *elements;
-			std::size_t elementsCount;
-		};
+        template <typename TEvent>
+        using EventHandler = void (*)(TEvent *e);
 
-		template <typename TEvent>
-		using EventHandler = void (*)(TEvent *e);
+        using TakingItemHandler = EventHandler<TakingItemEvent>;
+        using TakeItemHandler = EventHandler<TakeItemEvent>;
+        using SelectItemHandler = EventHandler<SelectItemEvent>;
+        using OpeningLootMenuHandler = EventHandler<OpeningLootMenuEvent>;
+        using OpenLootMenuHandler = EventHandler<OpenLootMenuEvent>;
+        using CloseLootMenuHandler = EventHandler<CloseLootMenuEvent>;
+        using InvalidateLootMenuHandler = EventHandler<InvalidateLootMenuEvent>;
+        using ModifyInventoryHandler = EventHandler<ModifyInventoryEvent>;
+        using PopulateInfoBarHandler = EventHandler<PopulateInfoBarEvent>;
+        using PopulateButtonBarHandler = EventHandler<PopulateButtonBarEvent>;
+    }
 
-		template <typename TEvent>
-		struct HandlerRegistrationRequest
-		{
-			EventHandler<TEvent> handler;
-		};
+    using namespace Events;
 
-		using TakingItemHandler = EventHandler<TakingItemEvent>;
-		using TakeItemHandler = EventHandler<TakeItemEvent>;
-		using SelectItemHandler = EventHandler<SelectItemEvent>;
-		using OpeningLootMenuHandler = EventHandler<OpeningLootMenuEvent>;
-		using OpenLootMenuHandler = EventHandler<OpenLootMenuEvent>;
-		using CloseLootMenuHandler = EventHandler<CloseLootMenuEvent>;
-		using InvalidateLootMenuHandler = EventHandler<InvalidateLootMenuEvent>;
-	}
+    class QuickLootAPI
+    {
+    public:
+        QuickLootAPI() = delete;
+        ~QuickLootAPI() = delete;
+        QuickLootAPI(QuickLootAPI const &) = delete;
+        QuickLootAPI(QuickLootAPI const &&) = delete;
+        QuickLootAPI operator=(QuickLootAPI &) = delete;
+        QuickLootAPI operator=(QuickLootAPI &&) = delete;
 
-	using namespace Events;
+        static constexpr const char *SERVER_PLUGIN_NAME = "QuickLootIE";
 
-	class QuickLootAPI
-	{
-		static inline PluginRequests::RequestClient _client{};
+        // Call this before any other API function and pass your own plugin name.
+        static bool Init(const char *plugin)
+        {
+            using GetInterfaceProc = InterfaceV20 *(*)();
 
-		template <typename THandler>
-		static bool RegisterInternal(const char *func, uint32_t requestType, THandler handler)
-		{
-			bool response = false;
-			const HandlerRegistrationRequest request{handler};
+            const auto dllHandle = GetModuleHandleA(SERVER_PLUGIN_NAME);
+            const auto getInterfaceProc = reinterpret_cast<GetInterfaceProc>(GetProcAddress(dllHandle, "GetQuickLootInterfaceV20"));
 
-			if (const auto error = _client.Query(requestType, &request, &response))
-			{
-				logger::error("Query failed for {}: {}", func, _client.GetErrorString(error));
-				return false;
-			}
+            if (getInterfaceProc)
+            {
+                _plugin = plugin;
+                _interface = getInterfaceProc();
+            }
 
-			return response;
-		}
+            return IsReady();
+        }
 
-	public:
-		QuickLootAPI() = delete;
-		~QuickLootAPI() = delete;
-		QuickLootAPI(QuickLootAPI const &) = delete;
-		QuickLootAPI(QuickLootAPI const &&) = delete;
-		QuickLootAPI operator=(QuickLootAPI &) = delete;
-		QuickLootAPI operator=(QuickLootAPI &&) = delete;
+        static bool IsReady()
+        {
+            return _interface;
+        }
 
-		// For a client request to be processed, both of the following must be true:
-		//
-		// - client major ver == server major ver
-		// - client minor var <= server minor ver
-		//
-		// Minor version changes must be backwards compatible, so any breaking changes
-		// to the api must increase the major version. New handlers may be added by
-		// new minor versions.
-		static constexpr const char *SERVER_PLUGIN_NAME = "QuickLootIE";
-		static constexpr uint16_t API_MAJOR_VERSION = 1;
-		static constexpr uint16_t API_MINOR_VERSION = 0;
+        static void DisableLootMenu()
+        {
+            if (_interface)
+            {
+                _interface->DisableLootMenu(_plugin);
+            }
+        }
 
-		// This is the list of request types.
-		// Each of them is associated with a signature.
-		// The client and server must agree on these signatures.
-		enum RequestType : uint32_t
-		{
-			kDisableLootMenu = 0x000,
-			kEnableLootMenu = 0x001,
+        static void EnableLootMenu()
+        {
+            if (_interface)
+            {
+                _interface->EnableLootMenu(_plugin);
+            }
+        }
 
-			kRegisterTakingItemHandler = 0x100,
-			kRegisterTakeItemHandler = 0x101,
-			kRegisterSelectItemHandler = 0x102,
-			kRegisterOpeningLootMenuHandler = 0x103,
-			kRegisterOpenLootMenuHandler = 0x104,
-			kRegisterCloseLootMenuHandler = 0x105,
-			kRegisterInvalidateLootMenuHandler = 0x106,
-		};
+        static void RegisterTakingItemHandler(TakingItemHandler handler)
+        {
+            if (_interface)
+            {
+                _interface->RegisterTakingItemHandler(_plugin, handler);
+            }
+        }
 
-		// The client initialization must happen at (or after) kPostLoad
-		static void Init()
-		{
-			_client.Init(SERVER_PLUGIN_NAME, API_MAJOR_VERSION, API_MINOR_VERSION);
-		}
+        static void RegisterTakeItemHandler(TakeItemHandler handler)
+        {
+            if (_interface)
+            {
+                _interface->RegisterTakeItemHandler(_plugin, handler);
+            }
+        }
 
-		static bool IsReady()
-		{
-			return _client.IsReady();
-		}
+        static void RegisterSelectItemHandler(SelectItemHandler handler)
+        {
+            if (_interface)
+            {
+                _interface->RegisterSelectItemHandler(_plugin, handler);
+            }
+        }
 
-		static void DisableLootMenu()
-		{
-			if (const auto error = _client.Query(kDisableLootMenu, nullptr, nullptr))
-			{
-				logger::error("Query failed for DisableLootMenu: {}", _client.GetErrorString(error));
-			}
-		}
+        static void RegisterOpeningLootMenuHandler(OpeningLootMenuHandler handler)
+        {
+            if (_interface)
+            {
+                _interface->RegisterOpeningLootMenuHandler(_plugin, handler);
+            }
+        }
 
-		static void EnableLootMenu()
-		{
-			if (const auto error = _client.Query(kEnableLootMenu, nullptr, nullptr))
-			{
-				logger::error("Query failed for EnableLootMenu: {}", _client.GetErrorString(error));
-			}
-		}
+        static void RegisterOpenLootMenuHandler(OpenLootMenuHandler handler)
+        {
+            if (_interface)
+            {
+                _interface->RegisterOpenLootMenuHandler(_plugin, handler);
+            }
+        }
 
-		static bool RegisterTakingItemHandler(TakingItemHandler handler)
-		{
-			return RegisterInternal(__func__, kRegisterTakingItemHandler, handler);
-		}
+        static void RegisterCloseLootMenuHandler(CloseLootMenuHandler handler)
+        {
+            if (_interface)
+            {
+                _interface->RegisterCloseLootMenuHandler(_plugin, handler);
+            }
+        }
 
-		static bool RegisterTakeItemHandler(TakeItemHandler handler)
-		{
-			return RegisterInternal(__func__, kRegisterTakeItemHandler, handler);
-		}
+        static void RegisterInvalidateLootMenuHandler(InvalidateLootMenuHandler handler)
+        {
+            if (_interface)
+            {
+                _interface->RegisterInvalidateLootMenuHandler(_plugin, handler);
+            }
+        }
 
-		static bool RegisterSelectItemHandler(SelectItemHandler handler)
-		{
-			return RegisterInternal(__func__, kRegisterSelectItemHandler, handler);
-		}
+        static void RegisterModifyInventoryHandler(ModifyInventoryHandler handler)
+        {
+            if (_interface)
+            {
+                _interface->RegisterModifyInventoryHandler(_plugin, handler);
+            }
+        }
 
-		static bool RegisterOpeningLootMenuHandler(OpeningLootMenuHandler handler)
-		{
-			return RegisterInternal(__func__, kRegisterOpeningLootMenuHandler, handler);
-		}
+        static void RegisterPopulateInfoBarHandler(PopulateInfoBarHandler handler)
+        {
+            if (_interface)
+            {
+                _interface->RegisterPopulateInfoBarHandler(_plugin, handler);
+            }
+        }
 
-		static bool RegisterOpenLootMenuHandler(OpenLootMenuHandler handler)
-		{
-			return RegisterInternal(__func__, kRegisterOpenLootMenuHandler, handler);
-		}
+        static void RegisterPopulateButtonBarHandler(PopulateButtonBarHandler handler)
+        {
+            if (_interface)
+            {
+                _interface->RegisterPopulateButtonBarHandler(_plugin, handler);
+            }
+        }
 
-		static bool RegisterCloseLootMenuHandler(CloseLootMenuHandler handler)
-		{
-			return RegisterInternal(__func__, kRegisterCloseLootMenuHandler, handler);
-		}
+    private:
+        // ReSharper disable once CppPolymorphicClassWithNonVirtualPublicDestructor
+        struct InterfaceV20
+        {
+            virtual void DisableLootMenu(const char *plugin);
+            virtual void EnableLootMenu(const char *plugin);
 
-		static bool RegisterInvalidateLootMenuHandler(InvalidateLootMenuHandler handler)
-		{
-			return RegisterInternal(__func__, kRegisterInvalidateLootMenuHandler, handler);
-		}
-	};
+            virtual void RegisterTakingItemHandler(const char *plugin, TakingItemHandler handler);
+            virtual void RegisterTakeItemHandler(const char *plugin, TakeItemHandler handler);
+            virtual void RegisterSelectItemHandler(const char *plugin, SelectItemHandler handler);
+            virtual void RegisterOpeningLootMenuHandler(const char *plugin, OpeningLootMenuHandler handler);
+            virtual void RegisterOpenLootMenuHandler(const char *plugin, OpenLootMenuHandler handler);
+            virtual void RegisterCloseLootMenuHandler(const char *plugin, CloseLootMenuHandler handler);
+            virtual void RegisterInvalidateLootMenuHandler(const char *plugin, InvalidateLootMenuHandler handler);
+
+            virtual void RegisterModifyInventoryHandler(const char *plugin, ModifyInventoryHandler handler);
+            virtual void RegisterPopulateInfoBarHandler(const char *plugin, PopulateInfoBarHandler handler);
+            virtual void RegisterPopulateButtonBarHandler(const char *plugin, PopulateButtonBarHandler handler);
+
+            virtual void ForceCurrentContainer(const char *plugin, RE::ObjectRefHandle container);
+            virtual void ClearForcedContainer(const char *plugin);
+            virtual void CloseLootMenu(const char *plugin);
+            virtual void RefreshLootMenu(const char *plugin);
+        };
+
+        static inline const char *_plugin;
+        static inline InterfaceV20 *_interface;
+    };
 }

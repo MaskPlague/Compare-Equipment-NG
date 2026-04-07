@@ -117,21 +117,6 @@ namespace CEMenu
         return true;
     }
 
-    void ShowOrHideQLIEHint()
-    {
-        logger::debug("ShowOrHideQLIEHint called");
-        std::thread([]()
-                    {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
-        SKSE::GetTaskInterface()->AddUITask([]()
-                                            {
-        RE::GFxValue ceMenu = GetCEMenu(GetMenu_mc("LootMenu"));
-        if (ceMenu.IsNull() || ceMenu.IsUndefined() || !ceMenu.IsObject())
-            return;
-        ceMenu.Invoke("showOrHideQLIEHint"); }); })
-            .detach();
-    }
-
     RE::GFxValue GetMenu_mc(std::string_view nameOfMenuToGet)
     {
         logger::trace("nameOfMenuToGet: {}", nameOfMenuToGet);
@@ -352,7 +337,6 @@ namespace CEMenu
         logger::trace("Created menu {}", MENU_NAME);
 
         Menu_mc.SetMember("ce_buttonCompareText", CEGlobals::buttonCompareText.c_str());
-        Menu_mc.SetMember("ce_qlieHintText", CEGlobals::QLIE_HINT_TEXT.c_str());
         Menu_mc.SetMember("ce_comparingTo", CEGlobals::comparingTo.c_str());
         Menu_mc.SetMember("ce_damageLabelText", CEGlobals::damageLabelText.c_str());
         Menu_mc.SetMember("ce_critLabelText", CEGlobals::critLabelText.c_str());
@@ -420,7 +404,7 @@ namespace CEMenu
                 qliePersistentToggledOn = CEGlobals::QLIE_PERSISTENT_DEFAULT_DISPLAY;
                 qliePersistentToggledOnce = true;
             }
-            ShowOrHideQLIEHint();
+
             if (CEGlobals::QLIE_PERSISTENT_DISPLAY && CEGameMenuUtils::isWeaponOrArmor(CEGameMenuUtils::currentFormID))
                 PersistentDisplayRun(true);
         }

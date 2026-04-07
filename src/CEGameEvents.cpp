@@ -237,16 +237,7 @@ namespace CEGameEvents
         return &singleton;
     }
 
-    void MaybeShowHideHint()
-    {
-        if (NanoToLongMilli(std::chrono::steady_clock::now() - openedMenuTime) >= 15)
-        {
-            openedMenuTime = std::chrono::steady_clock::now();
-            CEMenu::ShowOrHideQLIEHint();
-        }
-    }
-
-    void QuickLootTakeItemHandler(QuickLoot::Events::TakeItemEvent *event)
+    void QuickLootTakeItemHandler(QuickLoot::API::Events::TakeItemEvent *event)
     {
         if (!CEGlobals::QLIE_ALLOWED || !event || !event->actor)
             return;
@@ -267,15 +258,15 @@ namespace CEGameEvents
         }
     }
 
-    void QuickLootSelectItemHandler(QuickLoot::Events::SelectItemEvent *event)
+    void QuickLootSelectItemHandler(QuickLoot::API::Events::SelectItemEvent *event)
     {
-        if (!CEGlobals::QLIE_ALLOWED || !event || !event->elements || !event->elements->object || !event->elements->object->formID)
+        if (!CEGlobals::QLIE_ALLOWED || !event || !event->stack || !event->stack->entry || !event->stack->entry->object)
             return;
         logger::debug("QuickLoot Select Item Event triggered");
         RE::FormID fid;
         try
         {
-            fid = event->elements->object->formID;
+            fid = event->stack->entry->object->formID;
             auto form = RE::TESForm::LookupByID(fid);
             if (!form)
                 return;
@@ -291,73 +282,50 @@ namespace CEGameEvents
             CEMenu::PersistentDisplayRun(true);
         else
             CEMenu::HideMenu();
-        MaybeShowHideHint();
     }
 
-    void QuickLootCloseHandler(QuickLoot::Events::CloseLootMenuEvent *)
+    void QuickLootCloseHandler(QuickLoot::API::Events::CloseLootMenuEvent *)
     {
         if (!CEGlobals::QLIE_ALLOWED)
             return;
         logger::debug("QuickLoot Close Event triggered");
         CEGameMenuUtils::currentFormID = NULL;
         CEMenu::HideMenu();
-        MaybeShowHideHint();
     }
 
-    void QuickLootOpenHandler(QuickLoot::Events::OpenLootMenuEvent *event)
+    void QuickLootOpenHandler(QuickLoot::API::Events::OpenLootMenuEvent *event)
     {
         if (!CEGlobals::QLIE_ALLOWED || !event || !event->container)
             return;
         logger::debug("QuickLoot Open Event triggered");
         try
         {
-            CEGameMenuUtils::containerInventoryQLIE = event->container->GetInventory();
+            CEGameMenuUtils::containerInventoryQLIE = event->container.get()->GetInventory();
         }
         catch (...)
         {
             logger::debug("QLIE OpenEventHandler: Failed to get container inventory.");
             return;
         }
-        std::vector<std::pair<std::string, RE::FormID>> objects;
-        for (auto &[item, data] : CEGameMenuUtils::containerInventoryQLIE)
-        {
-            if (item && data.second)
-            {
-                RE ::InventoryEntryData *entryData;
-                try
-                {
-                    entryData = data.second.get();
-                }
-                catch (...)
-                {
-                    logger::debug("QLIE OpenEventHandler: Failed to get data.second.get()");
-                    continue;
-                }
-                if (entryData)
-                {
-                    try
-                    {
-                        std::string name = entryData->GetDisplayName();
-                        RE::FormID fid = item->GetFormID();
-                        if (!name.empty() && std::strcmp(name.c_str(), "<Missing Name>") != 0 && fid)
-                            objects.push_back(std::make_pair(name, fid));
-                    }
-                    catch (...)
-                    {
-                        logger::debug("QLIE OpenEventHandler: Failed to get DisplayName or FID");
-                        continue;
-                    }
-                }
-            }
-        }
-        if (objects.size() <= 0)
+    }
+
+    void QuickLootPopulateButtonBarHandler(QuickLoot::API::Events::PopulateButtonBarEvent *event)
+    {
+        if (!event || !event->stack || !event->stack->entry)
             return;
-        std::sort(objects.begin(), objects.end(), [](const auto &a, const auto &b)
-                  { return a.first < b.first; });
-        auto firstObj = objects.at(0);
-        CEGameMenuUtils::currentFormID = firstObj.second;
-        MaybeShowHideHint();
-        if (CEGlobals::QLIE_PERSISTENT_DISPLAY && CEGameMenuUtils::isWeaponOrArmor(CEGameMenuUtils::currentFormID))
-            CEMenu::PersistentDisplayRun(true);
+        logger::debug("QuickLoot Populate Button Bar Event triggered");
+        if (!CEGameMenuUtils::isWeaponOrArmor(CEGameMenuUtils::currentFormID))
+            return;
+        uint32_t key = CEGlobals::COMPARE_KEY;
+        if (CEGlobals::lastInputDevice == RE::INPUT_DEVICE::kGamepad)
+        {
+            if (CEMenu::openedMenuName == "LootMenu")
+                key = CEGlobals::ConvertSKSEKeyToSkyrimKey(CEGlobals::CONTROLLER_KEY);
+            else
+                key = 273;
+        }
+        qlieButton.buttonArtIndex = static_cast<uint16_t>(key);
+        qlieButton.label = CEGlobals::QLIE_HINT_TEXT.c_str();
+        event->result.push_back(qlieButton);
     }
 }

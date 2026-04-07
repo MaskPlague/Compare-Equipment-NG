@@ -81,13 +81,19 @@ namespace CompareEquipmentNG
         if (!quickLootIEInitialized)
         {
             logger::debug("Initializing QuickLoot IE API");
-            QuickLoot::QuickLootAPI::Init();
-            QuickLoot::QuickLootAPI::RegisterTakeItemHandler(CEGameEvents::QuickLootTakeItemHandler);
-            QuickLoot::QuickLootAPI::RegisterSelectItemHandler(CEGameEvents::QuickLootSelectItemHandler);
-            QuickLoot::QuickLootAPI::RegisterCloseLootMenuHandler(CEGameEvents::QuickLootCloseHandler);
-            QuickLoot::QuickLootAPI::RegisterOpenLootMenuHandler(CEGameEvents::QuickLootOpenHandler);
-            quickLootIEInitialized = true;
+            quickLootIEInitialized = QuickLoot::API::QuickLootAPI::Init("CompareEquipment");
+            if (!quickLootIEInitialized)
+            {
+                logger::info("Error while initializing QLIE API");
+                return;
+            }
+            QuickLoot::API::QuickLootAPI::RegisterTakeItemHandler(CEGameEvents::QuickLootTakeItemHandler);
+            QuickLoot::API::QuickLootAPI::RegisterSelectItemHandler(CEGameEvents::QuickLootSelectItemHandler);
+            QuickLoot::API::QuickLootAPI::RegisterCloseLootMenuHandler(CEGameEvents::QuickLootCloseHandler);
+            QuickLoot::API::QuickLootAPI::RegisterOpenLootMenuHandler(CEGameEvents::QuickLootOpenHandler);
+            QuickLoot::API::QuickLootAPI::RegisterPopulateButtonBarHandler(CEGameEvents::QuickLootPopulateButtonBarHandler);
         }
+        logger::info("QuickLoot IE API Status: {}", quickLootIEInitialized ? "Active" : "Disabled");
     }
 
     void MessageHandler(SKSE::MessagingInterface::Message *msg)

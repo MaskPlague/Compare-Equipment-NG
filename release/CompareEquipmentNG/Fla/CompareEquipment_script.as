@@ -24,7 +24,6 @@ var effectsOriginalHeight = 54;
 var effectsOriginalWidth = 260;
 //Gloabls: Strings
 var buttonCompareText = "Compare";
-var qlieHintText = "Compare";
 var comparingTo = "Comparing to";
 var damageLabelText = "Damage";
 var critLabelText = "Crit";
@@ -67,11 +66,6 @@ var navPanel:MovieClip;
 var skyUiItemCard:MovieClip;
 var AHZItemCardContainer:MovieClip;
 var weaponStatsV2:MovieClip;
-//saved quickloot objects;
-var inLootMenu:Boolean = false;
-var lootMenuButtonBar:MovieClip;
-var lootMenuDataProvider:Array;
-
 
 function setVariables(){
 	var i = 0;
@@ -222,11 +216,7 @@ function onUnload(){
 		_parent.updateBottomBar = _parent.ce_original_UpdateBottomBar;
 		_parent.ce_original_UpdateBottomBar = undefined;
 	}
-	//So the new function doesn't duplicate
-	if (lootMenuButtonBar != null){
-		lootMenuButtonBar.invalidateData = lootMenuButtonBar.ce_original_invalidateData;
-		lootMenuButtonBar.ce_original_invalidateData = undefined;
-	}
+
 	//So the new function doesn't duplicate
 	if (weaponStatsV2 != null){
 		weaponStatsV2.showTheStats = weaponStatsV2.ce_original_showTheStats
@@ -264,36 +254,6 @@ function loaded(){
 	openedMenuName = args[1];
 	
 	getVariables();
-	
-	lootMenuButtonBar = _root.lootMenu.buttonBar;
-	if (lootMenuButtonBar != undefined && lootMenuButtonBar.ce_original_invalidateData == undefined){
-		inLootMenu = true;
-		lootMenuDataProvider = lootMenuButtonBar.dataProvider;
-		lootMenuButtonBar.ce_original_invalidateData = lootMenuButtonBar.invalidateData;
-		lootMenuButtonBar.invalidateData = function(){
-				if(cengIsWeaponOrArmor()){
-					var object:Object = lootMenuDataProvider[lootMenuDataProvider.length - 1];
-					if (object != undefined && object.ce_button == undefined){
-						var buttonObject:Object = new Object();
-						buttonObject.label = qlieHintText;
-						buttonObject.index = keycode;
-						buttonObject.stolen = false;
-						buttonObject.ce_button = true;
-						lootMenuButtonBar.ce_buttonObject = buttonObject;
-						lootMenuDataProvider.push(lootMenuButtonBar.ce_buttonObject);
-					}
-				}
-				else{
-					var object:Object = lootMenuDataProvider[lootMenuDataProvider.length - 1];
-					if (object.ce_button != undefined){
-						lootMenuDataProvider.pop();
-						lootMenuButtonBar.ce_button = undefined;
-					}
-				}
-				lootMenuButtonBar.ce_original_invalidateData();
-			}
-		showQLIEhint();
-	}
 	
 	//---------------For adding button hint, thanks shazdeh2 ------
 	var _thisMenuName = this._name;
@@ -354,7 +314,6 @@ function loaded(){
 function getVariables(){
     keycode = _parent.ce_hotKey;
 	buttonCompareText = _parent.ce_buttonCompareText;
-	qlieHintText = _parent.ce_qlieHintText;
 	comparingTo = _parent.ce_comparingTo;
 	damageLabelText = _parent.ce_damageLabelText;
 	critLabelText = _parent.ce_critLabelText;
@@ -394,12 +353,6 @@ function getVariables(){
 	_root.ce_assets._yscale = _parent.ce_scale;
 	maxRows = _parent.ce_maxRows;
 	_root.ce_assets.SelectedItemCard.Background._alpha = ALPHA;
-}
-
-function showOrHideQLIEHint(){
-	if(inLootMenu == false)
-		return;
-	lootMenuButtonBar.invalidateData();
 }
 
 function hideSkyUiItemCardAndMore(){
