@@ -325,7 +325,6 @@ namespace CEGameMenuUtils
             Slot::kModPelvisPrimary,
             Slot::kModPelvisSecondary,
             Slot::kModShoulder,
-            Slot::kNone,
             Slot::kRing,
             Slot::kShield,
             Slot::kTail,
@@ -349,38 +348,35 @@ namespace CEGameMenuUtils
         bool selectedIsEquipped = false;
         for (auto slot : slotList)
         {
-            if ((slots & slot) != Slot::kNone)
+            auto equippedArmor = actor->GetWornArmor(slot);
+            if (equippedArmor)
             {
-                auto equippedArmor = actor->GetWornArmor(slot);
-                if (equippedArmor)
+                auto formId = equippedArmor->GetFormID();
+                if (selectedFormId == formId)
+                    selectedIsEquipped = true;
+                bool alreadyPushed = std::find(pushedFormIds.begin(), pushedFormIds.end(), formId) != pushedFormIds.end();
+                if (selectedFormId != formId && !alreadyPushed)
                 {
-                    auto formId = equippedArmor->GetFormID();
-                    if (selectedFormId == formId)
-                        selectedIsEquipped = true;
-                    bool alreadyPushed = std::find(pushedFormIds.begin(), pushedFormIds.end(), formId) != pushedFormIds.end();
-                    if (selectedFormId != formId && !alreadyPushed)
-                    {
-                        pushedFormIds.push_back(formId);
-                        const char *equippedName = equippedArmor->GetName();
-                        std::string equippedSlots = GetArmorSlotsString(equippedArmor);
-                        const char *equippedType = GetArmorTypeString(equippedArmor->GetArmorType());
-                        int32_t equippedValue = 0;
-                        std::string equippedEffectInfo = "";
-                        float equippedRatingFloat = 0.0;
-                        int equippedRating = 0;
-                        std::string equippedRatingString;
-                        GetInfo(formId, equippedName, equippedValue, equippedRatingFloat, equippedRatingString,
-                                true, false, equippedEffectInfo, equippedArmor);
-                        equippedRating = static_cast<int>(equippedRatingFloat);
-                        equippedAccumulatedValue += equippedValue;
-                        equippedAccumulatedRating += equippedRating;
-                        RE::GFxValue equippedEntry = CEIconUtils::GetEquippedEntryObject(formId);
-                        std::array<RE::GFxValue, CEGlobals::EQUIPPED_ARMOR_ITEM_ARRAY_SIZE>
-                            itemInfo = {equippedName, equippedSlots.c_str(), equippedType,
-                                        equippedRatingString.c_str(), equippedValue, equippedEffectInfo.c_str(),
-                                        equippedEntry};
-                        CEMenu::CreateArmorComparisonItemCard(itemInfo, ceMenu);
-                    }
+                    pushedFormIds.push_back(formId);
+                    const char *equippedName = equippedArmor->GetName();
+                    std::string equippedSlots = GetArmorSlotsString(equippedArmor);
+                    const char *equippedType = GetArmorTypeString(equippedArmor->GetArmorType());
+                    int32_t equippedValue = 0;
+                    std::string equippedEffectInfo = "";
+                    float equippedRatingFloat = 0.0;
+                    int equippedRating = 0;
+                    std::string equippedRatingString;
+                    GetInfo(formId, equippedName, equippedValue, equippedRatingFloat, equippedRatingString,
+                            true, false, equippedEffectInfo, equippedArmor);
+                    equippedRating = static_cast<int>(equippedRatingFloat);
+                    equippedAccumulatedValue += equippedValue;
+                    equippedAccumulatedRating += equippedRating;
+                    RE::GFxValue equippedEntry = CEIconUtils::GetEquippedEntryObject(formId);
+                    std::array<RE::GFxValue, CEGlobals::EQUIPPED_ARMOR_ITEM_ARRAY_SIZE>
+                        itemInfo = {equippedName, equippedSlots.c_str(), equippedType,
+                                    equippedRatingString.c_str(), equippedValue, equippedEffectInfo.c_str(),
+                                    equippedEntry};
+                    CEMenu::CreateArmorComparisonItemCard(itemInfo, ceMenu);
                 }
             }
         }
