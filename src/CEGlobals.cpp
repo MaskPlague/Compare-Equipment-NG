@@ -12,6 +12,8 @@ namespace CEGlobals
     double BART_MENU_Y_ORIGIN = 250.0f;
     double GIFT_MENU_X_ORIGIN = 590.0f;
     double GIFT_MENU_Y_ORIGIN = 250.0f;
+    double CRAFTING_MENU_X_ORIGIN = 590.0f;
+    double CRAFTING_MENU_Y_ORIGIN = 250.0f;
     double QLIE_X_ORIGIN = 100.0f;
     double QLIE_Y_ORIGIN = 350.0f;
     double HUD_X_ORIGIN = 450.0f;
@@ -179,6 +181,8 @@ namespace CEGlobals
         BART_MENU_Y_ORIGIN = ini.GetDoubleValue("InMenu", "Barter Y Offset", 250.0f);
         GIFT_MENU_X_ORIGIN = ini.GetDoubleValue("InMenu", "Gift X Offset", 590.0f);
         GIFT_MENU_Y_ORIGIN = ini.GetDoubleValue("InMenu", "Gift Y Offset", 250.0f);
+        CRAFTING_MENU_X_ORIGIN = ini.GetDoubleValue("InMenu", "Crafting X Offset", 590.0f);
+        CRAFTING_MENU_Y_ORIGIN = ini.GetDoubleValue("InMenu", "Crafting Y Offset", 250.0f);
         MENU_SCALE = ini.GetLongValue("InMenu", "Scale", 100);
         if (MENU_SCALE <= 0)
             MENU_SCALE = 100;
@@ -311,6 +315,8 @@ namespace CEGlobals
         logger::debug("Barter Y Offset:         {:.2f}", BART_MENU_Y_ORIGIN);
         logger::debug("Gift X Offset:           {:.2f}", GIFT_MENU_X_ORIGIN);
         logger::debug("Gift Y Offset:           {:.2f}", GIFT_MENU_Y_ORIGIN);
+        logger::debug("Crafting X Offset:       {:.2f}", CRAFTING_MENU_X_ORIGIN);
+        logger::debug("Crafting Y Offset:       {:.2f}", CRAFTING_MENU_Y_ORIGIN);
         logger::debug("Scale:                   {}", MENU_SCALE);
         logger::debug("Background Alpha         {}", MENU_BACKGROUND_ALPHA);
         logger::debug("Layout:                  {}", MENU_LAYOUT);
@@ -372,6 +378,8 @@ namespace CEGlobals
         ini.SetDoubleValue("InMenu", "Barter Y Offset", BART_MENU_Y_ORIGIN, "#Selected Item's item card Y offset in the Barter menu\n#Default 250.0");
         ini.SetDoubleValue("InMenu", "Gift X Offset", GIFT_MENU_X_ORIGIN, "#Selected Item's item card X offset in the Gift menu\n#Default 590.0");
         ini.SetDoubleValue("InMenu", "Gift Y Offset", GIFT_MENU_Y_ORIGIN, "#Selected Item's item card Y offset in the Gift menu\n#Default 250.0");
+        ini.SetDoubleValue("InMenu", "Crafting X Offset", CRAFTING_MENU_X_ORIGIN, "#Selected Item's item card X offset in the Crafting menu\n#Default 590.0");
+        ini.SetDoubleValue("InMenu", "Crafting Y Offset", CRAFTING_MENU_Y_ORIGIN, "#Selected Item's item card Y offset in the Crafting menu\n#Default 250.0");
         ini.SetLongValue("InMenu", "Scale", MENU_SCALE, "#Scale of item cards in menus, default 100");
         ini.SetLongValue("InMenu", "Background Alpha", MENU_BACKGROUND_ALPHA, "#All item card's background alpha value in menus\n#Default 95, max 100, min 0");
         ini.SetLongValue("InMenu", "Layout", MENU_LAYOUT, "#Layout of item cards in menus\n#0: Vertically Centered (Default), 1: Upward, 2: Downward");

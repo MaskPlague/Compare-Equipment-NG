@@ -210,6 +210,7 @@ namespace CEGameEvents
              menuName == RE::ContainerMenu::MENU_NAME ||
              menuName == RE::BarterMenu::MENU_NAME ||
              menuName == RE::GiftMenu::MENU_NAME ||
+             menuName == RE::CraftingMenu::MENU_NAME ||
              (CEGlobals::QLIE_ALLOWED && menuName == "LootMenu")))
         {
             if (a_event->opening)

@@ -252,6 +252,16 @@ namespace CEGameMenuUtils
             items = uiSingleton->GetMenu<RE::BarterMenu>()->GetRuntimeData().itemList->items;
         else if (RE::GiftMenu::MENU_NAME == CEMenu::openedMenuName)
             items = uiSingleton->GetMenu<RE::GiftMenu>()->GetRuntimeData().itemList->items;
+        else if (RE::CraftingMenu::MENU_NAME == CEMenu::openedMenuName)
+        {
+            RE::TESObjectREFR::InventoryItemMap inv = CEActorUtils::currentActor->GetInventory();
+            if (GetInfoFromInventory(formId, name, value, stat, statString, armor, effectInfo, item, inv))
+                return true;
+
+            RE::InventoryEntryData entryData(item, 0);
+            GetInfoFromEntryData(&entryData, name, value, stat, statString, armor, effectInfo, item);
+            return true;
+        }
         else if ("LootMenu" == CEMenu::openedMenuName)
             return GetInfoFromInventory(formId, name, value, stat, statString, armor, effectInfo, item, containerInventoryQLIE);
         else
@@ -739,7 +749,12 @@ namespace CEGameMenuUtils
         RE::GFxValue itemList;
         RE::GFxValue selectedEntry;
         RE::GFxValue formId;
-        if (!Menu_mc.GetMember("inventoryLists", &inventoryLists) ||
+
+        std::string inventoryListsStr = "inventoryLists";
+        if (CEMenu::openedMenuName == RE::CraftingMenu::MENU_NAME)
+            inventoryListsStr = "InventoryLists";
+
+        if (!Menu_mc.GetMember(inventoryListsStr.c_str(), &inventoryLists) ||
             !inventoryLists.GetMember("itemList", &itemList) ||
             !itemList.GetMember("selectedEntry", &selectedEntry) ||
             !selectedEntry.IsObject() ||

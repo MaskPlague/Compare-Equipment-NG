@@ -130,9 +130,18 @@ namespace CEMenu
         RE::GFxValue Menu_mc;
         bool menuObtained = view->GetVariable(
             &Menu_mc,
-            nameOfMenuToGet == "LootMenu"  ? "_root.lootMenu"
-            : nameOfMenuToGet == "HUDMenu" ? "_root"
-                                           : "_root.Menu_mc");
+            nameOfMenuToGet == "LootMenu"        ? "_root.lootMenu"
+            : nameOfMenuToGet == "HUDMenu"       ? "_root"
+            : nameOfMenuToGet == "Crafting Menu" ? "_root.Menu"
+                                                 : "_root.Menu_mc");
+        // Member finder
+        /*RE::GFxValue root;
+        bool gotRoot = view->GetVariable(&root, "_root.Menu");
+        if (gotRoot)
+        {
+            root.VisitMembers([&](const char *name, const RE::GFxValue &)
+                              { logger::info("{}", name); });
+        }*/
         if (!menuObtained)
             return nullptr;
         return Menu_mc;
@@ -200,6 +209,11 @@ namespace CEMenu
         {
             xOffset = CEGlobals::GIFT_MENU_X_ORIGIN;
             yOffset = CEGlobals::GIFT_MENU_Y_ORIGIN;
+        }
+        else if (openedMenuName == RE::CraftingMenu::MENU_NAME)
+        {
+            xOffset = CEGlobals::CRAFTING_MENU_X_ORIGIN;
+            yOffset = CEGlobals::CRAFTING_MENU_Y_ORIGIN;
         }
         RE::GFxValue args[2];
         args[0].SetNumber(xOffset);
