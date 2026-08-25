@@ -482,6 +482,8 @@ namespace CEGlobals
     std::string worseWrapperEnd = ")</font>";
     std::string normalWrapperStart = "<font color=\"#FFFFFF\" size=\"12\">";
     std::string normalWrapperEnd = "</font>";
+    std::string diffTypeWrapperStart = "<font color=\"#FFFF00\" size=\"12\">";
+    std::string diffTypeWrapperEnd = "</font>";
     std::string settingsReloaded = "CompareEquipmentNG: Settings Reloaded";
 
     long diffOffset = 0;
@@ -536,6 +538,8 @@ namespace CEGlobals
         worseWrapperEnd = ini.GetValue("Translations", "worseWrapperEnd", ")</font>");
         normalWrapperStart = ini.GetValue("Translations", "normalWrapperStart", "<font color=\"#FFFFFF\">");
         normalWrapperEnd = ini.GetValue("Translations", "normalWrapperEnd", "</font>");
+        diffTypeWrapperStart = ini.GetValue("Translations", "diffTypeWrapperStart", "<font color=\"#FFFF00\">");
+        diffTypeWrapperEnd = ini.GetValue("Translations", "diffTypeWrapperEnd", "</font>");
         settingsReloaded = ini.GetValue("Translations", "settingsReloaded", "CompareEquipmentNG: Settings Reloaded");
 
         ini.SetLongValue("Customization", "diffOffset", diffOffset,
@@ -652,6 +656,12 @@ namespace CEGlobals
 
         ini.SetValue("Translations", "normalWrapperEnd", normalWrapperEnd.c_str(),
                      "# Normal HTML wrapper end");
+
+        ini.SetValue("Translations", "diffTypeWrapperStart", diffTypeWrapperStart.c_str(),
+                     "# Different Type HTML Wrapper start so different type armor types are colored yellow. i.e. Selected Light != Equipped Heavy make Heavy yellow.");
+
+        ini.SetValue("Translations", "diffTypeWrapperEnd", diffTypeWrapperEnd.c_str(),
+                     "# Different Type HTML wrapper end");
 
         ini.SetValue("Translations", "settingsReloaded", settingsReloaded.c_str(),
                      "# Notification that appears when you reload the settings via hotkey");

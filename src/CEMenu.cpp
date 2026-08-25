@@ -362,6 +362,8 @@ namespace CEMenu
         Menu_mc.SetMember("ce_worseWrapperEnd", CEGlobals::worseWrapperEnd.c_str());
         Menu_mc.SetMember("ce_normalWrapperStart", CEGlobals::normalWrapperStart.c_str());
         Menu_mc.SetMember("ce_normalWrapperEnd", CEGlobals::normalWrapperEnd.c_str());
+        Menu_mc.SetMember("ce_diffTypeWrapperStart", CEGlobals::diffTypeWrapperStart.c_str());
+        Menu_mc.SetMember("ce_diffTypeWrapperEnd", CEGlobals::diffTypeWrapperEnd.c_str());
         Menu_mc.SetMember("ce_diffOffset", CEGlobals::diffOffset);
         Menu_mc.SetMember("ce_valueOffset", CEGlobals::valueOffset);
         Menu_mc.SetMember("ce_columnTwoOffset", CEGlobals::columnTwoOffset);

@@ -101,6 +101,8 @@ namespace CEGlobals
     extern std::string worseWrapperEnd;
     extern std::string normalWrapperStart;
     extern std::string normalWrapperEnd;
+    extern std::string diffTypeWrapperStart;
+    extern std::string diffTypeWrapperEnd;
     extern std::string settingsReloaded;
 
     extern long diffOffset;
