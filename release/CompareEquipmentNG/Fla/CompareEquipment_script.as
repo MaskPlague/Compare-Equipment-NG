@@ -1,5 +1,5 @@
 ﻿// SWF version, DO NOT TOUCH, used to make sure the SWF matches the dll.
-var VERSION:Number = 6;
+var VERSION:Number = 7;
 //Globals
 var maxRows:Number = 4;
 var spacingFromSelected = 5;
@@ -22,6 +22,7 @@ var SCROLL_SPEED:Number = 100;
 var SCROLL_DELAY:Number = 2.5;
 var effectsOriginalHeight = 54;
 var effectsOriginalWidth = 260;
+var isArmor:Boolean;
 //Gloabls: Strings
 var buttonCompareText = "Compare";
 var comparingTo = "Comparing to";
@@ -49,6 +50,8 @@ var worseWrapperStart = "<font color=\"#FF0000\">(";
 var worseWrapperEnd = ")</font>";
 var normalWrapperStart = "<font color=\"#FFFFFF\">";
 var normalWrapperEnd = "</font>";
+var diffTypeWrapperStart = "<font color=\"#FFFF00\">";
+var diffTypeWrapperEnd = "</font>";
 
 var warningLabel = "VERSION MISMATCH";
 var dllExpectsText = "CompareEquipmentNG.dll expects SWF version";
@@ -66,7 +69,7 @@ var navPanel:MovieClip;
 var skyUiItemCard:MovieClip;
 var AHZItemCardContainer:MovieClip;
 var weaponStatsV2:MovieClip;
-
+/*
 function setVariables(){
 	var i = 0;
 	buttonCompareText = arguments[i++];
@@ -102,7 +105,7 @@ function setVariables(){
 	spacingBetweenEquippedX = arguments[i++]
 	spacingBetweenEquippedY = arguments[i++];
 	layout = arguments[i++];
-}
+}*/
 
 function normalWrap(str:String){
 	return normalWrapperStart + str + normalWrapperEnd;
@@ -114,6 +117,10 @@ function betterWrap(str:String){
 
 function worseWrap(str:String){
 	return worseWrapperStart + str + worseWrapperEnd;
+}
+
+function diffTypeWrap(str:String){
+	return diffTypeWrapperStart + str + diffTypeWrapperEnd
 }
 
 function setWeaponLabels(instanceToLabel:MovieClip){
@@ -242,9 +249,15 @@ function onLoad() {
 
 function loaded(){
 	inventoryLists = _parent.inventoryLists;
+	if (!inventoryLists){
+		inventoryLists = _parent.InventoryLists;
+	}
 	DEFAULT_ITEM_NAME_X = _root.ce_assets.SelectedItemCard.TextBoxes.ItemName._x;
 	navPanel = _parent.navPanel;
 	skyUiItemCard = _parent.itemCard;
+	if (!skyUiItemCard){
+		skyUiItemCard = _parent.ItemInfo
+	}
 	AHZItemCardContainer = _root.AHZItemCardContainer;
 	var args:Array = this._name.split("_");
     var expectedSwfVersion:Number = _parent.ce_expectedVersion;
@@ -257,14 +270,26 @@ function loaded(){
 	
 	//---------------For adding button hint, thanks shazdeh2 ------
 	var _thisMenuName = this._name;
-	_parent.ce_original_UpdateBottomBar = _parent.updateBottomBar;
-	_parent.updateBottomBar = function(arg:Boolean) {
-			this.ce_original_UpdateBottomBar(arg);
-			this[_thisMenuName].lastBoolean = arg;
-			if (this[_thisMenuName].displayButton){
-				this[_thisMenuName].addButton();
-			}
-		}
+	if(!_parent.updateBottomBar){
+		_parent.ce_original_UpdateButtonText = _parent.UpdateButtonText;
+		_parent.UpdateButtonText = function() {
+										this.ce_original_UpdateButtonText();
+										if (this[_thisMenuName].displayButton){
+											this[_thisMenuName].addButton();
+										}
+									}
+	}
+	else{
+		_parent.ce_original_UpdateBottomBar = _parent.updateBottomBar;
+		_parent.updateBottomBar = function(arg:Boolean) {
+										this.ce_original_UpdateBottomBar(arg);
+										this[_thisMenuName].lastBoolean = arg;
+										if (this[_thisMenuName].displayButton){
+											this[_thisMenuName].addButton();
+										}
+									}
+	}
+
 	//-------------------------------------------------------------
 	if (expectedSwfVersion == VERSION){
 		_root.ce_assets._visible = false;
@@ -339,6 +364,8 @@ function getVariables(){
 	worseWrapperEnd = _parent.ce_worseWrapperEnd;
 	normalWrapperStart = _parent.ce_normalWrapperStart;
 	normalWrapperEnd = _parent.ce_normalWrapperEnd;
+	diffTypeWrapperStart = _parent.ce_diffTypeWrapperStart;
+	diffTypeWrapperEnd = _parent.ce_diffTypeWrapperEnd;
 	diffOffset = _parent.ce_diffOffset;
 	valueOffset = _parent.ce_valueOffset;
 	columnTwoOffset = _parent.ce_columnTwoOffset;
@@ -416,10 +443,15 @@ function showOrHideHotkeyHint(event: Object){
 	if (openedMenuName == "GiftMenu"){
 		displayButton = true;
 	}
+	if (openedMenuName == "Crafting Menu" && 
+		(event.index == 0 || event.index == 1 || event.index == 3 ||
+		 event.index == 4 || event.index == 6)){
+		displayButton = true;
+	}
 	//----------------------------------------------------------------------------------
 	
 	//Display button hint with same as last called boolean
-	if (_parent != null){
+	if (_parent != null and _parent.updateBottomBar){
 		_parent.updateBottomBar(lastBoolean);
 	}
 }
@@ -751,6 +783,7 @@ function offsetValuesAndDiffs(instanceO:MovieClip){
 }
 
 function populateSelectedArmorItemCard(){
+	isArmor = true;
 	setArmorLabels(_root.ce_assets.SelectedItemCard);
 	enableAutoSize(_root.ce_assets.SelectedItemCard);
 	var tb = _root.ce_assets.SelectedItemCard.TextBoxes;
@@ -808,6 +841,7 @@ function populateSelectedArmorItemCard(){
 }
 
 function populateSelectedWeaponItemCard(){
+	isArmor = false
 	_root.ce_assets.SelectedItemCard._visible = false;
 	var newInstance:MovieClip;
 	//Up to two selected item cards, one for each equipped hand.
@@ -1145,6 +1179,10 @@ function positionItemCards(){
 		instanceToPosition._x = _root.ce_assets.SelectedItemCard.Background._width + spacingFromSelected + col * (instanceToPosition.Background._width + spacingBetweenEquippedX);
 		instanceToPosition.Background._alpha = ALPHA;
 		offsetValuesAndDiffs(instanceToPosition);
+		// If armor and types do not match, wrap with diffTypeWrapper
+		if (isArmor && instanceToPosition.TextBoxes.ArmorType.Text.text != _root.ce_assets.SelectedItemCard.TextBoxes.ArmorType.Text.text){
+			instanceToPosition.TextBoxes.ArmorType.Text.htmlText = diffTypeWrap(instanceToPosition.TextBoxes.ArmorType.Text.text)
+		}
 	}
 	for (i = 0; i < selectedCounter; i++) {
 		instanceToPosition = _root.ce_assets["instanceSelected_" + i];
