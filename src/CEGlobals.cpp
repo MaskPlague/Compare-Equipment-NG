@@ -145,109 +145,202 @@ namespace CEGlobals
         }
     }
 
+    namespace
+    {
+        constexpr const char *CONFIG_INI_PATH = "Data\\SKSE\\Plugins\\CompareEquipmentNG.ini";
+        constexpr const char *TRANSLATION_INI_PATH = "Data\\SKSE\\Plugins\\CompareEquipmentNG_translation.ini";
+
+        constexpr const int LOGPADDING = 22;
+
+        long ClampToRange(long value, long min, long max)
+        {
+            if (value < min)
+                return min;
+            if (value > max)
+                return max;
+            return value;
+        }
+
+        long ResetIfOutOfRange(long value, long min, long max, long fallback)
+        {
+            return (value < min || value > max) ? fallback : value;
+        }
+    }
+
+    // clang-format off
+    // X(Type, Var, Section, Key, Default, Log Label, Comment)
+
+    #define CE_GENERAL_SETTINGS(X) \
+        X(Bool,   USE_ICONS,                  "General", "UseIcons",               true,  "Use Icons", \
+            "#If item icons should be displayed when available.") \
+        X(Bool,   HIDE_3D,                    "General", "Hide 3D Model",          true,  "Hide 3D Models", \
+          "#If the 3d model in menus should be hidden.") \
+        X(Bool,   HIDE_SKY_UI_ITEM_CARD,      "General", "Hide SkyUI Item Card",   true,  "Hide SkyUI Item Cards", \
+          "#If the SkyUI item card should be hidden.") \
+        X(Long,   SCROLL_SPEED,               "General", "Effect(s) Scroll Speed", 100,   "Effect(s) Scroll Speed", \
+          "#How fast the Effect(s) text box will scroll\n#Default 100") \
+        X(Double, SCROLL_DELAY,               "General", "Effect(s) Scroll Delay", 2.5,   "Effect(s) Scroll Delay (seconds)", \
+          "#Length of delay before/after scrolling effects, in seconds.\n#Default 2.5") \
+        X(Bool,   INSERT_NEWLINES,            "General", "Insert Newlines",        false, "Insert Newlines", \
+          "#Insert a newline between enchantment effects ('. ' -> '.\\n') in the Effect(s) section") \
+        X(Long,   SPACING_FROM_SELECTED,      "General", "Spacing From Selected",  5,     "Spacing From Selected", \
+          "#Spacing of equipped item cards from selected item cards, default 5") \
+        X(Long,   SPACING_BETWEEN_EQUIPPED_X, "General", "Spacing Between Equipped X", 5, "Spacing Between X", \
+          "#Spacing between equipped item cards on the x-axis, default 5") \
+        X(Long,   SPACING_BETWEEN_EQUIPPED_Y, "General", "Spacing Between Equipped Y", 5, "Spacing Between Y", \
+          "#Spacing between equipped item cards on the y-axis, default 5")
+
+    #define CE_INMENU_SETTINGS(X) \
+        X(Double, INV_MENU_X_ORIGIN,      "InMenu", "Inventory X Offset", 590.0, "Inventory X Offset", \
+          "#Selected Item's item card X offset in the Inventory menu\n#Default 590.0") \
+        X(Double, INV_MENU_Y_ORIGIN,      "InMenu", "Inventory Y Offset", 250.0, "Inventory Y Offset", \
+          "#Selected Item's item card Y offset in the Inventory menu\n#Default 250.0") \
+        X(Double, CONT_MENU_X_ORIGIN,     "InMenu", "Container X Offset", 590.0, "Container X Offset", \
+          "#Selected Item's item card X offset in the Container menu\n#Default 590.0") \
+        X(Double, CONT_MENU_Y_ORIGIN,     "InMenu", "Container Y Offset", 250.0, "Container Y Offset", \
+          "#Selected Item's item card Y offset in the Container menu\n#Default 250.0") \
+        X(Double, BART_MENU_X_ORIGIN,     "InMenu", "Barter X Offset", 590.0, "Barter X Offset", \
+          "#Selected Item's item card X offset in the Barter menu\n#Default 590.0") \
+        X(Double, BART_MENU_Y_ORIGIN,     "InMenu", "Barter Y Offset", 250.0, "Barter Y Offset", \
+          "#Selected Item's item card Y offset in the Barter menu\n#Default 250.0") \
+        X(Double, GIFT_MENU_X_ORIGIN,     "InMenu", "Gift X Offset", 590.0, "Gift X Offset", \
+          "#Selected Item's item card X offset in the Gift menu\n#Default 590.0") \
+        X(Double, GIFT_MENU_Y_ORIGIN,     "InMenu", "Gift Y Offset", 250.0, "Gift Y Offset", \
+          "#Selected Item's item card Y offset in the Gift menu\n#Default 250.0") \
+        X(Double, CRAFTING_MENU_X_ORIGIN, "InMenu", "Crafting X Offset", 590.0, "Crafting X Offset", \
+          "#Selected Item's item card X offset in the Crafting menu\n#Default 590.0") \
+        X(Double, CRAFTING_MENU_Y_ORIGIN, "InMenu", "Crafting Y Offset", 250.0, "Crafting Y Offset", \
+          "#Selected Item's item card Y offset in the Crafting menu\n#Default 250.0") \
+        X(Bool,   MENU_PERSISTENT_DISPLAY, "InMenu", "Persistent Display", false, "Persistent Display", \
+          "#If item cards should persistantly display without hotkey in menus.\n#Default false") \
+        X(Bool,   MENU_PERSISTENT_TOGGLE,  "InMenu", "Persistent Toggle", false, "Persistent Toggle", \
+          "#If pressing the hotkey will toggle persistent display in menus.\n#Default false") \
+        X(Bool,   MENU_PERSISTENT_DEFAULT_DISPLAY, "InMenu", "Persistent Default Display", true, "Persistent Default", \
+          "#If item cards should display by default before first toggled." \
+          "\n#Requires Persistent Display to be true to have an effect." \
+          "\n#Default true")
+
+    #define CE_OUTOFMENU_SETTINGS(X) \
+        X(Bool,   HUD_ALLOWED,    "OutOfMenu", "Enabled", true, "HUD Enabled", \
+          "#Toggle for Compare Equipment functionality outside of Menus.\n#Default true") \
+        X(Bool,   HUD_TOGGLEMODE, "OutOfMenu", "Toggle Mode", true, "HUD Toggle Mode", \
+          "#If pressing the hotkey a second time will hide the item cards.\n#Default true") \
+        X(Double, HUD_X_ORIGIN,   "OutOfMenu", "X Offset", 450.0, "HUD X Offset", \
+          "#Selected Item's item card X offset outside of menus\n#Default 450.0") \
+        X(Double, HUD_Y_ORIGIN,   "OutOfMenu", "Y Offset", 250.0, "HUD Y Offset", \
+          "#Selected Item's item card Y offset outside of menus\n#Default 250.0")
+
+    #define CE_QUICKLOOTIE_SETTINGS(X) \
+        X(Bool,   QLIE_ALLOWED, "QuickLootIE", "Enabled", true, "QuickLootIE Enabled", \
+          "#Toggle for Compare Equipment functionality for QuickLoot IE.\n#Default true") \
+        X(Double, QLIE_X_ORIGIN, "QuickLootIE", "X Offset", 100.0, "QuickLootIE X Offset", \
+          "#Selected Item's item card X offset for QuickLootIE\n#Default 100.0") \
+        X(Double, QLIE_Y_ORIGIN, "QuickLootIE", "Y Offset", 350.0, "QuickLootIE Y Offset", \
+          "#Selected Item's item card Y offset for QuickLootIE\n#Default 350.0") \
+        X(Bool,   QLIE_PERSISTENT_DISPLAY, "QuickLootIE", "Persistent Display", false, "QLIE Persistent Display", \
+          "#If item cards should persistantly display without hotkey for QuickLootIE.\n#Default false") \
+        X(Bool,   QLIE_PERSISTENT_TOGGLE, "QuickLootIE", "Persistent Toggle", false, "QLIE Persistent Toggle", \
+          "#If pressing the hotkey will toggle persistent display for QuickLootIE.\n#Default false") \
+        X(Bool,   QLIE_PERSISTENT_DEFAULT_DISPLAY, "QuickLootIE", "Persistent Default Display", true, "QLIE Persistent Default", \
+          "#If item cards should display by default before first toggled for QuickLootIE." \
+          "\n#Requires Persistent Display to be true to have an effect." \
+          "\n#Default true")
+
+    #define CE_CONTROLS_SETTINGS(X) \
+        X(Long, COMPARE_KEY, "Controls", "Compare Key", 47, "Compare Key", \
+          "#Key that will display the comparison item cards, triple tap to cycle followers, hold to select player." \
+          "\n#For controller see Controller Compare Key, ThumbstickAngle and ThumbstickThreshold" \
+          "\n#Default 47 (V key), Key Codes can be found here : https://ck.uesp.net/wiki/Input_Script")
+
+    #define CE_INTERNAL_SETTINGS(X) \
+        X(Bool, CRASH_PREVENTION, "Internal", "Crash Prevention", true, "Crash Prevention", \
+          "#Adds extra crash prevention measures." \
+          "\n#This can slightly slow down display speeds and is only noticible when persistent display is enabled." \
+          "\n#Only disable this if you are using persistent display and you dislike the item cards flashing.")
+
+    #define CE_DEBUG_SETTINGS(X) \
+        X(Long, LOG_LEVEL, "Debug", "Logging Level", 2, "Logging Level", \
+          "#0: Errors, 1: Warnings, 2: Info(default), 3: Debug, 4: Trace")
+
+    // Long settings that get clamped against a min/max range
+    // X(Var, Section, Key, Default, Min, Max, Fallback, Log Label, Comment)
+
+    #define CE_RANGED_LONG_SETTINGS(X) \
+        X(MENU_SCALE,             "InMenu",      "Scale",             100, 1, 999999999L, 100, "Menus Scale", \
+          "#Scale of item cards in menus, default 100") \
+        X(QLIE_SCALE,             "QuickLootIE", "Scale",             150, 1, 999999999L, 150, "QuickLootIE Scale", \
+          "#Scale of item cards for QuickLootIE, default 150") \
+        X(HUD_SCALE,              "OutOfMenu",   "Scale",             100, 1, 999999999L, 100, "HUD Scale", \
+          "#Scale of item cards outside of menus, default 100") \
+        X(MENU_BACKGROUND_ALPHA,  "InMenu",      "Background Alpha",  95,  0, 100,        100, "Menus Background Alpha", \
+          "#All item card's background alpha value in menus\n#Default 95, max 100, min 0") \
+        X(QLIE_BACKGROUND_ALPHA,  "QuickLootIE", "Background Alpha",  85,  0, 100,        100, "QLIE Background Alpha", \
+          "#All item card's background alpha value for QuickLootIE\n#Default 85, max 100, min 0") \
+        X(HUD_BACKGROUND_ALPHA,   "OutOfMenu",   "Background Alpha",  85,  0, 100,        100, "HUD Background Alpha", \
+          "#All item card's background alpha value outside of menus\n#Default 85, max 100, min 0") \
+        X(MENU_LAYOUT,            "InMenu",      "Layout",            0,   0, 2,          0,   "Menus Layout", \
+          "#Layout of item cards in menus\n#0: Vertically Centered (Default), 1: Upward, 2: Downward") \
+        X(QLIE_LAYOUT,            "QuickLootIE", "Layout",            0,   0, 2,          0,   "QLIE Layout", \
+          "#Layout of item cards for QuickLootIE\n#0: Vertically Centered (Default), 1: Upward, 2: Downward") \
+        X(HUD_LAYOUT,             "OutOfMenu",   "Layout",            0,   0, 2,          0,   "HUD Layout", \
+          "#Layout of item cards outside of menus\n#0: Vertically Centered (Default), 1: Upward, 2: Downward")
+
+    // Expansion macros
+
+    #define LOAD_ROW(Type, Var, Section, Key, Default, LogLabel, Comment) \
+        Var = ini.Get##Type##Value(Section, Key, Default);
+    #define LOG_ROW_Bool(Var, LogLabel)   logger::debug("{}: {:{}} {}", LogLabel, "", LOGPADDING - std::strlen(LogLabel), Var);
+    #define LOG_ROW_Long(Var, LogLabel)   logger::debug("{}: {:{}} {}", LogLabel, "", LOGPADDING - std::strlen(LogLabel), Var);
+    #define LOG_ROW_Double(Var, LogLabel) logger::debug("{}: {:{}} {:.2f}", LogLabel, "", LOGPADDING - std::strlen(LogLabel), Var);
+    #define LOG_ROW(Type, Var, Section, Key, Default, LogLabel, Comment) \
+        LOG_ROW_##Type(Var, LogLabel)
+    #define SAVE_ROW(Type, Var, Section, Key, Default, LogLabel, Comment) \
+        ini.Set##Type##Value(Section, Key, Var, Comment);
+
+    #define LOAD_RANGED(Var, Section, Key, Default, Min, Max, Fallback, LogLabel, Comment) \
+        Var = static_cast<decltype(Var)>(ResetIfOutOfRange(ini.GetLongValue(Section, Key, Default), Min, Max, Fallback));
+    #define LOG_RANGED(Var, Section, Key, Default, Min, Max, Fallback, LogLabel, Comment) \
+        logger::debug("{}: {:{}} {}", LogLabel, "", LOGPADDING - std::strlen(LogLabel), Var);
+    #define SAVE_RANGED(Var, Section, Key, Default, Min, Max, Fallback, LogLabel, Comment) \
+        ini.SetLongValue(Section, Key, Var, Comment);
+
+    // clang-format on
+
     void LoadConfig()
     {
         CSimpleIniA ini;
         ini.SetUnicode();
 
-        SI_Error rc = ini.LoadFile("Data\\SKSE\\Plugins\\CompareEquipmentNG.ini");
+        SI_Error rc = ini.LoadFile(CONFIG_INI_PATH);
         if (rc < 0)
         {
             logger::warn("Could not load CompareEquipmentNG.ini, using defaults");
         }
-        USE_ICONS = ini.GetBoolValue("General", "UseIcons", true);
-        HIDE_3D = ini.GetBoolValue("General", "Hide 3D Model", true);
-        SCROLL_SPEED = ini.GetLongValue("General", "Effect(s) Scroll Speed", 100);
-        SCROLL_DELAY = ini.GetDoubleValue("General", "Effect(s) Scroll Delay", 2.5f);
-        INSERT_NEWLINES = ini.GetBoolValue("General", "Insert Newlines", false);
-        HIDE_SKY_UI_ITEM_CARD = ini.GetBoolValue("General", "Hide SkyUI Item Card", HIDE_SKY_UI_ITEM_CARD);
-        ROWS = ini.GetLongValue("General", "Maximum Rows", 4);
-        if (ROWS > 4)
-            ROWS = 4;
-        if (ROWS < 1)
-            ROWS = 1;
 
-        SPACING_FROM_SELECTED = ini.GetLongValue("General", "Spacing From Selected", 5);
-        SPACING_BETWEEN_EQUIPPED_X = ini.GetLongValue("General", "Spacing Between Equipped X", 5);
-        SPACING_BETWEEN_EQUIPPED_Y = ini.GetLongValue("General", "Spacing Between Equipped Y", 5);
+        // --------------------------------------------------------------- Load ---------------------------------------------------------------
+        CE_GENERAL_SETTINGS(LOAD_ROW)
+        ROWS = static_cast<int>(ClampToRange(ini.GetLongValue("General", "Maximum Rows", 4), 1, 4));
 
-        //------------------------------ In Menus ---------------------------------------------------------------
+        CE_INMENU_SETTINGS(LOAD_ROW)
+        CE_RANGED_LONG_SETTINGS(LOAD_RANGED)
 
-        INV_MENU_X_ORIGIN = ini.GetDoubleValue("InMenu", "Inventory X Offset", 590.0f);
-        INV_MENU_Y_ORIGIN = ini.GetDoubleValue("InMenu", "Inventory Y Offset", 250.0f);
-        CONT_MENU_X_ORIGIN = ini.GetDoubleValue("InMenu", "Container X Offset", 590.0f);
-        CONT_MENU_Y_ORIGIN = ini.GetDoubleValue("InMenu", "Container Y Offset", 250.0f);
-        BART_MENU_X_ORIGIN = ini.GetDoubleValue("InMenu", "Barter X Offset", 590.0f);
-        BART_MENU_Y_ORIGIN = ini.GetDoubleValue("InMenu", "Barter Y Offset", 250.0f);
-        GIFT_MENU_X_ORIGIN = ini.GetDoubleValue("InMenu", "Gift X Offset", 590.0f);
-        GIFT_MENU_Y_ORIGIN = ini.GetDoubleValue("InMenu", "Gift Y Offset", 250.0f);
-        CRAFTING_MENU_X_ORIGIN = ini.GetDoubleValue("InMenu", "Crafting X Offset", 590.0f);
-        CRAFTING_MENU_Y_ORIGIN = ini.GetDoubleValue("InMenu", "Crafting Y Offset", 250.0f);
-        MENU_SCALE = ini.GetLongValue("InMenu", "Scale", 100);
-        if (MENU_SCALE <= 0)
-            MENU_SCALE = 100;
-        MENU_BACKGROUND_ALPHA = ini.GetLongValue("InMenu", "Background Alpha", 95);
-        if (MENU_BACKGROUND_ALPHA < 0 || MENU_BACKGROUND_ALPHA > 100)
-            MENU_BACKGROUND_ALPHA = 100;
-        MENU_LAYOUT = ini.GetLongValue("InMenu", "Layout", 0);
-        if (MENU_LAYOUT < 0 || MENU_LAYOUT > 2)
-            MENU_LAYOUT = 0;
-        MENU_PERSISTENT_DISPLAY = ini.GetBoolValue("InMenu", "Persistent Display", false);
-        MENU_PERSISTENT_TOGGLE = ini.GetBoolValue("InMenu", "Persistent Toggle", false);
-        MENU_PERSISTENT_DEFAULT_DISPLAY = ini.GetBoolValue("InMenu", "Persistent Default Display", true);
-        //------------------------------ Outside of Menus --------------------------------------------------------
+        CE_OUTOFMENU_SETTINGS(LOAD_ROW)
+        CE_QUICKLOOTIE_SETTINGS(LOAD_ROW)
+        CE_CONTROLS_SETTINGS(LOAD_ROW)
 
-        HUD_ALLOWED = ini.GetBoolValue("OutOfMenu", "Enabled", true);
-        HUD_TOGGLEMODE = ini.GetBoolValue("OutOfMenu", "Toggle Mode", true);
-        HUD_X_ORIGIN = ini.GetDoubleValue("OutOfMenu", "X Offset", 450.0f);
-        HUD_Y_ORIGIN = ini.GetDoubleValue("OutOfMenu", "Y Offset", 250.0f);
-        HUD_SCALE = ini.GetLongValue("OutOfMenu", "Scale", 100);
-        if (HUD_SCALE <= 0)
-            HUD_SCALE = 100;
-        HUD_BACKGROUND_ALPHA = ini.GetLongValue("OutOfMenu", "Background Alpha", 85);
-        if (HUD_BACKGROUND_ALPHA < 0 || HUD_BACKGROUND_ALPHA > 100)
-            HUD_BACKGROUND_ALPHA = 100;
-        HUD_LAYOUT = ini.GetLongValue("OutOfMenu", "Layout", 0);
-        if (HUD_LAYOUT < 0 || HUD_LAYOUT > 2)
-            HUD_LAYOUT = 0;
-
-        //------------------------------- QuickLootIE ------------------------------------------------------------
-
-        QLIE_ALLOWED = ini.GetBoolValue("QuickLootIE", "Enabled", true);
-        QLIE_X_ORIGIN = ini.GetDoubleValue("QuickLootIE", "X Offset", 100.0f);
-        QLIE_Y_ORIGIN = ini.GetDoubleValue("QuickLootIE", "Y Offset", 350.0f);
-        QLIE_SCALE = ini.GetLongValue("QuickLootIE", "Scale", 150);
-        if (QLIE_SCALE <= 0)
-            QLIE_SCALE = 150;
-        QLIE_BACKGROUND_ALPHA = ini.GetLongValue("QuickLootIE", "Background Alpha", 85);
-        if (QLIE_BACKGROUND_ALPHA < 0 || QLIE_BACKGROUND_ALPHA > 100)
-            QLIE_BACKGROUND_ALPHA = 100;
-        QLIE_LAYOUT = ini.GetLongValue("QuickLootIE", "Layout", 0);
-        if (QLIE_LAYOUT < 0 || QLIE_LAYOUT > 2)
-            QLIE_LAYOUT = 0;
-        QLIE_PERSISTENT_DISPLAY = ini.GetBoolValue("QuickLootIE", "Persistent Display", false);
-        QLIE_PERSISTENT_TOGGLE = ini.GetBoolValue("QuickLootIE", "Persistent Toggle", false);
-        QLIE_PERSISTENT_DEFAULT_DISPLAY = ini.GetBoolValue("QuickLootIE", "Persistent Default Display", true);
-
-        //-------------------------------- Controls ---------------------------------------------------------------
-
-        COMPARE_KEY = ini.GetLongValue("Controls", "Compare Key", 47);
         HOLD_THRESHOLD = static_cast<float>(ini.GetLongValue("Controls", "Hold Duration", 500) * 0.001);
         TRIPLE_HIT_WINDOW = static_cast<float>(ini.GetLongValue("Controls", "Triple Hit Window", 400) * 0.001);
-
-        CONTROLLER_KEY = ini.GetLongValue("Controls", "Controller Compare Key", 268);
-        CONTROLLER_KEY = ConvertSkyrimKeyToSKSEKey(CONTROLLER_KEY);
-
         SETTING_HOLD_THRESHOLD = static_cast<float>(ini.GetLongValue("Controls", "Setting Hold Duration", 3000) * 0.001);
-        int angle = ini.GetLongValue("Controls", "Thumbstick Angle", 0);
-        if (angle > 180 || angle < -180)
-            angle = 0;
 
-        thumbstickThreshold = static_cast<float>(ini.GetDoubleValue("Controls", "Thumbstick Threshold", 0.9f));
-        if (thumbstickThreshold >= 1.0)
+        CONTROLLER_KEY = ConvertSkyrimKeyToSKSEKey(ini.GetLongValue("Controls", "Controller Compare Key", 268));
+
+        int angle = static_cast<int>(ResetIfOutOfRange(ini.GetLongValue("Controls", "Thumbstick Angle", 0), -180, 180, 0));
+
+        thumbstickThreshold = static_cast<float>(ini.GetDoubleValue("Controls", "Thumbstick Threshold", 0.9));
+        if (thumbstickThreshold >= 1.0f)
             thumbstickThreshold = 0.9f;
 
-        float radians = static_cast<float>(angle) * RE::NI_PI / 180.0f;
+        const float radians = static_cast<float>(angle) * RE::NI_PI / 180.0f;
         thumbstickX = std::sin(radians);
         thumbstickY = std::cos(radians);
 
@@ -284,174 +377,93 @@ namespace CEGlobals
 
         if (!valid || !d || !e || !p || temp.length() > 3)
         {
-            logger::warn("Effects Check Order is invalid, only '1', '2', and '3' are valid, and there must be one of each.");
+            logger::warn("Effects Check Order is invalid, only '1', '2', and '3' are valid, and there must be one of each."sv);
             effectCheckOrderNum = 123;
             effectCheckOrder = "DEP";
         }
 
-        CRASH_PREVENTION = ini.GetBoolValue("Internal", "Crash Prevention", true);
+        CE_INTERNAL_SETTINGS(LOAD_ROW)
+        CE_DEBUG_SETTINGS(LOAD_ROW)
 
-        LOG_LEVEL = ini.GetLongValue("Debug", "Logging Level", 2);
+        // ---------------------------------------------------------- Debug log ----------------------------------------------------------
+        logger::debug("Version                  {}"sv, SKSE::PluginDeclaration::GetSingleton()->GetVersion());
+        logger::debug("Expected SWF Version:    {}"sv, EXPECTED_SWF_VERSION);
 
-        logger::debug("Version                  {}", SKSE::PluginDeclaration::GetSingleton()->GetVersion());
-        logger::debug("Expected SWF Version:    {}", EXPECTED_SWF_VERSION);
-        logger::debug("-------------- General ------------------");
-        logger::debug("Use Icons:               {}", USE_ICONS);
-        logger::debug("Hide 3D Models:          {}", HIDE_3D);
-        logger::debug("Hide SkyUI Item Cards:   {}", HIDE_SKY_UI_ITEM_CARD);
-        logger::debug("Maximum Rows:            {}", ROWS);
-        logger::debug("Effects(s) Scroll Speed: {}", SCROLL_SPEED);
-        logger::debug("Effects(s) Scroll Delay: {} seconds", SCROLL_DELAY);
-        logger::debug("Insert Newlines:         {}", INSERT_NEWLINES);
-        logger::debug("Spacing From Selected:   {}", SPACING_FROM_SELECTED);
-        logger::debug("Spacing Between X:       {}", SPACING_BETWEEN_EQUIPPED_X);
-        logger::debug("Spacing Between Y:       {}", SPACING_BETWEEN_EQUIPPED_Y);
-        logger::debug("------------- In Menus ------------------");
-        logger::debug("Inventory X Offset:      {:.2f}", INV_MENU_X_ORIGIN);
-        logger::debug("Inventory Y Offset:      {:.2f}", INV_MENU_Y_ORIGIN);
-        logger::debug("Container X Offset:      {:.2f}", CONT_MENU_X_ORIGIN);
-        logger::debug("Container Y Offset:      {:.2f}", CONT_MENU_Y_ORIGIN);
-        logger::debug("Barter X Offset:         {:.2f}", BART_MENU_X_ORIGIN);
-        logger::debug("Barter Y Offset:         {:.2f}", BART_MENU_Y_ORIGIN);
-        logger::debug("Gift X Offset:           {:.2f}", GIFT_MENU_X_ORIGIN);
-        logger::debug("Gift Y Offset:           {:.2f}", GIFT_MENU_Y_ORIGIN);
-        logger::debug("Crafting X Offset:       {:.2f}", CRAFTING_MENU_X_ORIGIN);
-        logger::debug("Crafting Y Offset:       {:.2f}", CRAFTING_MENU_Y_ORIGIN);
-        logger::debug("Scale:                   {}", MENU_SCALE);
-        logger::debug("Background Alpha         {}", MENU_BACKGROUND_ALPHA);
-        logger::debug("Layout:                  {}", MENU_LAYOUT);
-        logger::debug("Persistent Display:      {}", MENU_PERSISTENT_DISPLAY);
-        logger::debug("Persistent Toggle:       {}", MENU_PERSISTENT_TOGGLE);
-        logger::debug("Persistent Default:      {}", MENU_PERSISTENT_DEFAULT_DISPLAY);
-        logger::debug("------------ Out Of Menus ---------------");
-        logger::debug("HUD Enabled:             {}", HUD_ALLOWED);
-        logger::debug("HUD Toggle Mode:         {}", HUD_TOGGLEMODE);
-        logger::debug("HUD X Offset:            {:.2f}", HUD_X_ORIGIN);
-        logger::debug("HUD Offset:              {:.2f}", HUD_Y_ORIGIN);
-        logger::debug("HUD Scale:               {}", HUD_SCALE);
-        logger::debug("HUD Background Alpha     {}", HUD_BACKGROUND_ALPHA);
-        logger::debug("HUD Layout:              {}", HUD_LAYOUT);
-        logger::debug("----------- QuickLootIE -----------------");
-        logger::debug("QuickLootIE Enabled:     {}", QLIE_ALLOWED);
-        logger::debug("QuickLootIE X Offset:    {:.2f}", QLIE_X_ORIGIN);
-        logger::debug("QuickLootIE Y Offset:    {:.2f}", QLIE_Y_ORIGIN);
-        logger::debug("QuickLootIE Scale:       {}", QLIE_SCALE);
-        logger::debug("QLIE Background Alpha    {}", QLIE_BACKGROUND_ALPHA);
-        logger::debug("QLIE Layout:             {}", QLIE_LAYOUT);
-        logger::debug("QLIE Persistent Display: {}", QLIE_PERSISTENT_DISPLAY);
-        logger::debug("QLIE Persistent Toggle:  {}", QLIE_PERSISTENT_TOGGLE);
-        logger::debug("QLIE Persistent Default: {}", QLIE_PERSISTENT_DEFAULT_DISPLAY);
-        logger::debug("-------------- Controls ------------------");
-        logger::debug("Compare Key:             {}", COMPARE_KEY);
-        logger::debug("Hold Duration:           {} milliseconds", HOLD_THRESHOLD * 1000);
-        logger::debug("Triple Hit Window:       {} milliseconds", TRIPLE_HIT_WINDOW * 1000);
-        logger::debug("Setting Hold Duration:   {} milliseconds", SETTING_HOLD_THRESHOLD * 1000);
-        logger::debug("Controller Compare Key:  {}", ConvertSKSEKeyToSkyrimKey(CONTROLLER_KEY));
-        logger::debug("Thumbstick Angle:        {}", angle);
-        logger::debug("Thumbstick Threshold:    {}", thumbstickThreshold);
-        logger::debug("-------------- Internal ------------------");
-        logger::debug("Effects Check Order:     {}", effectCheckOrderNum);
-        logger::debug("Crash Prevention:        {}", CRASH_PREVENTION);
-        logger::debug("--------------- Debug --------------------");
-        logger::debug("Logging Level:           {}", LOG_LEVEL);
+        logger::debug("-------------- General ------------------"sv);
+        CE_GENERAL_SETTINGS(LOG_ROW)
+        logger::debug("Maximum Rows: {}", ROWS);
 
-        //----------------------------- General -----------------------------------------------------------------
-        const char *rowsComment = ("#Maximum number of compared item card rows, after this number of rows, a column will be created"
-                                   "\n#Default 4, max 4, min 1");
-        ini.SetBoolValue("General", "UseIcons", USE_ICONS, "#If item icons should be displayed when available.");
-        ini.SetBoolValue("General", "Hide 3D Model", HIDE_3D, "#If the 3d model in menus should be hidden.");
-        ini.SetBoolValue("General", "Hide SkyUI Item Card", HIDE_SKY_UI_ITEM_CARD, "#If the SkyUI item card should be hidden.");
-        ini.SetLongValue("General", "Maximum Rows", ROWS, rowsComment);
-        ini.SetLongValue("General", "Effect(s) Scroll Speed", SCROLL_SPEED, "#How fast the Effect(s) text box will scroll\n#Default 100");
-        ini.SetDoubleValue("General", "Effect(s) Scroll Delay", SCROLL_DELAY, "#Length of delay before/after scrolling effects, in seconds.\n#Default 2.5");
-        ini.SetBoolValue("General", "Insert Newlines", INSERT_NEWLINES, "#Insert a newline between enchantment effects ('. ' -> '.\\n') in the Effect(s) section");
-        ini.SetLongValue("General", "Spacing From Selected", SPACING_FROM_SELECTED, "#Spacing of equipped item cards from selected item cards, default 5");
-        ini.SetLongValue("General", "Spacing Between Equipped X", SPACING_BETWEEN_EQUIPPED_X, "#Spacing between equipped item cards on the x-axis, default 5");
-        ini.SetLongValue("General", "Spacing Between Equipped Y", SPACING_BETWEEN_EQUIPPED_Y, "#Spacing between equipped item cards on the y-axis, default 5");
+        logger::debug("------------- In Menus ------------------"sv);
+        CE_INMENU_SETTINGS(LOG_ROW)
+        CE_RANGED_LONG_SETTINGS(LOG_RANGED)
 
-        //------------------------------ In Menus ---------------------------------------------------------------
-        ini.SetDoubleValue("InMenu", "Inventory X Offset", INV_MENU_X_ORIGIN, "#Selected Item's item card X offset in the Inventory menu\n#Default 590.0");
-        ini.SetDoubleValue("InMenu", "Inventory Y Offset", INV_MENU_Y_ORIGIN, "#Selected Item's item card Y offset in the Inventory menu\n#Default 250.0");
-        ini.SetDoubleValue("InMenu", "Container X Offset", CONT_MENU_X_ORIGIN, "#Selected Item's item card X offset in the Container menu\n#Default 590.0");
-        ini.SetDoubleValue("InMenu", "Container Y Offset", CONT_MENU_Y_ORIGIN, "#Selected Item's item card Y offset in the Container menu\n#Default 250.0");
-        ini.SetDoubleValue("InMenu", "Barter X Offset", BART_MENU_X_ORIGIN, "#Selected Item's item card X offset in the Barter menu\n#Default 590.0");
-        ini.SetDoubleValue("InMenu", "Barter Y Offset", BART_MENU_Y_ORIGIN, "#Selected Item's item card Y offset in the Barter menu\n#Default 250.0");
-        ini.SetDoubleValue("InMenu", "Gift X Offset", GIFT_MENU_X_ORIGIN, "#Selected Item's item card X offset in the Gift menu\n#Default 590.0");
-        ini.SetDoubleValue("InMenu", "Gift Y Offset", GIFT_MENU_Y_ORIGIN, "#Selected Item's item card Y offset in the Gift menu\n#Default 250.0");
-        ini.SetDoubleValue("InMenu", "Crafting X Offset", CRAFTING_MENU_X_ORIGIN, "#Selected Item's item card X offset in the Crafting menu\n#Default 590.0");
-        ini.SetDoubleValue("InMenu", "Crafting Y Offset", CRAFTING_MENU_Y_ORIGIN, "#Selected Item's item card Y offset in the Crafting menu\n#Default 250.0");
-        ini.SetLongValue("InMenu", "Scale", MENU_SCALE, "#Scale of item cards in menus, default 100");
-        ini.SetLongValue("InMenu", "Background Alpha", MENU_BACKGROUND_ALPHA, "#All item card's background alpha value in menus\n#Default 95, max 100, min 0");
-        ini.SetLongValue("InMenu", "Layout", MENU_LAYOUT, "#Layout of item cards in menus\n#0: Vertically Centered (Default), 1: Upward, 2: Downward");
-        ini.SetBoolValue("InMenu", "Persistent Display", MENU_PERSISTENT_DISPLAY, "#If item cards should persistantly display without hotkey in menus.\n#Default false");
-        ini.SetBoolValue("InMenu", "Persistent Toggle", MENU_PERSISTENT_TOGGLE, "#If pressing the hotkey will toggle persistent display in menus.\n#Default false");
-        ini.SetBoolValue("InMenu", "Persistent Default Display", MENU_PERSISTENT_DEFAULT_DISPLAY, "#If item cards should display by default before first toggled."
-                                                                                                  "\n#Requires Persistent Display to be true to have an effect."
-                                                                                                  "\n#Default true");
+        logger::debug("------------ Out Of Menus ---------------"sv);
+        CE_OUTOFMENU_SETTINGS(LOG_ROW)
 
-        //------------------------------ Outside Of Menus ---------------------------------------------------------------
-        ini.SetBoolValue("OutOfMenu", "Enabled", HUD_ALLOWED, "#Toggle for Compare Equipment functionality outside of Menus.\n#Default true");
-        ini.SetBoolValue("OutOfMenu", "Toggle Mode", HUD_TOGGLEMODE, "#If pressing the hotkey a second time will hide the item cards.\n#Default true");
-        ini.SetDoubleValue("OutOfMenu", "X Offset", HUD_X_ORIGIN, "#Selected Item's item card X offset outside of menus\n#Default 450.0");
-        ini.SetDoubleValue("OutOfMenu", "Y Offset", HUD_Y_ORIGIN, "#Selected Item's item card Y offset outside of menus\n#Default 250.0");
-        ini.SetLongValue("OutOfMenu", "Scale", HUD_SCALE, "#Scale of item cards outside of menus, default 100");
-        ini.SetLongValue("OutOfMenu", "Background Alpha", HUD_BACKGROUND_ALPHA, "#All item card's background alpha value outside of menus\n#Default 85, max 100, min 0");
-        ini.SetLongValue("OutOfMenu", "Layout", HUD_LAYOUT, "#Layout of item cards outside of menus\n#0: Vertically Centered (Default), 1: Upward, 2: Downward");
+        logger::debug("----------- QuickLootIE -----------------"sv);
+        CE_QUICKLOOTIE_SETTINGS(LOG_ROW)
 
-        //------------------------------ QuickLoot IE ---------------------------------------------------------------
-        ini.SetBoolValue("QuickLootIE", "Enabled", QLIE_ALLOWED, "#Toggle for Compare Equipment functionality for QuickLoot IE.\n#Default true");
-        ini.SetDoubleValue("QuickLootIE", "X Offset", QLIE_X_ORIGIN, "#Selected Item's item card X offset for QuickLootIE\n#Default 100.0");
-        ini.SetDoubleValue("QuickLootIE", "Y Offset", QLIE_Y_ORIGIN, "#Selected Item's item card Y offset for QuickLootIE\n#Default 350.0");
-        ini.SetLongValue("QuickLootIE", "Scale", QLIE_SCALE, "#Scale of item cards for QuickLootIE, default 150");
-        ini.SetLongValue("QuickLootIE", "Background Alpha", QLIE_BACKGROUND_ALPHA, "#All item card's background alpha value for QuickLootIE\n#Default 85, max 100, min 0");
-        ini.SetLongValue("QuickLootIE", "Layout", QLIE_LAYOUT, "#Layout of item cards for QuickLootIE\n#0: Vertically Centered (Default), 1: Upward, 2: Downward");
-        const char *qliePersistentComment = ("#If item cards should persistantly display without hotkey for QuickLootIE."
-                                             "\n#Default false");
-        ini.SetBoolValue("QuickLootIE", "Persistent Display", QLIE_PERSISTENT_DISPLAY, qliePersistentComment);
-        ini.SetBoolValue("QuickLootIE", "Persistent Toggle", QLIE_PERSISTENT_TOGGLE, "#If pressing the hotkey will toggle persistent display for QuickLootIE.\n#Default false");
-        ini.SetBoolValue("QuickLootIE", "Persistent Default Display", QLIE_PERSISTENT_DEFAULT_DISPLAY, "#If item cards should display by default before first toggled for QuickLootIE."
-                                                                                                       "\n#Requires Persistent Display to be true to have an effect."
-                                                                                                       "\n#Default true");
+        logger::debug("-------------- Controls ------------------"sv);
+        CE_CONTROLS_SETTINGS(LOG_ROW)
+        logger::debug("Hold Duration:           {} milliseconds"sv, HOLD_THRESHOLD * 1000);
+        logger::debug("Triple Hit Window:       {} milliseconds"sv, TRIPLE_HIT_WINDOW * 1000);
+        logger::debug("Setting Hold Duration:   {} milliseconds"sv, SETTING_HOLD_THRESHOLD * 1000);
+        logger::debug("Controller Compare Key:  {}"sv, ConvertSKSEKeyToSkyrimKey(CONTROLLER_KEY));
+        logger::debug("Thumbstick Angle:        {}"sv, angle);
+        logger::debug("Thumbstick Threshold:    {}"sv, thumbstickThreshold);
 
-        //------------------------------ Controls------------------------------------------------------------------------
-        const char *compareKeyComment = ("#Key that will display the comparison item cards, triple tap to cycle followers, hold to select player."
-                                         "\n#For controller see Controller Compare Key, ThumbstickAngle and ThumbstickThreshold"
-                                         "\n#Default 47 (V key), Key Codes can be found here : https://ck.uesp.net/wiki/Input_Script");
-        ini.SetLongValue("Controls", "Compare Key", COMPARE_KEY, compareKeyComment);
-        const char *holdPlayerComment = ("#Duration, in milliseconds, to hold the CompareKey to set the selected actor to the player"
-                                         "\n#Default 500");
-        ini.SetLongValue("Controls", "Hold Duration", static_cast<long>(HOLD_THRESHOLD * 1000), holdPlayerComment);
-        const char *tripleHitComment = ("#Window, in milliseconds, to triple tap the CompareKey to cycle through active loaded followers"
-                                        "\n#Recommended to set to around 600 for controller users"
-                                        "\n#Default 400(400 / 2 = 200 milliseconds allowed between keypresses)");
-        ini.SetLongValue("Controls", "Triple Hit Window", static_cast<long>(TRIPLE_HIT_WINDOW * 1000), tripleHitComment);
-        const char *settingHoldComment = ("#Duration, in milliseconds, to hold the CompareKey to reload the settings from this ini file."
-                                          "\n#Does not change active logging level."
-                                          "\n#Default 3000(3 seconds)");
-        ini.SetLongValue("Controls", "Setting Hold Duration", static_cast<long>(SETTING_HOLD_THRESHOLD * 1000), settingHoldComment);
-        const char *controllerCompareKeyComment = ("#Controller key that will display the comparison item cards. Only works while looking at a valid item in world or in QuickLoot."
-                                                   "\n#In menus the thumbstick angle and threshold are used instead. Does not block input from activating other actions."
-                                                   "\n#Default 268 (Left D-pad), Key Codes can be found here at the end: https://ck.uesp.net/wiki/Input_Script");
-        ini.SetLongValue("Controls", "Controller Compare Key", ConvertSKSEKeyToSkyrimKey(CONTROLLER_KEY), controllerCompareKeyComment);
-        const char *angleComment = ("#Angle to flick right thumbstick to activate 0 = up, 90 = right, 180/-180 = down, -90 = left."
-                                    "\n#You can set whatever angle between -180 to 180"
-                                    "\n#Default 0 -> up ");
-        ini.SetLongValue("Controls", "Thumbstick Angle", angle, angleComment);
-        const char *thumbstickThresholdComment = ("#Percent that is considered activated, 1.0 is all the way to the edge and 0.0 is centered"
-                                                  "\n#Default 0.9 -> 90% ");
-        ini.SetDoubleValue("Controls", "Thumbstick Threshold", thumbstickThreshold, thumbstickThresholdComment);
-        const char *effectCheckOrderComment = ("#Order in which to check for effects strings, once a valid string is found it does not check for the others."
-                                               "\n#1: Item Description, 2: ESP defined enchantment's MGEF description, 3: Player enchanted enchantment's MGEF description"
-                                               "\n#Default is 123, must contain a 1, 2, and 3 in any order.");
-        //------------------------------ Internal ------------------------------------------------------------------------
-        ini.SetLongValue("Internal", "Effects Check Order", effectCheckOrderNum, effectCheckOrderComment);
-        ini.SetBoolValue("Internal", "Crash Prevention", CRASH_PREVENTION, "#Adds extra crash prevention measures."
-                                                                           "\n#This can slightly slow down display speeds and is only noticible when persistent display is enabled."
-                                                                           "\n#Only disable this if you are using persistent display and you dislike the item cards flashing.");
+        logger::debug("-------------- Internal ------------------"sv);
+        logger::debug("Effects Check Order:     {}"sv, effectCheckOrderNum);
+        CE_INTERNAL_SETTINGS(LOG_ROW)
 
-        ini.SetLongValue("Debug", "Logging Level", LOG_LEVEL, "#0: Errors, 1: Warnings, 2: Info(default), 3: Debug, 4: Trace");
+        logger::debug("--------------- Debug --------------------"sv);
+        CE_DEBUG_SETTINGS(LOG_ROW)
 
-        ini.SaveFile("Data\\SKSE\\Plugins\\CompareEquipmentNG.ini");
+        // ------------------------------------------------------------- Save -------------------------------------------------------------
+        CE_GENERAL_SETTINGS(SAVE_ROW)
+        ini.SetLongValue("General", "Maximum Rows", ROWS,
+                         "#Maximum number of compared item card rows, after this number of rows, a column will be created"
+                         "\n#Default 4, max 4, min 1");
+
+        CE_INMENU_SETTINGS(SAVE_ROW)
+        CE_RANGED_LONG_SETTINGS(SAVE_RANGED)
+
+        CE_OUTOFMENU_SETTINGS(SAVE_ROW)
+        CE_QUICKLOOTIE_SETTINGS(SAVE_ROW)
+        CE_CONTROLS_SETTINGS(SAVE_ROW)
+
+        ini.SetLongValue("Controls", "Hold Duration", static_cast<long>(HOLD_THRESHOLD * 1000),
+                         "#Duration, in milliseconds, to hold the CompareKey to set the selected actor to the player"
+                         "\n#Default 500");
+        ini.SetLongValue("Controls", "Triple Hit Window", static_cast<long>(TRIPLE_HIT_WINDOW * 1000),
+                         "#Window, in milliseconds, to triple tap the CompareKey to cycle through active loaded followers"
+                         "\n#Recommended to set to around 600 for controller users"
+                         "\n#Default 400(400 / 2 = 200 milliseconds allowed between keypresses)");
+        ini.SetLongValue("Controls", "Setting Hold Duration", static_cast<long>(SETTING_HOLD_THRESHOLD * 1000),
+                         "#Duration, in milliseconds, to hold the CompareKey to reload the settings from this ini file."
+                         "\n#Does not change active logging level."
+                         "\n#Default 3000(3 seconds)");
+        ini.SetLongValue("Controls", "Controller Compare Key", ConvertSKSEKeyToSkyrimKey(CONTROLLER_KEY),
+                         "#Controller key that will display the comparison item cards. Only works while looking at a valid item in world or in QuickLoot."
+                         "\n#In menus the thumbstick angle and threshold are used instead. Does not block input from activating other actions."
+                         "\n#Default 268 (Left D-pad), Key Codes can be found here at the end: https://ck.uesp.net/wiki/Input_Script");
+        ini.SetLongValue("Controls", "Thumbstick Angle", angle,
+                         "#Angle to flick right thumbstick to activate 0 = up, 90 = right, 180/-180 = down, -90 = left."
+                         "\n#You can set whatever angle between -180 to 180"
+                         "\n#Default 0 -> up ");
+        ini.SetDoubleValue("Controls", "Thumbstick Threshold", thumbstickThreshold,
+                           "#Percent that is considered activated, 1.0 is all the way to the edge and 0.0 is centered"
+                           "\n#Default 0.9 -> 90% ");
+
+        CE_INTERNAL_SETTINGS(SAVE_ROW)
+        ini.SetLongValue("Internal", "Effects Check Order", effectCheckOrderNum,
+                         "#Order in which to check for effects strings, once a valid string is found it does not check for the others."
+                         "\n#1: Item Description, 2: ESP defined enchantment's MGEF description, 3: Player enchanted enchantment's MGEF description"
+                         "\n#Default is 123, must contain a 1, 2, and 3 in any order.");
+
+        CE_DEBUG_SETTINGS(SAVE_ROW)
+
+        ini.SaveFile(CONFIG_INI_PATH);
 
         CEMenu::UpdateMenuName();
         LoadTranslation();
@@ -498,182 +510,138 @@ namespace CEGlobals
     long valueOffset = 2;
     long columnTwoOffset = 155;
 
+    // clang-format off
+
+    #define CE_CUSTOMIZATION_SETTINGS(X) \
+        X(Long, diffOffset,      "Customization", "diffOffset",      0,   "Diff Offset", \
+          "#Offset of difference values from regular values, default 0") \
+        X(Long, valueOffset,     "Customization", "valueOffset",     2,   "Value Offset", \
+          "#Offset of values from labels, default 0") \
+        X(Long, columnTwoOffset, "Customization", "columnTwoOffset", 155, "Column Two Offset", \
+          "#Offset of the second column of labels, default 155")
+
+    // X(Var, Section, Key, Default, Comment)
+    #define CE_TRANSLATION_SETTINGS(X) \
+        X(QLIE_HINT_TEXT, "Translations", "QuickLoot IE Hint Text", "Compare", \
+          "#This ini is also reloaded with the settings in game." \
+          "\n#All text should support the basic html that ActionScript 2.0 supports(granted the font in the SWF supports it)." \
+          "\n#Replace the text following the \"=\" in the below:\n" \
+          "\n#The hint text that is shown in the QuickLoot Menu." \
+          "\n#set one of these if using Oblivion Interaction Icons:" \
+          "\n# Use either EE or EhE since EE can look a bit sus: <font face='Daedric'>EE</font>" \
+          "\n# Use P or whatever you want from Oblivion Interaction Icons's Docs/OII_cheatsheet.png: <font face=' Iconographia'>P</font>" \
+          "\n# Font size 22 is what makes the hotkey symbol correctly sized for me, yours may be different: <font face = 'SkyrimBooks_Handwritten_Bold' size = '22'><b>[][]</ b></ font> ") \
+        X(buttonCompareText, "Translations", "buttonCompareText", "Compare", \
+          "# Text to display next to button hint") \
+        X(comparingTo, "Translations", "comparingTo", "<font color=\"#D4D4D4\" size=\"12\">Comparing to</font>", \
+          "# The item is being compared to x's equipment") \
+        X(damageLabelText, "Translations", "damageLabelText", "<font color=\"#D4D4D4\" size=\"12\">Damage:</font>", \
+          "# Damage of weapon, example -> \"Damage:\" 10.00") \
+        X(critLabelText, "Translations", "critLabelText", "<font color=\"#D4D4D4\" size=\"12\">Crit:</font>", \
+          "# Critical damage of weapon, example -> \"Crit:\" 4.00") \
+        X(noneText, "Translations", "noneText", "None", \
+          "# Indicate no effects/no value") \
+        X(armorTypeLabelText, "Translations", "armorTypeLabelText", "<font color=\"#D4D4D4\" size=\"12\">Armor Type:</font>", \
+          "# The type of armor that an item is, example -> \"Armor Type:\" Cloth") \
+        X(heavyArmor, "Translations", "heavyArmor", "Heavy", "# Armor type: Heavy") \
+        X(lightArmor, "Translations", "lightArmor", "Light", "# Armor type: Light") \
+        X(clothArmor, "Translations", "clothArmor", "Cloth", "# Armor type: Cloth") \
+        X(armorRatingLabelText, "Translations", "armorRatingLabelText", "<font color=\"#D4D4D4\" size=\"12\">Armor Rating:</font>", \
+          "# The rating/defence of an armor, example -> \"Armor Rating:\" 20") \
+        X(goldLabelText, "Translations", "goldLabelText", "<font color=\"#D4D4D4\" size=\"12\">Gold Value:</font>", \
+          "# How much the item is worth in gold, example -> \"Gold Value:\" 1000") \
+        X(effectsLabelText, "Translations", "effectsLabelText", "<font color=\"#D4D4D4\" size=\"12\">Effect(s):</font>", \
+          "# What enchantment/effect/item description the item has") \
+        X(equippedTo, "Translations", "equippedTo", "<font color=\"#D4D4D4\" size=\"12\">Equipped to</font>", \
+          "# The item is \"Equipped to\" x actor") \
+        X(slotsLabelText, "Translations", "slotsLabelText", "<font color=\"#D4D4D4\" size=\"12\">Slot(s):</font>", \
+          "# The body slot or slots the item has") \
+        X(leftHand, "Translations", "leftHand", "Left Hand", "# The hand the weapon is equipped to: left") \
+        X(rightHand, "Translations", "rightHand", "Right Hand", "# The hand the weapon is equipped to: right") \
+        X(bothHands, "Translations", "bothHands", "Both Hands", "# The hand(s) the weapon is equipped to: both") \
+        X(speedLabelText, "Translations", "speedLabelText", "<font color=\"#D4D4D4\" size=\"12\">Speed:</font>", \
+          "# The speed at which a weapon attacks.") \
+        X(reachLabelText, "Translations", "reachLabelText", "<font color=\"#D4D4D4\" size=\"12\">Reach:</font>", \
+          "# The reach/range of a weapon when swung/attacking.") \
+        X(staggerLabelText, "Translations", "staggerLabelText", "<font color=\"#D4D4D4\" size=\"12\">Stagger:</font>", \
+          "# The stagger damage a weapon does to an enemy to make them stagger when attacking.") \
+        X(keyText, "Translations", "keyText", "<font color=\"#D4D4D4\" size=\"12\">Key:</font>", \
+          "# The legend or key that explains what the differences are relative to") \
+        X(keyInfo, "Translations", "keyInfo", "(Total : T, Average : A, Max : M)", \
+          "# The actual key. Total difference, average difference, max difference.") \
+        X(totalKey, "Translations", "totalKey", "T", \
+          "# The indicator from the above key -> (T)otal: (T), to add a space put a semi-colon in front ';T'") \
+        X(averageKey, "Translations", "averageKey", "A", \
+          "# The indicator from the above key -> (A)verage: (A), to add a space put a semi-colon in front ';A'") \
+        X(maxKey, "Translations", "maxKey", "M", \
+          "# The indicator from the above key -> (M)ax: (M), to add a space put a semi-colon in front ';M'") \
+        X(notApplicable, "Translations", "notApplicable", "N/A", \
+          "# Simple text that indicates something is not applicable / not available") \
+        X(betterWrapperStart, "Translations", "betterWrapperStart", "<font color=\"#00FF00\">(+", \
+          "# Better HTML wrapper start #RRGGBB so a green (+Diff)") \
+        X(betterWrapperEnd, "Translations", "betterWrapperEnd", ")</font>", \
+          "# Better HTML wrapper end") \
+        X(worseWrapperStart, "Translations", "worseWrapperStart", "<font color=\"#FF0000\">(", \
+          "# Worse HTML wrapper start #RRGGBB so a red (Diff)") \
+        X(worseWrapperEnd, "Translations", "worseWrapperEnd", ")</font>", \
+          "# Worse HTML wrapper end") \
+        X(normalWrapperStart, "Translations", "normalWrapperStart", "<font color=\"#FFFFFF\">", \
+          "# Normal HTML Wrapper start so normal text like the \"32\" in Armor Rating: 32 is white") \
+        X(normalWrapperEnd, "Translations", "normalWrapperEnd", "</font>", \
+          "# Normal HTML wrapper end") \
+        X(diffTypeWrapperStart, "Translations", "diffTypeWrapperStart", "<font color=\"#FFFF00\">", \
+          "# Different Type HTML Wrapper start so different type armor types are colored yellow. i.e. Selected Light != Equipped Heavy make Heavy yellow.") \
+        X(diffTypeWrapperEnd, "Translations", "diffTypeWrapperEnd", "</font>", \
+          "# Different Type HTML wrapper end") \
+        X(settingsReloaded, "Translations", "settingsReloaded", "CompareEquipmentNG: Settings Reloaded", \
+          "# Notification that appears when you reload the settings via hotkey")
+
+    #define LOAD_STR(Var, Section, Key, Default, Comment) \
+        Var = ini.GetValue(Section, Key, Default);
+    #define SAVE_STR(Var, Section, Key, Default, Comment) \
+        ini.SetValue(Section, Key, Var.c_str(), Comment);
+
+    // clang-format on
+
     void LoadTranslation()
     {
         CSimpleIniA ini;
         ini.SetUnicode();
 
-        SI_Error rc = ini.LoadFile("Data\\SKSE\\Plugins\\CompareEquipmentNG_translation.ini");
+        SI_Error rc = ini.LoadFile(TRANSLATION_INI_PATH);
         if (rc < 0)
         {
             logger::warn("Could not load CompareEquipmentNG_translation.ini, using defaults");
         }
 
-        diffOffset = ini.GetLongValue("Customization", "diffOffset", 0);
-        valueOffset = ini.GetLongValue("Customization", "valueOffset", 2);
-        columnTwoOffset = ini.GetLongValue("Customization", "columnTwoOffset", 155);
+        CE_CUSTOMIZATION_SETTINGS(LOAD_ROW)
+        CE_TRANSLATION_SETTINGS(LOAD_STR)
 
-        QLIE_HINT_TEXT = ini.GetValue("Translations", "QuickLoot IE Hint Text", "Compare");
-        buttonCompareText = ini.GetValue("Translations", "buttonCompareText", "Compare");
-        comparingTo = ini.GetValue("Translations", "comparingTo", "<font color=\"#D4D4D4\" size=\"12\">Comparing to</font>");
-        damageLabelText = ini.GetValue("Translations", "damageLabelText", "<font color=\"#D4D4D4\" size=\"12\">Damage:</font>");
-        critLabelText = ini.GetValue("Translations", "critLabelText", "<font color=\"#D4D4D4\" size=\"12\">Crit:</font>");
-        noneText = ini.GetValue("Translations", "noneText", "None");
-        armorTypeLabelText = ini.GetValue("Translations", "armorTypeLabelText", "<font color=\"#D4D4D4\" size=\"12\">Armor Type:</font>");
-        heavyArmor = ini.GetValue("Translations", "heavyArmor", "Heavy");
-        lightArmor = ini.GetValue("Translations", "lightArmor", "Light");
-        clothArmor = ini.GetValue("Translations", "clothArmor", "Cloth");
-        armorRatingLabelText = ini.GetValue("Translations", "armorRatingLabelText", "<font color=\"#D4D4D4\" size=\"12\">Armor Rating:</font>");
-        goldLabelText = ini.GetValue("Translations", "goldLabelText", "<font color=\"#D4D4D4\" size=\"12\">Gold Value:</font>");
-        effectsLabelText = ini.GetValue("Translations", "effectsLabelText", "<font color=\"#D4D4D4\" size=\"12\">Effect(s):</font>");
-        equippedTo = ini.GetValue("Translations", "equippedTo", "<font color=\"#D4D4D4\" size=\"12\">Equipped to</font>");
-        slotsLabelText = ini.GetValue("Translations", "slotsLabelText", "<font color=\"#D4D4D4\" size=\"12\">Slot(s):</font>");
-        leftHand = ini.GetValue("Translations", "leftHand", "Left Hand");
-        rightHand = ini.GetValue("Translations", "rightHand", "Right Hand");
-        bothHands = ini.GetValue("Translations", "bothHands", "Both Hands");
-        speedLabelText = ini.GetValue("Translations", "speedLabelText", "<font color=\"#D4D4D4\" size=\"12\">Speed:</font>");
-        reachLabelText = ini.GetValue("Translations", "reachLabelText", "<font color=\"#D4D4D4\" size=\"12\">Reach:</font>");
-        staggerLabelText = ini.GetValue("Translations", "staggerLabelText", "<font color=\"#D4D4D4\" size=\"12\">Stagger:</font>");
-        keyText = ini.GetValue("Translations", "keyText", "<font color=\"#D4D4D4\" size=\"12\">Key:</font>");
-        keyInfo = ini.GetValue("Translations", "keyInfo", "(Total : T, Average : A, Max : M)");
-        totalKey = ini.GetValue("Translations", "totalKey", "T");
-        averageKey = ini.GetValue("Translations", "averageKey", "A");
-        maxKey = ini.GetValue("Translations", "maxKey", "M");
-        notApplicable = ini.GetValue("Translations", "notApplicable", "N/A");
-        betterWrapperStart = ini.GetValue("Translations", "betterWrapperStart", "<font color=\"#00FF00\">(+");
-        betterWrapperEnd = ini.GetValue("Translations", "betterWrapperEnd", ")</font>");
-        worseWrapperStart = ini.GetValue("Translations", "worseWrapperStart", "<font color=\"#FF0000\">(");
-        worseWrapperEnd = ini.GetValue("Translations", "worseWrapperEnd", ")</font>");
-        normalWrapperStart = ini.GetValue("Translations", "normalWrapperStart", "<font color=\"#FFFFFF\">");
-        normalWrapperEnd = ini.GetValue("Translations", "normalWrapperEnd", "</font>");
-        diffTypeWrapperStart = ini.GetValue("Translations", "diffTypeWrapperStart", "<font color=\"#FFFF00\">");
-        diffTypeWrapperEnd = ini.GetValue("Translations", "diffTypeWrapperEnd", "</font>");
-        settingsReloaded = ini.GetValue("Translations", "settingsReloaded", "CompareEquipmentNG: Settings Reloaded");
+        CE_CUSTOMIZATION_SETTINGS(SAVE_ROW)
+        CE_TRANSLATION_SETTINGS(SAVE_STR)
 
-        ini.SetLongValue("Customization", "diffOffset", diffOffset,
-                         "#Offset of difference values from regular values, default 0");
-
-        ini.SetLongValue("Customization", "valueOffset", valueOffset,
-                         "#Offset of values from labels, default 0");
-
-        ini.SetLongValue("Customization", "columnTwoOffset", columnTwoOffset,
-                         "#Offset of the second column of labels, default 155");
-
-        ini.SetValue("Translations", "QuickLoot IE Hint Text", QLIE_HINT_TEXT.c_str(),
-                     "#This ini is also reloaded with the settings in game."
-                     "\n#All text should support the basic html that ActionScript 2.0 supports(granted the font in the SWF supports it)."
-                     "\n#Replace the text following the \"=\" in the below:\n"
-                     "\n#The hint text that is shown in the QuickLoot Menu."
-                     "\n#set one of these if using Oblivion Interaction Icons:"
-                     "\n# Use either EE or EhE since EE can look a bit sus: <font face='Daedric'>EE</font>"
-                     "\n# Use P or whatever you want from Oblivion Interaction Icons's Docs/OII_cheatsheet.png: <font face=' Iconographia'>P</font>"
-                     "\n# Font size 22 is what makes the hotkey symbol correctly sized for me, yours may be different: <font face = 'SkyrimBooks_Handwritten_Bold' size = '22'><b>[][]</ b></ font> ");
-
-        ini.SetValue("Translations", "buttonCompareText", buttonCompareText.c_str(),
-                     "# Text to display next to button hint");
-
-        ini.SetValue("Translations", "comparingTo", comparingTo.c_str(),
-                     "# The item is being compared to x's equipment");
-
-        ini.SetValue("Translations", "damageLabelText", damageLabelText.c_str(),
-                     "# Damage of weapon, example -> \"Damage:\" 10.00");
-
-        ini.SetValue("Translations", "critLabelText", critLabelText.c_str(),
-                     "# Critical damage of weapon, example -> \"Crit:\" 4.00");
-
-        ini.SetValue("Translations", "noneText", noneText.c_str(),
-                     "# Indicate no effects/no value");
-
-        ini.SetValue("Translations", "armorTypeLabelText", armorTypeLabelText.c_str(),
-                     "# The type of armor that an item is, example -> \"Armor Type:\" Cloth");
-
-        ini.SetValue("Translations", "heavyArmor", heavyArmor.c_str(),
-                     "# Armor type: Heavy");
-
-        ini.SetValue("Translations", "lightArmor", lightArmor.c_str(),
-                     "# Armor type: Light");
-
-        ini.SetValue("Translations", "clothArmor", clothArmor.c_str(),
-                     "# Armor type: Cloth");
-
-        ini.SetValue("Translations", "armorRatingLabelText", armorRatingLabelText.c_str(),
-                     "# The rating/defence of an armor, example -> \"Armor Rating:\" 20");
-
-        ini.SetValue("Translations", "goldLabelText", goldLabelText.c_str(),
-                     "# How much the item is worth in gold, example -> \"Gold Value:\" 1000");
-
-        ini.SetValue("Translations", "effectsLabelText", effectsLabelText.c_str(),
-                     "# What enchantment/effect/item description the item has");
-
-        ini.SetValue("Translations", "equippedTo", equippedTo.c_str(),
-                     "# The item is \"Equipped to\" x actor");
-
-        ini.SetValue("Translations", "slotsLabelText", slotsLabelText.c_str(),
-                     "# The body slot or slots the item has");
-
-        ini.SetValue("Translations", "leftHand", leftHand.c_str(),
-                     "# The hand the weapon is equipped to: left");
-
-        ini.SetValue("Translations", "rightHand", rightHand.c_str(),
-                     "# The hand the weapon is equipped to: right");
-
-        ini.SetValue("Translations", "bothHands", bothHands.c_str(),
-                     "# The hand(s) the weapon is equipped to: both");
-
-        ini.SetValue("Translations", "speedLabelText", speedLabelText.c_str(),
-                     "# The speed at which a weapon attacks.");
-
-        ini.SetValue("Translations", "reachLabelText", reachLabelText.c_str(),
-                     "# The reach/range of a weapon when swung/attacking.");
-
-        ini.SetValue("Translations", "staggerLabelText", staggerLabelText.c_str(),
-                     "# The stagger damage a weapon does to an enemy to make them stagger when attacking.");
-
-        ini.SetValue("Translations", "keyText", keyText.c_str(),
-                     "# The legend or key that explains what the differences are relative to");
-
-        ini.SetValue("Translations", "keyInfo", keyInfo.c_str(),
-                     "# The actual key. Total difference, average difference, max difference.");
-
-        ini.SetValue("Translations", "totalKey", totalKey.c_str(),
-                     "# The indicator from the above key -> (T)otal: (T), to add a space put a semi-colon in front ';T'");
-
-        ini.SetValue("Translations", "averageKey", averageKey.c_str(),
-                     "# The indicator from the above key -> (A)verage: (A), to add a space put a semi-colon in front ';A'");
-
-        ini.SetValue("Translations", "maxKey", maxKey.c_str(),
-                     "# The indicator from the above key -> (M)ax: (M), to add a space put a semi-colon in front ';M'");
-
-        ini.SetValue("Translations", "notApplicable", notApplicable.c_str(),
-                     "# Simple text that indicates something is not applicable / not available");
-
-        ini.SetValue("Translations", "betterWrapperStart", betterWrapperStart.c_str(),
-                     "# Better HTML wrapper start #RRGGBB so a green (+Diff)");
-
-        ini.SetValue("Translations", "betterWrapperEnd", betterWrapperEnd.c_str(),
-                     "# Better HTML wrapper end");
-
-        ini.SetValue("Translations", "worseWrapperStart", worseWrapperStart.c_str(),
-                     "# Worse HTML wrapper start #RRGGBB so a red (Diff)");
-
-        ini.SetValue("Translations", "worseWrapperEnd", worseWrapperEnd.c_str(),
-                     "# Worse HTML wrapper end");
-
-        ini.SetValue("Translations", "normalWrapperStart", normalWrapperStart.c_str(),
-                     "# Normal HTML Wrapper start so normal text like the \"32\" in Armor Rating: 32 is white");
-
-        ini.SetValue("Translations", "normalWrapperEnd", normalWrapperEnd.c_str(),
-                     "# Normal HTML wrapper end");
-
-        ini.SetValue("Translations", "diffTypeWrapperStart", diffTypeWrapperStart.c_str(),
-                     "# Different Type HTML Wrapper start so different type armor types are colored yellow. i.e. Selected Light != Equipped Heavy make Heavy yellow.");
-
-        ini.SetValue("Translations", "diffTypeWrapperEnd", diffTypeWrapperEnd.c_str(),
-                     "# Different Type HTML wrapper end");
-
-        ini.SetValue("Translations", "settingsReloaded", settingsReloaded.c_str(),
-                     "# Notification that appears when you reload the settings via hotkey");
-
-        ini.SaveFile("Data\\SKSE\\Plugins\\CompareEquipmentNG_translation.ini");
+        ini.SaveFile(TRANSLATION_INI_PATH);
     }
+
+#undef CE_GENERAL_SETTINGS
+#undef CE_INMENU_SETTINGS
+#undef CE_OUTOFMENU_SETTINGS
+#undef CE_QUICKLOOTIE_SETTINGS
+#undef CE_CONTROLS_SETTINGS
+#undef CE_INTERNAL_SETTINGS
+#undef CE_DEBUG_SETTINGS
+#undef CE_RANGED_LONG_SETTINGS
+#undef CE_CUSTOMIZATION_SETTINGS
+#undef CE_TRANSLATION_SETTINGS
+#undef LOAD_ROW
+#undef LOG_ROW
+#undef LOG_ROW_Bool
+#undef LOG_ROW_Long
+#undef LOG_ROW_Double
+#undef SAVE_ROW
+#undef LOAD_RANGED
+#undef LOG_RANGED
+#undef SAVE_RANGED
+#undef LOAD_STR
+#undef SAVE_STR
 }
